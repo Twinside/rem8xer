@@ -14,3 +14,4 @@ keywords = ["music"]
 [dependencies]
 arr_macro = "0.2.1"
 byteorder = "1.4.3"
+num_enum = "0.7.3"

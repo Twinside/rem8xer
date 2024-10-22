@@ -6,12 +6,18 @@ pub struct FX {
     pub command: u8,
     pub value: u8,
 }
+
 impl FX {
-    pub(crate) fn from_reader(reader: &Reader) -> Result<Self> {
+    pub(crate) fn from_reader(reader: &mut Reader) -> M8Result<Self> {
         Ok(Self {
             command: reader.read(),
             value: reader.read(),
         })
+    }
+
+    pub fn write(self, w: &mut Writer) {
+        w.write(self.command);
+        w.write(self.value);
     }
 
     pub fn print(&self, version: Version) -> String {

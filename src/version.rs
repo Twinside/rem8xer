@@ -34,7 +34,7 @@ impl fmt::Debug for Version {
 impl Version {
     pub(crate) const SIZE: usize = 14;
 
-    pub(crate) fn from_reader(reader: &Reader) -> Result<Self> {
+    pub(crate) fn from_reader(reader: &mut Reader) -> M8Result<Self> {
         let _version_string = reader.read_bytes(10);
         let lsb = reader.read();
         let msb = reader.read();

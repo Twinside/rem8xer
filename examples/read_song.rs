@@ -17,7 +17,8 @@ fn run() -> Result<(), Box<dyn Error>> {
     let mut f = File::open(&args[1])?;
     let song = Song::read(&mut f)?;
 
-    dbg!(song);
+    dbg!(&song);
+    dbg!(&song.eqs);
 
     Ok(())
 }

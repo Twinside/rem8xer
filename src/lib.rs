@@ -20,9 +20,11 @@ mod fx;
 mod instrument;
 mod reader;
 mod scale;
+mod eq;
 mod settings;
 mod theme;
 mod version;
+use eq::Equ;
 pub use fx::*;
 pub use instrument::*;
 use reader::*;
@@ -58,6 +60,7 @@ pub struct Song {
     pub effects_settings: EffectsSettings,
     pub midi_settings: MidiSettings,
     pub midi_mappings: Vec<MidiMapping>,
+    pub eqs : Vec<Equ>
 }
 
 impl fmt::Debug for Song {
@@ -80,6 +83,7 @@ impl fmt::Debug for Song {
             .field("tables", &self.tables[0])
             .field("grooves", &self.grooves[0])
             .field("scales", &self.scales[0])
+            .field("eqs", self.eqs.get(0).unwrap_or(&Equ::default() ) )
             .field("mixer_settings", &self.mixer_settings)
             .field("effects_settings", &self.effects_settings)
             .field("midi_settings", &self.midi_settings)
@@ -96,114 +100,45 @@ impl Song {
     const N_TABLES: usize = 256;
     const N_GROOVES: usize = 32;
     const N_SCALES: usize = 16;
+
+    /// 32 general EQ + 3 for effects
+
+    const N_EQS: usize = 32 + 3;
     const N_MIDI_MAPPINGS: usize = 128;
 
-    pub fn read(reader: &mut impl std::io::Read) -> Result<Self> {
+    pub fn eq_debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_list().entries(self.eqs.iter()).finish()
+    }
+
+    pub fn read(reader: &mut impl std::io::Read) -> M8Result<Self> {
         let mut buf: Vec<u8> = vec![];
         reader.read_to_end(&mut buf).unwrap();
         let len = buf.len();
-        let reader = Reader::new(buf);
+        let mut reader = Reader::new(buf);
 
         if len < Self::SIZE_PRIOR_TO_2_5 + Version::SIZE {
             return Err(ParseError(
                 "File is not long enough to be a M8 song".to_string(),
             ));
         }
-        let version = Version::from_reader(&reader)?;
+        let version = Version::from_reader(&mut reader)?;
         if version.at_least(2, 5) && len < Self::SIZE + Version::SIZE {
             return Err(ParseError(
                 "File is not long enough to be a M8 song".to_string(),
             ));
         }
 
-        if version.at_least(3, 0) {
-            Self::from_reader3(&reader, version)
-        } else {
-            Self::from_reader2(&reader, version)
-        }
+        Self::from_reader(&mut reader, version)
     }
 
-    fn from_reader2(reader: &Reader, version: Version) -> Result<Self> {
-        let directory = reader.read_string(128);
-        let transpose = reader.read();
-        let tempo = LittleEndian::read_f32(reader.read_bytes(4));
-        let quantize = reader.read();
-        let name = reader.read_string(12);
-        let midi_settings = MidiSettings::from_reader(reader)?;
-        let key = reader.read();
-        reader.read_bytes(18); // Skip
-        let mixer_settings = MixerSettings::from_reader(reader)?;
-        // println!("{:x}", reader.pos());
-
-        let grooves = (0..Self::N_GROOVES)
-            .map(|i| Groove::from_reader(reader, i as u8))
-            .collect::<Result<Vec<Groove>>>()?;
-        let song = SongSteps::from_reader(reader)?;
-        let phrases = (0..Self::N_PHRASES)
-            .map(|i| Phrase::from_reader(reader, i as u8, version))
-            .collect::<Result<Vec<Phrase>>>()?;
-        let chains = (0..Self::N_CHAINS)
-            .map(|i| Chain::from_reader(reader, i as u8))
-            .collect::<Result<Vec<Chain>>>()?;
-        let tables = (0..Self::N_TABLES)
-            .map(|i| Table::from_reader(reader, i as u8, version))
-            .collect::<Result<Vec<Table>>>()?;
-        let instruments = (0..Self::N_INSTRUMENTS)
-            .map(|i| Instrument::from_reader2(reader, i as u8, version))
-            .collect::<Result<Vec<Instrument>>>()?;
-
-        reader.read_bytes(3); // Skip
-        let effects_settings = EffectsSettings::from_reader(reader)?;
-        reader.set_pos(0x1A5FE);
-        let midi_mappings = (0..Self::N_MIDI_MAPPINGS)
-            .map(|_| MidiMapping::from_reader(reader))
-            .collect::<Result<Vec<MidiMapping>>>()?;
-
-        let scales: Vec<Scale> = if version.at_least(2, 5) {
-            reader.set_pos(0x1AA7E);
-            (0..Self::N_SCALES)
-                .map(|i| Scale::from_reader(reader, i as u8))
-                .collect::<Result<Vec<Scale>>>()?
-        } else {
-            (0..Self::N_SCALES)
-                .map(|i| -> Scale {
-                    let mut s = Scale::default();
-                    s.number = i as u8;
-                    s
-                })
-                .collect()
-        };
-
-        Ok(Self {
-            version,
-            directory,
-            transpose,
-            tempo,
-            quantize,
-            name,
-            midi_settings,
-            key,
-            mixer_settings,
-            grooves,
-            song,
-            phrases,
-            chains,
-            tables,
-            instruments,
-            scales,
-            effects_settings,
-            midi_mappings,
-        })
-    }
-
-    fn from_reader3(reader: &Reader, version: Version) -> Result<Self> {
+    fn from_reader(reader: &mut Reader, version: Version) -> M8Result<Self> {
         // TODO read groove, scale
         let directory = reader.read_string(128);
         let transpose = reader.read();
         let tempo = LittleEndian::read_f32(reader.read_bytes(4));
         let quantize = reader.read();
         let name = reader.read_string(12);
-        let midi_settings = MidiSettings::from_reader(reader)?;
+        let midi_settings = MidiSettings::try_from(&mut *reader)?;
         let key = reader.read();
         reader.read_bytes(18); // Skip
         let mixer_settings = MixerSettings::from_reader(reader)?;
@@ -211,33 +146,33 @@ impl Song {
 
         let grooves = (0..Self::N_GROOVES)
             .map(|i| Groove::from_reader(reader, i as u8))
-            .collect::<Result<Vec<Groove>>>()?;
+            .collect::<M8Result<Vec<Groove>>>()?;
         let song = SongSteps::from_reader(reader)?;
         let phrases = (0..Self::N_PHRASES)
             .map(|i| Phrase::from_reader(reader, i as u8, version))
-            .collect::<Result<Vec<Phrase>>>()?;
+            .collect::<M8Result<Vec<Phrase>>>()?;
         let chains = (0..Self::N_CHAINS)
             .map(|i| Chain::from_reader(reader, i as u8))
-            .collect::<Result<Vec<Chain>>>()?;
+            .collect::<M8Result<Vec<Chain>>>()?;
         let tables = (0..Self::N_TABLES)
             .map(|i| Table::from_reader(reader, i as u8, version))
-            .collect::<Result<Vec<Table>>>()?;
+            .collect::<M8Result<Vec<Table>>>()?;
         let instruments = (0..Self::N_INSTRUMENTS)
-            .map(|i| Instrument::from_reader3(reader, i as u8, version))
-            .collect::<Result<Vec<Instrument>>>()?;
+            .map(|i| Instrument::from_reader(reader, i as u8, version))
+            .collect::<M8Result<Vec<Instrument>>>()?;
 
         reader.read_bytes(3); // Skip
-        let effects_settings = EffectsSettings::from_reader(reader)?;
+        let effects_settings = EffectsSettings::from_reader(reader, version)?;
         reader.set_pos(0x1A5FE);
         let midi_mappings = (0..Self::N_MIDI_MAPPINGS)
             .map(|_| MidiMapping::from_reader(reader))
-            .collect::<Result<Vec<MidiMapping>>>()?;
+            .collect::<M8Result<Vec<MidiMapping>>>()?;
 
         let scales: Vec<Scale> = if version.at_least(2, 5) {
             reader.set_pos(0x1AA7E);
             (0..Self::N_SCALES)
                 .map(|i| Scale::from_reader(reader, i as u8))
-                .collect::<Result<Vec<Scale>>>()?
+                .collect::<M8Result<Vec<Scale>>>()?
         } else {
             (0..Self::N_SCALES)
                 .map(|i| -> Scale {
@@ -246,6 +181,15 @@ impl Song {
                     s
                 })
                 .collect()
+        };
+
+        let eqs = if version.at_least(4, 0) {
+            reader.set_pos(0x1AD5A + 3);
+            (0..Self::N_EQS)
+                .map(|_i| Equ::from_reader(reader))
+                .collect::<Vec<Equ>>()
+        } else {
+            vec!()
         };
 
         Ok(Self {
@@ -267,6 +211,7 @@ impl Song {
             scales,
             effects_settings,
             midi_mappings,
+            eqs
         })
     }
 }
@@ -299,7 +244,7 @@ impl SongSteps {
         })
     }
 
-    fn from_reader(reader: &Reader) -> Result<Self> {
+    fn from_reader(reader: &mut Reader) -> M8Result<Self> {
         Ok(Self {
             steps: reader.read_bytes(2048).try_into().unwrap(),
         })
@@ -329,7 +274,7 @@ impl Chain {
         })
     }
 
-    fn from_reader(reader: &Reader, number: u8) -> Result<Self> {
+    fn from_reader(reader: &mut Reader, number: u8) -> M8Result<Self> {
         Ok(Self {
             number,
             steps: arr![ChainStep::from_reader(reader)?; 16],
@@ -353,6 +298,7 @@ pub struct ChainStep {
     pub phrase: u8,
     pub transpose: u8,
 }
+
 impl Default for ChainStep {
     fn default() -> Self {
         Self {
@@ -361,6 +307,7 @@ impl Default for ChainStep {
         }
     }
 }
+
 impl ChainStep {
     pub fn print(&self, row: u8) -> String {
         if self.phrase == 255 {
@@ -370,7 +317,7 @@ impl ChainStep {
         }
     }
 
-    fn from_reader(reader: &Reader) -> Result<Self> {
+    fn from_reader(reader: &mut Reader) -> M8Result<Self> {
         Ok(Self {
             phrase: reader.read(),
             transpose: reader.read(),
@@ -391,7 +338,7 @@ impl Phrase {
         })
     }
 
-    fn from_reader(reader: &Reader, number: u8, version: Version) -> Result<Self> {
+    fn from_reader(reader: &mut Reader, number: u8, version: Version) -> M8Result<Self> {
         Ok(Self {
             number,
             steps: arr![Step::from_reader(reader)?; 16],
@@ -444,7 +391,7 @@ impl Step {
         )
     }
 
-    fn from_reader(reader: &Reader) -> Result<Self> {
+    fn from_reader(reader: &mut Reader) -> M8Result<Self> {
         Ok(Self {
             note: Note(reader.read()),
             velocity: reader.read(),
@@ -505,7 +452,7 @@ impl Table {
         })
     }
 
-    fn from_reader(reader: &Reader, number: u8, version: Version) -> Result<Self> {
+    fn from_reader(reader: &mut Reader, number: u8, version: Version) -> M8Result<Self> {
         Ok(Self {
             number,
             steps: arr![TableStep::from_reader(reader)?; 16],
@@ -556,7 +503,7 @@ impl TableStep {
         )
     }
 
-    fn from_reader(reader: &Reader) -> Result<Self> {
+    fn from_reader(reader: &mut Reader) -> M8Result<Self> {
         Ok(Self {
             transpose: reader.read(),
             velocity: reader.read(),
@@ -573,7 +520,7 @@ pub struct Groove {
     pub steps: [u8; 16],
 }
 impl Groove {
-    fn from_reader(reader: &Reader, number: u8) -> Result<Self> {
+    fn from_reader(reader: &mut Reader, number: u8) -> M8Result<Self> {
         Ok(Self {
             number,
             steps: reader.read_bytes(16).try_into().unwrap(),
@@ -618,7 +565,7 @@ mod tests {
         assert!(
             match &test_file.instruments[1] {
                 Instrument::WavSynth(s) => {
-                    assert_eq!(s.transpose, true);
+                    assert_eq!(s.transp_eq.transpose, true);
                     assert_eq!(s.size, 0x20);
                     assert_eq!(s.synth_params.mixer_reverb, 0xD0);
                     assert!(match s.synth_params.mods[0] {
@@ -646,7 +593,7 @@ mod tests {
         );
         assert!(match &test_file.instruments[2] {
             Instrument::MacroSynth(s) => {
-                assert_eq!(s.transpose, false);
+                assert_eq!(s.transp_eq.transpose, false);
                 assert!(match s.synth_params.mods[0] {
                     Mod::TrigEnv(_) => true,
                     _ => false,
@@ -739,8 +686,8 @@ mod tests {
                     _ => false,
                 });
                 assert_eq!(s.scale, 0xFF);
-                assert_eq!(s.chord[0], 0x01);
-                assert_eq!(s.chord[6], 0x3C);
+                assert_eq!(s.default_chord[0], 0x01);
+                assert_eq!(s.default_chord[6], 0x3C);
 
                 true
             }
@@ -748,19 +695,19 @@ mod tests {
         });
         assert!(match &test_file.instruments[6] {
             Instrument::MIDIOut(s) => {
-                assert!(match s.mods[0] {
+                assert!(match s.mods.mods[0] {
                     Mod::AHDEnv(_) => true,
                     _ => false,
                 });
-                assert!(match s.mods[1] {
+                assert!(match s.mods.mods[1] {
                     Mod::AHDEnv(_) => true,
                     _ => false,
                 });
-                assert!(match s.mods[2] {
+                assert!(match s.mods.mods[2] {
                     Mod::LFO(_) => true,
                     _ => false,
                 });
-                assert!(match s.mods[3] {
+                assert!(match s.mods.mods[3] {
                     Mod::LFO(_) => true,
                     _ => false,
                 });
