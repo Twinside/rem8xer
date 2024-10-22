@@ -22,6 +22,19 @@ const INSTRUMENT_MEMORY_SIZE : usize = 215;
 // const MOD_OFFSET : usize = 0x3B;
 
 impl Instrument {
+    pub fn write(&self, w: &mut Writer) {
+        match self {
+            Instrument::WavSynth(ws)     => { w.write(0); ws.write(w); }
+            Instrument::MacroSynth(ms) => { w.write(1); ms.write(w); }
+            Instrument::Sampler(s)        => { w.write(2); s.write(w); }
+            Instrument::MIDIOut(mo)       => { w.write(3); mo.write(w); }
+            Instrument::FMSynth(fs)       => { w.write(4); fs.write(w); }
+            Instrument::HyperSynth(hs) => { w.write(5); hs.write(w); }
+            Instrument::External(ex) => { w.write(6); ex.write(w); }
+            Instrument::None => w.write(0xFF),
+        }
+    }
+
     pub fn read(reader: &mut impl std::io::Read) -> M8Result<Self> {
         let mut buf: Vec<u8> = vec![];
         reader.read_to_end(&mut buf).unwrap();
@@ -192,7 +205,7 @@ impl WavSynth {
         w.write(self.mult);
         w.write(self.warp);
         w.write(self.scan);
-        self.synth_params.write(w);
+        self.synth_params.write(w, WavSynth::MOD_OFFSET);
     }
 
     pub fn from_reader(reader: &mut Reader, number: u8, version: Version) -> M8Result<Self> {
@@ -304,6 +317,23 @@ pub struct MacroSynth {
 impl MacroSynth {
     pub const MOD_OFFSET : usize = 30;
 
+    pub fn write(&self, w: &mut Writer) {
+        w.write_string(&self.name, 12);
+        w.write(self.transp_eq.into());
+        w.write(self.table_tick);
+        w.write(self.synth_params.volume);
+        w.write(self.synth_params.pitch);
+        w.write(self.synth_params.fine_tune);
+
+        w.write(self.shape.into());
+        w.write(self.timbre);
+        w.write(self.color);
+        w.write(self.degrade);
+        w.write(self.redux);
+
+        self.synth_params.write(w, MacroSynth::MOD_OFFSET);
+    }
+
     pub fn from_reader(reader: &mut Reader, number: u8, version: Version) -> M8Result<Self> {
         let name = reader.read_string(12);
 
@@ -378,6 +408,28 @@ pub struct Sampler {
 
 impl Sampler {
     pub const MOD_OFFSET : usize = 29;
+
+    pub fn write(&self, w: &mut Writer) {
+        let pos = w.pos();
+        w.write_string(&self.name, 12);
+        w.write(self.transp_eq.into());
+        w.write(self.table_tick);
+        w.write(self.synth_params.volume);
+        w.write(self.synth_params.pitch);
+        w.write(self.synth_params.fine_tune);
+
+        w.write(self.play_mode.into());
+        w.write(self.slice);
+        w.write(self.start);
+        w.write(self.loop_start);
+        w.write(self.length);
+        w.write(self.degrade);
+
+        self.synth_params.write(w, Sampler::MOD_OFFSET);
+
+        w.write(((pos + 0x57) - w.pos()) as u8);
+        w.write_string(&self.sample_path, 128);
+    }
 
     pub fn from_reader(reader: &mut Reader, start_pos: usize, number: u8, version: Version) -> M8Result<Self> {
         let name = reader.read_string(12);
@@ -506,6 +558,46 @@ pub struct FMSynth {
 impl FMSynth {
     const MOD_OFFSET : usize = 2;
 
+    pub fn write(&self, w: &mut Writer) {
+        w.write_string(&self.name, 12);
+        w.write(self.transp_eq.into());
+        w.write(self.table_tick);
+        w.write(self.synth_params.volume);
+        w.write(self.synth_params.pitch);
+        w.write(self.synth_params.fine_tune);
+
+        w.write(self.algo.0);
+
+        for op in &self.operators {
+            w.write(op.shape.into());
+        }
+
+        for op in &self.operators {
+            w.write(op.ratio);
+            w.write(op.ratio_fine);
+        }
+
+        for op in &self.operators {
+            w.write(op.level);
+            w.write(op.feedback);
+        }
+
+        for op in &self.operators {
+            w.write(op.mod_a);
+        }
+
+        for op in &self.operators {
+            w.write(op.mod_b);
+        }
+
+        w.write(self.mod1);
+        w.write(self.mod2);
+        w.write(self.mod3);
+        w.write(self.mod4);
+
+        self.synth_params.write(w, FMSynth::MOD_OFFSET);
+    }
+
     pub fn from_reader(reader: &mut Reader, number: u8, version: Version) -> M8Result<Self> {
         let name = reader.read_string(12);
         let transp_eq = reader.read().into();
@@ -583,6 +675,26 @@ pub struct MIDIOut {
 impl MIDIOut {
     const MOD_OFFSET : usize = 25;
 
+    pub fn write(&self, w: &mut Writer) {
+        w.write_string(&self.name, 12);
+        w.write(if self.transpose { 1 } else { 0 });
+        w.write(self.table_tick);
+        w.write(self.port);
+        w.write(self.channel);
+        w.write(self.bank_select);
+        w.write(self.program_change);
+
+        w.write(0);
+        w.write(0);
+        w.write(0);
+
+        for cc in self.custom_cc {
+            cc.write(w);
+        }
+
+        self.mods.write(w, MIDIOut::MOD_OFFSET)
+    }
+
     pub fn from_reader(reader: &mut Reader, number: u8, version: Version) -> M8Result<Self> {
         let name = reader.read_string(12);
         let transpose = reader.read_bool();
@@ -655,7 +767,7 @@ impl HyperSynth {
         w.write(self.width);
         w.write(self.subosc);
 
-        w.fill_till(0, w.pos() + HyperSynth::MOD_OFFSET);
+        self.synth_params.write(w, HyperSynth::MOD_OFFSET);
 
         for chd in self.chords {
             w.write(0xFF);
@@ -747,6 +859,8 @@ impl ExternalInst {
         self.ccb.write(w);
         self.ccc.write(w);
         self.ccd.write(w);
+
+        self.synth_params.write(w, ExternalInst::MOD_OFFSET);
     }
 
     pub fn from_reader(reader: &mut Reader, number: u8) -> M8Result<Self> {
@@ -930,7 +1044,7 @@ impl SynthParams {
         })
     }
 
-    pub fn write(&self, w: &mut Writer) {
+    pub fn write(&self, w: &mut Writer, mod_offset: usize) {
         w.write(self.filter_type);
         w.write(self.filter_cutoff);
         w.write(self.filter_res);
@@ -944,7 +1058,12 @@ impl SynthParams {
         w.write(self.mixer_delay);
         w.write(self.mixer_reverb);
 
-        // ALIGN
+        self.write_modes(w, mod_offset);
+    }
+
+    pub fn write_modes(&self, w: &mut Writer, mod_offset: usize) {
+        w.fill_till(0xFF, mod_offset);
+        for m in &self.mods { m.write(w); }
     }
 
     fn from_reader3(
@@ -1206,9 +1325,7 @@ impl LFO {
         })
     }
 
-    fn to_mod(self) -> Mod {
-        Mod::LFO(self)
-    }
+    fn to_mod(self) -> Mod { Mod::LFO(self) }
 }
 
 #[derive(PartialEq, Debug, Clone)]

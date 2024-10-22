@@ -21,14 +21,14 @@ pub struct Writer {
 impl Writer {
     pub fn write(&mut self, v: u8) { self.buffer.push(v); }
 
-    pub fn write_string(&mut self, str: &str, fill: usize) {
+    pub fn write_string(&mut self, _str: &str, _fill: usize) {
     }
 
     pub fn pos(&self) -> usize { self.buffer.len() }
 
     pub fn fill_till(&mut self, v: u8, until : usize) {
         let to_fill = until - self.buffer.len();
-        for i in 0 .. to_fill {
+        for _i in 0 .. to_fill {
             self.buffer.push(v);
         }
     }
