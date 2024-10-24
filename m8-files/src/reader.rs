@@ -42,10 +42,11 @@ pub struct Reader {
 #[allow(dead_code)]
 impl Reader {
     pub fn new(buffer: Vec<u8>) -> Self {
-        Self {
-            buffer,
-            position: 0,
-        }
+        Self { buffer, position: 0, }
+    }
+
+    pub fn len(&self) -> usize {
+        self.buffer.len()
     }
 
     pub fn read(&mut self) -> u8 {

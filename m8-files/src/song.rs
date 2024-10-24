@@ -101,19 +101,22 @@ impl Song {
         f.debug_list().entries(self.eqs.iter()).finish()
     }
 
-    pub fn read(reader: &mut impl std::io::Read) -> M8Result<Self> {
+    pub fn read_from_stream(reader: &mut impl std::io::Read) -> M8Result<Self> {
         let mut buf: Vec<u8> = vec![];
         reader.read_to_end(&mut buf).unwrap();
         let len = buf.len();
         let mut reader = Reader::new(buf);
+        Self::read(&mut reader)
+    }
 
-        if len < Self::SIZE_PRIOR_TO_2_5 + Version::SIZE {
+    pub fn read(mut reader: &mut Reader) -> M8Result<Self> {
+        if reader.len() < Self::SIZE_PRIOR_TO_2_5 + Version::SIZE {
             return Err(ParseError(
                 "File is not long enough to be a M8 song".to_string(),
             ));
         }
         let version = Version::from_reader(&mut reader)?;
-        if version.at_least(2, 5) && len < Self::SIZE + Version::SIZE {
+        if version.at_least(2, 5) && reader.len() < Self::SIZE + Version::SIZE {
             return Err(ParseError(
                 "File is not long enough to be a M8 song".to_string(),
             ));
@@ -542,7 +545,7 @@ mod tests {
 
     fn test_file() -> Song {
         let mut f = File::open("./examples/songs/TEST-FILE.m8s").expect("Could not open TEST-FILE");
-        Song::read(&mut f).expect("Could not parse TEST-FILE")
+        Song::read_from_stream(&mut f).expect("Could not parse TEST-FILE")
     }
 
     #[test]
