@@ -1,6 +1,16 @@
 import { Signal, signal } from "@preact/signals";
 import { WasmSong } from "../m8-files/pkg/m8_files";
 
+type Position =
+    {
+        x: number;
+        y: number
+    }
+
+type Selection =
+    {
+    }
+
 export type SongPane =
     {
         loaded_name: Signal<string | undefined>,

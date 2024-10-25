@@ -47,10 +47,43 @@ function hexStr(n : number) : string {
   return hexStr.length <= 1 ? "0" + hexStr : hexStr;
 }
 
-function StepsRender(props: { steps: Uint8Array, viewChain: (chainNumber: number) => void }) {
+type SongSide = "left" | "right"
+type DraggedChain = {
+  chain: number,
+  from_song: SongSide
+}
+
+function isDraggedChain(o : any) : o is DraggedChain {
+  return o !== null
+    && typeof o === 'object'
+    && 'chain' in o
+    && 'from_song' in o
+    && typeof o.chain === 'number'
+    && typeof o.from_song === 'string';
+}
+
+function StepsRender(props: { side: SongSide, steps: Uint8Array, viewChain: (chainNumber: number) => void }) {
   const elems = [];
   const steps = props.steps;
   let read_cursor = 0;
+
+  const dragStart = (evt : DragEvent, chain: number) => {
+    const asJson : DraggedChain = { chain, from_song: props.side };
+    evt.dataTransfer.setData("text/plain", JSON.stringify(asJson));
+    evt.dataTransfer.dropEffect = "copy";
+  };
+
+  const dragEnd = (evt : DragEvent, line : number, col : number) => {
+    const strPayload = evt.dataTransfer.getData('text/plain');
+    try {
+      const asJson = JSON.parse(strPayload);
+      if (!isDraggedChain(asJson))
+        return;
+      alert(`Copy ${asJson.chain} from song ${asJson.from_song} at ${line}:${col}`)
+    } catch {
+      /* ignores */
+    }
+  }
 
   for (let line = 0; line < 0x100; line++) {
     elems.push(<span class="spanline">{hexStr(line)} : </span>)
@@ -58,9 +91,19 @@ function StepsRender(props: { steps: Uint8Array, viewChain: (chainNumber: number
     for (let col = 0; col < 8; col++) {
       const chain = steps[read_cursor++];
 
-      if (chain === 0xFF) elems.push("-- ");
-      else {
-        elems.push(<span class="songchain" onClick={() => props.viewChain(chain)}>{hexStr(chain)} </span>)
+      if (chain === 0xFF) {
+        const elem =
+          <span onDrop={evt => dragEnd(evt, line, col)}>-- </span>;
+        elems.push(elem);
+      } else {
+        const elem =
+          <span class="songchain"
+                draggable={true}
+                onDragStart={(evt) => dragStart(evt, chain)}
+                onDrop={evt => dragEnd(evt, line, col)}
+                onClick={() => props.viewChain(chain)}>{hexStr(chain)} </span>; 
+
+        elems.push(elem);
       }
     }
 
@@ -70,7 +113,7 @@ function StepsRender(props: { steps: Uint8Array, viewChain: (chainNumber: number
   return <pre class="songsteps">{elems}</pre>;
 }
 
-function SongViewer(props: { panel: SongPane }) {
+function SongViewer(props: { side: SongSide, panel: SongPane }) {
   const panel = props.panel;
   const filename =  panel.loaded_name.value;
   const song = panel.song.value;
@@ -81,7 +124,8 @@ function SongViewer(props: { panel: SongPane }) {
 
   const viewChain = (n : number) => panel.selected_chain.value = n;
   const steps = song !== undefined
-    ? <StepsRender steps={W.get_song_steps(song)}
+    ? <StepsRender side={props.side}
+                   steps={W.get_song_steps(song)}
                    viewChain={viewChain}/>
     : "Drag an M8 song file here";
 
@@ -158,8 +202,8 @@ function App() {
         <div class="rootcolumn">
           <ChainViewer panel={state.left} />
         </div>
-        <SongViewer panel={state.left} />
-        <SongViewer panel={state.right} />
+        <SongViewer side="left" panel={state.left} />
+        <SongViewer side="right" panel={state.right} />
         <div class="rootcolumn">
           <ChainViewer panel={state.right} />
         </div>
