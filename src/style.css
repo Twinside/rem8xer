@@ -25,6 +25,7 @@ a:hover {
 body {
   margin: 0;
   display: flex;
+  flex-direction: column;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -109,9 +110,12 @@ button:focus-visible {
 }
 
 .rootcolumn {
+  display: flex;
   flex-direction: column;
   padding: 30px;
   border-right: 1px solid gray;
+  width: 100%;
+  flex: 0.9;
 }
 
 .visualization {
@@ -156,4 +160,9 @@ button:focus-visible {
 .songchain:hover {
     border: 1px solid white;
     cursor: pointer;
+}
+
+.songsteps {
+    font-weight: bold;
+    font-size: 15px;
 }

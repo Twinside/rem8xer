@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
 
-use crate::{reader::Reader, song::Song};
+use crate::{reader::{Reader, Writer}, song::{Song, V4_OFFSETS}};
 
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the
@@ -33,6 +33,17 @@ pub struct WasmSong {
 #[wasm_bindgen]
 pub fn song_name(song: &WasmSong) -> String {
     song.song.name.clone()
+}
+
+#[wasm_bindgen]
+pub fn write_song(song: &WasmSong, current_song: js_sys::Uint8Array) -> Result<js_sys::Uint8Array, String> {
+    if !song.song.version.at_least(4, 0) {
+        return Err("Only version 4 song can be written".into())
+    }
+
+    let mut w = Writer::new(current_song.to_vec());
+    song.song.write_patterns(V4_OFFSETS, &mut w);
+    Ok(js_sys::Uint8Array::from(&w.finish()[..]))
 }
 
 #[wasm_bindgen]

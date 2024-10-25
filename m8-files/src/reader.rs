@@ -15,21 +15,59 @@ impl std::error::Error for ParseError {}
 pub type M8Result<T> = std::result::Result<T, ParseError>;
 
 pub struct Writer {
-    buffer: Vec<u8>
+    buffer: Vec<u8>,
+    pos: usize
 }
 
 impl Writer {
-    pub fn write(&mut self, v: u8) { self.buffer.push(v); }
-
-    pub fn write_string(&mut self, _str: &str, _fill: usize) {
+    /// Initialize the writer from a loaded song
+    pub fn new(v: Vec<u8>) -> Writer {
+        Writer { buffer: v, pos: 0 }
     }
 
-    pub fn pos(&self) -> usize { self.buffer.len() }
+    /// Terminate writing and return the buffer
+    pub fn finish(self) -> Vec<u8> {
+        self.buffer
+    }
+
+    pub fn write(&mut self, v: u8) {
+        self.buffer[self.pos] = v;
+        self.pos += 1;
+    }
+
+    pub fn write_bytes(&mut self, bytes: &[u8]) {
+        let mut cursor = self.pos;
+        let buff = &mut self.buffer;
+
+        for b in bytes {
+            buff[cursor] = *b;
+            cursor += 1;
+        }
+
+        self.pos = cursor;
+    }
+
+    pub fn write_string(&mut self, str: &str, fill: usize) {
+        let bytes = str.as_bytes();
+        self.write_bytes(bytes);
+        self.fill_till(0, fill - bytes.len());
+    }
+
+    pub fn skip(&mut self, skip: usize) {
+        self.pos += skip
+    }
+
+    pub fn seek(&mut self, new_pos: usize) {
+        self.pos = new_pos;
+    }
+
+    pub fn pos(&self) -> usize { self.pos }
 
     pub fn fill_till(&mut self, v: u8, until : usize) {
         let to_fill = until - self.buffer.len();
         for _i in 0 .. to_fill {
-            self.buffer.push(v);
+            self.buffer[self.pos] = v;
+            self.pos += 1;
         }
     }
 }

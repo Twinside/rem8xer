@@ -29,6 +29,50 @@ pub use crate::version::*;
 use arr_macro::arr;
 use byteorder::{ByteOrder, LittleEndian};
 
+pub struct Offsets {
+    pub groove: usize,
+    pub song: usize,
+    pub phrases: usize,
+    pub chains : usize,
+    pub table : usize,
+    pub instruments : usize,
+    pub effect_settings : usize,
+    pub midi_mapping: usize,
+    pub scale: usize,
+    pub eq: usize
+}
+
+pub const V4_OFFSETS : Offsets = Offsets {
+    groove: 0xEE,
+    song: 0x2EE,
+    phrases: 0xAEE,
+    chains: 0x9a5e,
+    table: 0xba3e,
+    instruments: 0x13a3e,
+    effect_settings: 0x1a5c1,
+    midi_mapping: 0x1a5fe,
+    scale: 0x1aa7e,
+    eq: 0x1ad5d
+};
+
+/// For every instrument, it's destination instrument
+pub struct InstrumentMapping {
+    pub mapping: [u8; 0x80]
+}
+
+impl Default for InstrumentMapping {
+    fn default() -> Self {
+        let mut arr = [0 as u8; 0x80];
+        for i in 0 .. arr.len() {
+            arr[i] = i as u8;
+        }
+        Self { mapping: arr }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: Song
+////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Clone)]
 pub struct Song {
     pub version: Version,
@@ -125,6 +169,36 @@ impl Song {
         Self::from_reader(&mut reader, version)
     }
 
+    pub fn write_patterns(&self, ofs : Offsets, w : &mut Writer) {
+        w.seek(ofs.song);
+        w.write_bytes(&self.song.steps);
+
+        w.seek(ofs.phrases);
+        for ph in &self.phrases {
+            ph.write(w);
+        }
+
+        w.seek(ofs.chains);
+        for ch in &self.chains {
+            ch.write(w);
+        }
+
+        w.seek(ofs.table);
+        for table in &self.tables {
+            table.write(w);
+        }
+
+        w.seek(ofs.instruments);
+        for instr in &self.instruments {
+            let pos = w.pos();
+            instr.write(w);
+            w.seek(pos + INSTRUMENT_MEMORY_SIZE);
+        }
+
+        w.seek(ofs.eq);
+        for eq in &self.eqs { eq.write(w); }
+    }
+
     fn from_reader(reader: &mut Reader, version: Version) -> M8Result<Self> {
         // TODO read groove, scale
         let directory = reader.read_string(128);
@@ -136,7 +210,6 @@ impl Song {
         let key = reader.read();
         reader.read_bytes(18); // Skip
         let mixer_settings = MixerSettings::from_reader(reader)?;
-        // println!("{:x}", reader.pos());
 
         let grooves = (0..Self::N_GROOVES)
             .map(|i| Groove::from_reader(reader, i as u8))
@@ -210,10 +283,14 @@ impl Song {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: SongSteps
+////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Clone)]
 pub struct SongSteps {
     pub steps: [u8; 2048],
 }
+
 impl SongSteps {
     pub fn print_screen(&self) -> String {
         self.print_screen_from(0)
@@ -256,16 +333,26 @@ impl fmt::Debug for SongSteps {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: Chains
+////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Clone, Default)]
 pub struct Chain {
     pub number: u8,
     pub steps: [ChainStep; 16],
 }
+
 impl Chain {
     pub fn print_screen(&self) -> String {
         (0..16).fold("  PH TSP\n".to_string(), |s, row| {
             s + &self.steps[row].print(row as u8) + "\n"
         })
+    }
+
+    pub fn write(&self, w: &mut Writer) {
+        for cs in &self.steps {
+            cs.write(w)
+        }
     }
 
     fn from_reader(reader: &mut Reader, number: u8) -> M8Result<Self> {
@@ -295,10 +382,7 @@ pub struct ChainStep {
 
 impl Default for ChainStep {
     fn default() -> Self {
-        Self {
-            phrase: 255,
-            transpose: 0,
-        }
+        Self { phrase: 255, transpose: 0, }
     }
 }
 
@@ -311,6 +395,11 @@ impl ChainStep {
         }
     }
 
+    pub fn write(&self, w: &mut Writer) {
+        w.write(self.phrase);
+        w.write(self.transpose);
+    }
+
     fn from_reader(reader: &mut Reader) -> M8Result<Self> {
         Ok(Self {
             phrase: reader.read(),
@@ -319,17 +408,28 @@ impl ChainStep {
     }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: Phrase
+////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Clone, Default)]
 pub struct Phrase {
     pub number: u8,
     pub steps: [Step; 16],
     version: Version,
 }
+
 impl Phrase {
     pub fn print_screen(&self) -> String {
         (0..16).fold("  N   V  I  FX1   FX2   FX3  \n".to_string(), |s, row| {
             s + &self.steps[row].print(row as u8, self.version) + "\n"
         })
+    }
+
+    pub fn write(&self, w: &mut Writer) {
+        for s in &self.steps {
+            s.write(w);
+        }
     }
 
     fn from_reader(reader: &mut Reader, number: u8, version: Version) -> M8Result<Self> {
@@ -361,6 +461,8 @@ pub struct Step {
     pub fx2: FX,
     pub fx3: FX,
 }
+
+
 impl Step {
     pub fn print(&self, row: u8, version: Version) -> String {
         let velocity = if self.velocity == 255 {
@@ -385,6 +487,27 @@ impl Step {
         )
     }
 
+    pub fn map_instr(&self, mapping: &InstrumentMapping) -> Step {
+        Self {
+            note: self.note,
+            velocity: self.velocity,
+            instrument: mapping.mapping[self.instrument as usize],
+            fx1: self.fx1,
+            fx2: self.fx2,
+            fx3: self.fx3
+
+        }
+    }
+
+    pub fn write(&self, w: &mut Writer) {
+        w.write(self.note.0);
+        w.write(self.velocity);
+        w.write(self.instrument);
+        self.fx1.write(w);
+        self.fx2.write(w);
+        self.fx3.write(w);
+    }
+
     fn from_reader(reader: &mut Reader) -> M8Result<Self> {
         Ok(Self {
             note: Note(reader.read()),
@@ -397,8 +520,12 @@ impl Step {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: Note
+////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub struct Note(pub u8);
+
 impl Default for Note {
     fn default() -> Self {
         Note(255)
@@ -426,13 +553,16 @@ impl fmt::Display for Note {
                 9 => "A-",
                 10 => "A#",
                 11 => "B-",
-                _ => panic!(),
+                _ => "??",
             };
             write!(f, "{}{:X}", n, oct)
         }
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: Table
+////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Clone)]
 pub struct Table {
     pub number: u8,
@@ -444,6 +574,12 @@ impl Table {
         (0..16).fold("  N  V  FX1   FX2   FX3  \n".to_string(), |s, row| {
             s + &self.steps[row].print(row as u8, self.version) + "\n"
         })
+    }
+
+    pub fn write(&self, w: &mut Writer) {
+        for ts in &self.steps {
+            ts.write(w);
+        }
     }
 
     fn from_reader(reader: &mut Reader, number: u8, version: Version) -> M8Result<Self> {
@@ -474,6 +610,7 @@ pub struct TableStep {
     pub fx2: FX,
     pub fx3: FX,
 }
+
 impl TableStep {
     pub fn print(&self, row: u8, version: Version) -> String {
         let transpose = if self.transpose == 255 {
@@ -497,6 +634,14 @@ impl TableStep {
         )
     }
 
+    pub fn write(&self, w: &mut Writer) {
+        w.write(self.transpose);
+        w.write(self.velocity);
+        self.fx1.write(w);
+        self.fx2.write(w);
+        self.fx3.write(w);
+    }
+
     fn from_reader(reader: &mut Reader) -> M8Result<Self> {
         Ok(Self {
             transpose: reader.read(),
@@ -508,6 +653,9 @@ impl TableStep {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: Groove
+////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Clone)]
 pub struct Groove {
     pub number: u8,
@@ -519,6 +667,10 @@ impl Groove {
             number,
             steps: reader.read_bytes(16).try_into().unwrap(),
         })
+    }
+
+    pub fn write(&self, w: &mut Writer) {
+        w.write_bytes(&self.steps);
     }
 
     pub fn active_steps(&self) -> &[u8] {
@@ -538,6 +690,9 @@ impl fmt::Debug for Groove {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: Tests
+////////////////////////////////////////////////////////////////////////////////////
 #[cfg(test)]
 mod tests {
     use crate::song::*;

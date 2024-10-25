@@ -16,7 +16,7 @@ pub struct EqBand {
 }
 
 impl EqBand {
-    pub fn write(self, w: &mut Writer) {
+    pub fn write(&self, w: &mut Writer) {
         w.write(self.mode.0);
         w.write(self.freq);
         w.write(self.freq_fin);
@@ -45,7 +45,7 @@ pub struct Equ {
 }
 
 impl Equ {
-    pub fn write(self, w: &mut Writer) {
+    pub fn write(&self, w: &mut Writer) {
         self.low.write(w);
         self.mid.write(w);
         self.high.write(w);

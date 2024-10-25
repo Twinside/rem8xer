@@ -5,6 +5,9 @@ use num_enum::TryFromPrimitive;
 
 use arr_macro::arr;
 
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: Instrument
+////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Debug, Clone, Default)]
 pub enum Instrument {
     WavSynth(WavSynth),
@@ -18,7 +21,7 @@ pub enum Instrument {
     None
 }
 
-const INSTRUMENT_MEMORY_SIZE : usize = 215;
+pub const INSTRUMENT_MEMORY_SIZE : usize = 215;
 // const MOD_OFFSET : usize = 0x3B;
 
 impl Instrument {
@@ -64,7 +67,7 @@ impl Instrument {
             0x05 if version.at_least(3, 0) => Self::HyperSynth(HyperSynth::from_reader(reader, number)?),
             0x06 if version.at_least(3, 0) => Self::External(ExternalInst::from_reader(reader, number)?),
             0xFF => Self::None,
-            _ => panic!("Instrument type {} not supported", kind),
+            _ => return Err(ParseError(format!("Instrument type {} not supported", kind))),
         };
 
         reader.set_pos(start_pos + INSTRUMENT_MEMORY_SIZE);
@@ -96,6 +99,9 @@ impl From<u8> for TranspEq {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: Wavsynth
+////////////////////////////////////////////////////////////////////////////////////
 #[repr(u8)]
 #[allow(non_camel_case_types)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
@@ -246,6 +252,9 @@ impl WavSynth {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: Macrosynth
+////////////////////////////////////////////////////////////////////////////////////
 #[repr(u8)]
 #[allow(non_camel_case_types)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
@@ -372,6 +381,9 @@ impl MacroSynth {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: Sampler
+////////////////////////////////////////////////////////////////////////////////////
 #[repr(u8)]
 #[allow(non_camel_case_types)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
@@ -477,6 +489,9 @@ impl Sampler {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: FM
+////////////////////////////////////////////////////////////////////////////////////
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct FmAlgo(u8);
 
@@ -536,7 +551,23 @@ pub enum FMWave {
     SQR,
     PUL,
     IMP,
-    NOI
+    NOI,
+    NLP,
+    NHP,
+    NBP,
+    CLK
+}
+
+#[derive(PartialEq, Debug, Default, Clone)]
+pub struct Operator {
+    pub shape: FMWave,
+    pub ratio: u8,
+    pub ratio_fine: u8,
+    pub level: u8,
+    pub feedback: u8,
+    pub retrigger: u8,
+    pub mod_a: u8,
+    pub mod_b: u8,
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -610,7 +641,9 @@ impl FMSynth {
         let mut operators: [Operator; 4] = arr![Operator::default(); 4];
         if version.at_least(1, 4) {
             for i in 0..4 {
-                operators[i].shape = FMWave::try_from(reader.read()).map_err(|_| ParseError(format!("Invalid fm wave")))?;
+                let wav_code = reader.read();
+                operators[i].shape = FMWave::try_from(wav_code)
+                    .map_err(|_| ParseError(format!("Invalid fm wave {}", wav_code)))?;
             }
         }
         for i in 0..4 {
@@ -656,6 +689,31 @@ impl FMSynth {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: Midi out
+////////////////////////////////////////////////////////////////////////////////////
+#[derive(PartialEq, Debug, Clone, Copy)]
+pub struct ControlChange {
+    /// CC number (target)
+    pub number: u8,
+
+    /// Value to be sent via MIDI CC message
+    pub value: u8,
+}
+
+impl ControlChange {
+    pub fn write(self, writer: &mut Writer) {
+        writer.write(self.number);
+        writer.write(self.value);
+    }
+
+    pub fn from_reader(reader: &mut Reader) -> M8Result<Self> {
+        Ok(Self {
+            number: reader.read(),
+            value: reader.read(),
+        })
+    }
+}
 #[derive(PartialEq, Debug, Clone)]
 pub struct MIDIOut {
     pub number: u8,
@@ -729,6 +787,9 @@ impl MIDIOut {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: Hypersynth
+////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Debug, Clone)]
 pub struct HyperSynth {
     pub number: u8,
@@ -819,6 +880,9 @@ impl HyperSynth {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: External inst
+////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Debug, Clone)]
 pub struct ExternalInst {
     pub number: u8,
@@ -905,6 +969,9 @@ impl ExternalInst {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: Synth parameters
+////////////////////////////////////////////////////////////////////////////////////
 const LIMIT_TYPE : [&str; 8] =
     [
        "CLIP",
@@ -1113,6 +1180,9 @@ impl SynthParams {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+/// MARK: Modulators
+////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Debug, Clone)]
 pub enum Mod {
     AHDEnv(AHDEnv),
@@ -1140,7 +1210,8 @@ impl Mod {
             3 => Mod::LFO(LFO::from_reader3(reader, dest)?),
             4 => Mod::TrigEnv(TrigEnv::from_reader(reader, dest)?),
             5 => Mod::TrackingEnv(TrackingEnv::from_reader(reader, dest)?),
-            x => panic!("Unknown mod type {}", x),
+            x =>
+                return Err(ParseError(format!("Unknown mod type {}", x))),
         };
 
         reader.set_pos(start_pos + Self::SIZE);
@@ -1181,6 +1252,7 @@ impl Mod {
     }
 }
 
+/// MARK: AHDEnv
 #[derive(PartialEq, Debug, Clone, Default)]
 pub struct AHDEnv {
     pub dest: u8,
@@ -1225,6 +1297,7 @@ impl AHDEnv {
     }
 }
 
+/// MARK: LFO
 #[repr(u8)]
 #[allow(non_camel_case_types)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
@@ -1328,6 +1401,7 @@ impl LFO {
     fn to_mod(self) -> Mod { Mod::LFO(self) }
 }
 
+/// MARK: ADSREnv
 #[derive(PartialEq, Debug, Clone)]
 pub struct ADSREnv {
     pub dest: u8,
@@ -1359,6 +1433,7 @@ impl ADSREnv {
     }
 }
 
+/// MARK: DrumEnv
 #[derive(PartialEq, Debug, Clone)]
 pub struct DrumEnv {
     pub dest: u8,
@@ -1387,6 +1462,7 @@ impl DrumEnv {
     }
 }
 
+/// MARK: TrigEnv
 #[derive(PartialEq, Debug, Clone)]
 pub struct TrigEnv {
     pub dest: u8,
@@ -1418,6 +1494,7 @@ impl TrigEnv {
     }
 }
 
+/// MARK: TrackingEnv
 #[derive(PartialEq, Debug, Clone)]
 pub struct TrackingEnv {
     pub dest: u8,
@@ -1442,41 +1519,6 @@ impl TrackingEnv {
             src: reader.read(),
             lval: reader.read(),
             hval: reader.read(),
-        })
-    }
-}
-
-#[derive(PartialEq, Debug, Default, Clone)]
-pub struct Operator {
-    pub shape: FMWave,
-    pub ratio: u8,
-    pub ratio_fine: u8,
-    pub level: u8,
-    pub feedback: u8,
-    pub retrigger: u8,
-    pub mod_a: u8,
-    pub mod_b: u8,
-}
-
-#[derive(PartialEq, Debug, Clone, Copy)]
-pub struct ControlChange {
-    /// CC number (target)
-    pub number: u8,
-
-    /// Value to be sent via MIDI CC message
-    pub value: u8,
-}
-
-impl ControlChange {
-    pub fn write(self, writer: &mut Writer) {
-        writer.write(self.number);
-        writer.write(self.value);
-    }
-
-    pub fn from_reader(reader: &mut Reader) -> M8Result<Self> {
-        Ok(Self {
-            number: reader.read(),
-            value: reader.read(),
         })
     }
 }

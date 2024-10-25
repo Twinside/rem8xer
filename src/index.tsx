@@ -2,6 +2,7 @@ import { render } from "preact";
 import "./style.css";
 import * as W from '../m8-files/pkg/m8_files';
 import { initState, SongPane } from "./state";
+import { downloadBlob } from "./utils";
 
 const state = initState();
 
@@ -82,10 +83,24 @@ function SongViewer(props: { panel: SongPane }) {
                    viewChain={viewChain}/>
     : "Drag an M8 song file here";
 
+  const save = () => {
+    try {
+      const new_song = W.write_song(song, panel.raw_song.value);
+      panel.raw_song.value = new_song;
+      downloadBlob(new_song, songName + ".m8s");
+    } catch (err) {
+      state.message_banner.value = err.toString();
+    }
+  };
+
   return <div class="rootcolumn"
               onDragOver={(ev) => ev.preventDefault()}
               onDrop={(evt) => loadSong(evt, props.panel)}>
-    <h3>{songName}</h3>
+    <div>
+      <h3 style="display: inline-block;">{songName}</h3>
+      <span class="separator" />
+      {song !== undefined ? <button onClick={save}>Save</button> : undefined}
+    </div>
     {steps}
   </div>;
 }
@@ -99,11 +114,14 @@ function MessageBanner() {
 function ChainViewer(props: { panel: SongPane }) {
   const song = props.panel.song.value;
 
-  if (song === undefined) return <div class="chain_viewer"></div>;
+  if (song === undefined) return <div class="rootcolumn"></div>;
 
   const chain = props.panel.selected_chain.value;
   if (chain === undefined) {
-    return <div class="chain_viewer">Click a chain to view</div>;
+    return <div class="rootcolumn">
+      <h4>Chain viewer</h4>
+      <p>Click a chain to view</p>
+    </div>;
   }
 
   const chainSteps = W.get_chain_steps(song, chain);
@@ -123,6 +141,7 @@ function ChainViewer(props: { panel: SongPane }) {
   }
 
   return <div class="chain_viewer">
+    <h4>Chain viewer</h4>
     <pre>
       {elems}
     </pre>
@@ -130,16 +149,20 @@ function ChainViewer(props: { panel: SongPane }) {
 }
 
 function App() {
-  return <div>
+  return <>
       <h1>Rem8xer</h1>
       <MessageBanner />
       <div class="rootcontainer">
-        <ChainViewer panel={state.left} />
+        <div class="rootcolumn">
+          <ChainViewer panel={state.left} />
+        </div>
         <SongViewer panel={state.left} />
         <SongViewer panel={state.right} />
-        <ChainViewer panel={state.right} />
+        <div class="rootcolumn">
+          <ChainViewer panel={state.right} />
+        </div>
       </div>
-  </div>;
+  </>;
 }
 
-render(<App/>, document.getElementById("rootcontainer"));
+render(<App/>, document.body);
