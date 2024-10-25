@@ -46,3 +46,26 @@ pub fn load_song(arr: js_sys::Uint8Array) -> Result<WasmSong, String> {
         Err(psr) => Err(psr.to_string())
     }
 }
+
+#[wasm_bindgen]
+pub unsafe fn get_song_steps(song: &WasmSong) -> js_sys::Uint8Array {
+    let slice : &[u8] = &song.song.song.steps;
+    js_sys::Uint8Array::view(slice)
+}
+
+/// Get a chain by copy of its content
+#[wasm_bindgen]
+pub unsafe fn get_chain_steps(song: &WasmSong, chain_index: usize) -> js_sys::Uint8Array {
+    let chain = &song.song.chains[chain_index].steps;
+    let out_arr = js_sys::Uint8Array::new_with_length((chain.len() * 2) as u32);
+    let mut write_cursor = 0;
+
+    for cs in chain {
+        out_arr.set_index(write_cursor, cs.phrase);
+        write_cursor += 1;
+        out_arr.set_index(write_cursor, cs.transpose);
+        write_cursor += 1;
+    }
+
+    out_arr
+}

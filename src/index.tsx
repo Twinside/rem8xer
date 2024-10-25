@@ -39,6 +39,34 @@ async function loadSong(ev : DragEvent, pane: SongPane) {
   }
 }
 
+function hexStr(n : number) : string {
+  const hexStr = n.toString(16);
+  return hexStr.length <= 1 ? "0" + hexStr : hexStr;
+}
+
+function StepsRender(props: { steps: Uint8Array, viewChain: (chainNumber: number) => void }) {
+  const elems = [];
+  const steps = props.steps;
+  let read_cursor = 0;
+
+  for (let line = 0; line < 0x100; line++) {
+    elems.push(<span class="spanline">{hexStr(line)} : </span>)
+
+    for (let col = 0; col < 8; col++) {
+      const chain = steps[read_cursor++];
+
+      if (chain === 0xFF) elems.push("-- ");
+      else {
+        elems.push(<span class="songchain" onClick={() => props.viewChain(chain)}>{hexStr(chain)} </span>)
+      }
+    }
+
+    elems.push('\n');
+  }
+
+  return <pre class="songsteps">{elems}</pre>;
+}
+
 function SongViewer(props: { panel: SongPane }) {
   const panel = props.panel;
   const filename =  panel.loaded_name.value;
@@ -48,11 +76,17 @@ function SongViewer(props: { panel: SongPane }) {
     ? W.song_name(song)
     : filename;
 
+  const viewChain = (n : number) => panel.selected_chain.value = n;
+  const steps = song !== undefined
+    ? <StepsRender steps={W.get_song_steps(song)}
+                   viewChain={viewChain}/>
+    : "Drag an M8 song file here";
+
   return <div class="rootcolumn"
               onDragOver={(ev) => ev.preventDefault()}
               onDrop={(evt) => loadSong(evt, props.panel)}>
     <h3>{songName}</h3>
-    BlipBloup
+    {steps}
   </div>;
 }
 
@@ -62,13 +96,48 @@ function MessageBanner() {
   return <div>{msg}</div>;
 }
 
+function ChainViewer(props: { panel: SongPane }) {
+  const song = props.panel.song.value;
+
+  if (song === undefined) return <div class="chain_viewer"></div>;
+
+  const chain = props.panel.selected_chain.value;
+  if (chain === undefined) {
+    return <div class="chain_viewer">Click a chain to view</div>;
+  }
+
+  const chainSteps = W.get_chain_steps(song, chain);
+  const elems = [];
+
+  for (let i = 0; i < 32; i += 2) {
+    elems.push(`${(i / 2).toString(16)} : `)
+    const phrase = chainSteps[i];
+
+    if (phrase === 0xFF) {
+      elems.push("--\n")
+    } else {
+      elems.push(<span class="phrase">{hexStr(phrase)} {hexStr(chainSteps[i + 1])}</span>)
+      elems.push('\n')
+    }
+
+  }
+
+  return <div class="chain_viewer">
+    <pre>
+      {elems}
+    </pre>
+  </div>;
+}
+
 function App() {
   return <div>
       <h1>Rem8xer</h1>
       <MessageBanner />
       <div class="rootcontainer">
+        <ChainViewer panel={state.left} />
         <SongViewer panel={state.left} />
         <SongViewer panel={state.right} />
+        <ChainViewer panel={state.right} />
       </div>
   </div>;
 }

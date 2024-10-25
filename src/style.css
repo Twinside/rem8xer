@@ -139,3 +139,21 @@ button:focus-visible {
 .errorcolor {
   color: red;
 }
+
+
+.songsteps {
+    color: #444;
+}
+
+.spanline {
+    color: gray;
+}
+
+.songchain {
+    color: #ddd;
+}
+
+.songchain:hover {
+    border: 1px solid white;
+    cursor: pointer;
+}

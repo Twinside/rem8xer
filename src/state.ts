@@ -5,12 +5,14 @@ export type SongPane =
     {
         loaded_name: Signal<string | undefined>,
         song: Signal<WasmSong | undefined>
+        selected_chain: Signal<number | undefined>
     }
 
 function initPane() : SongPane {
     return {
         loaded_name: signal(undefined),
-        song: signal(undefined)
+        song: signal(undefined),
+        selected_chain: signal(undefined)
     };
 }
 
