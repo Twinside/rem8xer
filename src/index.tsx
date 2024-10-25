@@ -1,8 +1,9 @@
 import { render } from "preact";
 import "./style.css";
 import * as W from '../m8-files/pkg/m8_files';
-import { initState, SongPane } from "./state";
+import { AccumulatingSelection, ChainSelection, EmptySelection, ExtendSelection, initState, SongPane } from "./state";
 import { downloadBlob } from "./utils";
+import { Signal } from "@preact/signals";
 
 W.init();
 const state = initState();
@@ -62,7 +63,12 @@ function isDraggedChain(o : any) : o is DraggedChain {
     && typeof o.from_song === 'string';
 }
 
-function StepsRender(props: { side: SongSide, steps: Uint8Array, viewChain: (chainNumber: number) => void }) {
+function StepsRender(props: {
+    side: SongSide,
+    steps: Uint8Array,
+    selection: Signal<ChainSelection | undefined>,
+    viewChain: (chainNumber: number) => void
+  }) {
   const elems = [];
   const steps = props.steps;
   let read_cursor = 0;
@@ -85,19 +91,32 @@ function StepsRender(props: { side: SongSide, steps: Uint8Array, viewChain: (cha
     }
   }
 
+  const selection = props.selection.value || EmptySelection;
+  const isSelected = (line : number, column : number) =>
+      selection.start.x <= column && column <= selection.end.x &&
+      selection.end.y <= line && line <= selection.end.y;
+
   for (let line = 0; line < 0x100; line++) {
     elems.push(<span class="spanline">{hexStr(line)} : </span>)
 
     for (let col = 0; col < 8; col++) {
       const chain = steps[read_cursor++];
+      const selClass = isSelected(line, col)
+        ? " selected-chain"
+        : "";
 
       if (chain === 0xFF) {
         const elem =
-          <span onDrop={evt => dragEnd(evt, line, col)}>-- </span>;
+          <span class="scselect"
+                data-line={line}
+                data-col={col}
+                onDrop={evt => dragEnd(evt, line, col)}>-- </span>;
         elems.push(elem);
       } else {
         const elem =
-          <span class="songchain"
+          <span class={"songchain scselect" + selClass}
+                data-line={line}
+                data-col={col}
                 draggable={true}
                 onDragStart={(evt) => dragStart(evt, chain)}
                 onDrop={evt => dragEnd(evt, line, col)}
@@ -110,7 +129,110 @@ function StepsRender(props: { side: SongSide, steps: Uint8Array, viewChain: (cha
     elems.push('\n');
   }
 
-  return <pre class="songsteps">{elems}</pre>;
+  // const sel = new SelectionRectangle(".selection-rect", props.selection);
+
+  return <pre class="songsteps"
+              // onMouseDown={(evt) => sel.onMouseDown(evt)}
+              // onMouseMove={(evt) => sel.onMouseMove(evt)}
+              // onMouseUp={(evt) => sel.onMouseUp(evt)}
+              >{elems}</pre>;
+}
+
+class SelectionRectangle {
+  top : number;
+  left : number;
+  right : number;
+  bottom : number;
+  isMouseDown : boolean;
+
+  constructor(
+    private readonly target : string,
+    private readonly selection: Signal<ChainSelection | undefined>) {
+    this.top = 0;
+    this.bottom = 0;
+    this.left = 0;
+    this.right = 0;
+    this.isMouseDown = false;
+  }
+
+  rectangleSelect() {
+    const left = Math.min(this.left, this.right);
+    const right = Math.max(this.left, this.right);
+    const top = Math.min(this.top, this.bottom);
+    const bottom = Math.max(this.top, this.bottom);
+
+    let acc = AccumulatingSelection;
+
+    const elements = [...document.querySelectorAll(".scselect")] as HTMLElement[];
+    for (const element of elements) {
+      var box = element.getBoundingClientRect();
+
+      if (left <= box.left && box.right <= right &&
+          top <= box.top && box.bottom <= bottom) {
+
+          const col = Number.parseInt(element.dataset.col, 10);
+          const line = Number.parseInt(element.dataset.line, 10);
+
+          acc = ExtendSelection(acc, col, line)
+      }
+    }
+
+    this.selection.value = (acc.end.x < 0 || acc.end.y < 0)
+      ? undefined
+      : acc;
+  }
+
+  private getSelectionRectNode() : HTMLElement {
+    return document.querySelector(this.target);
+  }
+
+  private hideSelectionRectangle() {
+    const rect = this.getSelectionRectNode();
+    rect.style.opacity = "0";
+  }
+
+  private showSelectionRectangle() {
+    const rect = this.getSelectionRectNode();
+
+    const left = Math.min(this.left, this.right)
+    const top = this.top < this.bottom
+      ? this.top + window.scrollY
+      : this.bottom + window.scrollY;
+
+    rect.style.left = `${left}px`;
+    rect.style.top = `${top}px`;
+    rect.style.width = `${Math.abs(this.right - this.left)}px`;
+    rect.style.height = `${Math.abs(this.bottom - this.top)}px`;
+    rect.style.opacity = "0.5";
+  }
+
+  public onMouseMove(e : MouseEvent) {
+    if (!this.isMouseDown) { return; }
+
+    this.right = e.clientX;
+    this.bottom = e.clientY;
+    this.showSelectionRectangle();
+  }
+
+  public onMouseUp(e : MouseEvent) {
+    this.isMouseDown = false;
+    this.rectangleSelect();
+
+    this.hideSelectionRectangle();
+    this.top = 0;
+    this.left = 0;
+    this.right = 0;
+    this.bottom = 0;
+  }
+
+  public onMouseDown(e : MouseEvent) {
+    e.preventDefault();
+
+    this.isMouseDown = true;
+
+    this.left = e.clientX;
+    this.top = e.clientY;
+  }
 }
 
 function SongViewer(props: { side: SongSide, panel: SongPane }) {
@@ -126,6 +248,7 @@ function SongViewer(props: { side: SongSide, panel: SongPane }) {
   const steps = song !== undefined
     ? <StepsRender side={props.side}
                    steps={W.get_song_steps(song)}
+                   selection={panel.selection_range}
                    viewChain={viewChain}/>
     : "Drag an M8 song file here";
 
@@ -196,6 +319,7 @@ function ChainViewer(props: { panel: SongPane }) {
 
 function App() {
   return <>
+      <div class="selection-rect"></div>
       <h1>Rem8xer</h1>
       <MessageBanner />
       <div class="rootcontainer">

@@ -38,6 +38,32 @@ impl Instrument {
         }
     }
 
+    pub fn eq(&self) -> Option<u8> {
+        match self {
+            Instrument::WavSynth(ws)     => Some(ws.transp_eq.eq),
+            Instrument::MacroSynth(ms) => Some(ms.transp_eq.eq),
+            Instrument::Sampler(s)        => Some(s.transp_eq.eq),
+            Instrument::MIDIOut(mo)       => None,
+            Instrument::FMSynth(fs)       => Some(fs.transp_eq.eq),
+            Instrument::HyperSynth(hs) => Some(hs.transp_eq.eq),
+            Instrument::External(ex) => Some(ex.transp_eq.eq),
+            Instrument::None => None,
+        }
+    }
+
+    pub fn set_eq(&mut self, eq_ix: u8) {
+        match self {
+            Instrument::WavSynth(ws)     => ws.transp_eq.set_eq(eq_ix),
+            Instrument::MacroSynth(ms) => ms.transp_eq.set_eq(eq_ix),
+            Instrument::Sampler(s)        => s.transp_eq.set_eq(eq_ix),
+            Instrument::MIDIOut(mo)       => {},
+            Instrument::FMSynth(fs)       => fs.transp_eq.set_eq(eq_ix),
+            Instrument::HyperSynth(hs) => hs.transp_eq.set_eq(eq_ix),
+            Instrument::External(ex) => ex.transp_eq.set_eq(eq_ix),
+            Instrument::None => {},
+        }
+    }
+
     pub fn read(reader: &mut impl std::io::Read) -> M8Result<Self> {
         let mut buf: Vec<u8> = vec![];
         reader.read_to_end(&mut buf).unwrap();
@@ -83,6 +109,11 @@ pub struct TranspEq {
     pub eq : u8
 }
 
+impl TranspEq {
+    pub fn set_eq(&mut self, eq_ix : u8) {
+        self.eq = eq_ix;
+    }
+}
 impl From<TranspEq> for u8 {
     fn from(value: TranspEq) -> Self {
         (if value.transpose { 1 } else { 0 }) |

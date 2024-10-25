@@ -55,6 +55,19 @@ pub const V4_OFFSETS : Offsets = Offsets {
     eq: 0x1AD5D
 };
 
+pub struct EqMapping {
+    pub mapping: [u8; 32]
+}
+
+impl Default for EqMapping {
+    fn default() -> Self {
+        let mut arr = [0 as u8; 32];
+        for i in 0 .. arr.len() {
+            arr[i] = i as u8;
+        }
+        Self { mapping: arr }
+    }
+}
 /// For every instrument, it's destination instrument
 pub struct InstrumentMapping {
     pub mapping: [u8; 0x80]
@@ -424,6 +437,19 @@ impl Phrase {
         (0..16).fold("  N   V  I  FX1   FX2   FX3  \n".to_string(), |s, row| {
             s + &self.steps[row].print(row as u8, self.version) + "\n"
         })
+    }
+
+    pub fn map_instruments(&self, instr_map: &InstrumentMapping) -> Phrase{
+        let mut steps = self.steps.clone();
+        for i in 0 .. steps.len() {
+            steps[i] = steps[i].map_instr(&instr_map);
+        }
+
+        Self {
+            number: self.number,
+            steps,
+            version: self.version
+        }
     }
 
     pub fn write(&self, w: &mut Writer) {

@@ -166,3 +166,16 @@ button:focus-visible {
     font-weight: bold;
     font-size: 15px;
 }
+
+.selected-chain {
+  color: magenta;
+}
+
+.selection-rect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: magenta;
+  opacity: 0;
+  pointer-events: none;
+}
