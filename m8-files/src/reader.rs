@@ -63,9 +63,10 @@ impl Writer {
 
     pub fn pos(&self) -> usize { self.pos }
 
-    pub fn fill_till(&mut self, v: u8, until : usize) {
-        let to_fill = until - self.buffer.len();
-        for _i in 0 .. to_fill {
+    fn fill_till(&mut self, v: u8, until : usize) {
+        if until == 0 { return }
+
+        for _i in 0 .. until {
             self.buffer[self.pos] = v;
             self.pos += 1;
         }

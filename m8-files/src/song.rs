@@ -46,13 +46,13 @@ pub const V4_OFFSETS : Offsets = Offsets {
     groove: 0xEE,
     song: 0x2EE,
     phrases: 0xAEE,
-    chains: 0x9a5e,
-    table: 0xba3e,
-    instruments: 0x13a3e,
-    effect_settings: 0x1a5c1,
-    midi_mapping: 0x1a5fe,
-    scale: 0x1aa7e,
-    eq: 0x1ad5d
+    chains: 0x9A5E,
+    table: 0xBA3E,
+    instruments: 0x13A3E,
+    effect_settings: 0x1A5C1,
+    midi_mapping: 0x1A5FE,
+    scale: 0x1AA7E,
+    eq: 0x1AD5D
 };
 
 /// For every instrument, it's destination instrument

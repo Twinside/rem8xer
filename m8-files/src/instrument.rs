@@ -439,7 +439,7 @@ impl Sampler {
 
         self.synth_params.write(w, Sampler::MOD_OFFSET);
 
-        w.write(((pos + 0x57) - w.pos()) as u8);
+        w.seek(pos + 0x56);
         w.write_string(&self.sample_path, 128);
     }
 
@@ -725,13 +725,13 @@ pub struct MIDIOut {
     pub channel: u8,
     pub bank_select: u8,
     pub program_change: u8,
-    pub custom_cc: [ControlChange; 8],
+    pub custom_cc: [ControlChange; 10],
 
     pub mods: SynthParams,
 }
 
 impl MIDIOut {
-    const MOD_OFFSET : usize = 25;
+    const MOD_OFFSET : usize = 21;
 
     pub fn write(&self, w: &mut Writer) {
         w.write_string(&self.name, 12);
@@ -742,15 +742,13 @@ impl MIDIOut {
         w.write(self.bank_select);
         w.write(self.program_change);
 
-        w.write(0);
-        w.write(0);
-        w.write(0);
+        w.skip(3);
 
         for cc in self.custom_cc {
             cc.write(w);
         }
 
-        self.mods.write(w, MIDIOut::MOD_OFFSET)
+        self.mods.write_modes(w, MIDIOut::MOD_OFFSET)
     }
 
     pub fn from_reader(reader: &mut Reader, number: u8, version: Version) -> M8Result<Self> {
@@ -763,7 +761,7 @@ impl MIDIOut {
         let bank_select = reader.read();
         let program_change = reader.read();
         reader.read_bytes(3); // discard
-        let custom_cc: [ControlChange; 8] = arr![ControlChange::from_reader(reader)?; 8];
+        let custom_cc = arr![ControlChange::from_reader(reader)?; 10];
         let mods =
             if version.at_least(3, 0) {
                 SynthParams::mod_only3(reader, MIDIOut::MOD_OFFSET)?
@@ -1129,7 +1127,7 @@ impl SynthParams {
     }
 
     pub fn write_modes(&self, w: &mut Writer, mod_offset: usize) {
-        w.fill_till(0xFF, mod_offset);
+        w.seek(w.pos() +  mod_offset);
         for m in &self.mods { m.write(w); }
     }
 
@@ -1248,7 +1246,7 @@ impl Mod {
             }
         }
 
-        w.fill_till(0, start + Self::SIZE);
+        w.seek(start + Self::SIZE);
     }
 }
 

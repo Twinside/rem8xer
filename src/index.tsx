@@ -4,6 +4,7 @@ import * as W from '../m8-files/pkg/m8_files';
 import { initState, SongPane } from "./state";
 import { downloadBlob } from "./utils";
 
+W.init();
 const state = initState();
 
 async function loadSong(ev : DragEvent, pane: SongPane) {
@@ -13,10 +14,11 @@ async function loadSong(ev : DragEvent, pane: SongPane) {
   ev.preventDefault();
 
   const loadFile = async (buff : Promise<ArrayBuffer>) => {
-      const loaded_file = await buff;
+      const loaded_file = new Uint8Array(await buff);
 
       try {
-        pane.song.value = W.load_song(new Uint8Array(loaded_file));
+        pane.raw_song.value = loaded_file;
+        pane.song.value = W.load_song(loaded_file);
       } catch (err) {
         state.message_banner.value = err.toString();
       }

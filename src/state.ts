@@ -30,6 +30,7 @@ export type State =
     }
 
 export function initState() : State {
+
     return {
         message_banner: signal(undefined),
         left: initPane(),
