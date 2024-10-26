@@ -1,12 +1,12 @@
 pub mod song;
-mod fx;
-mod instrument;
+pub mod eq;
+pub mod fx;
+pub mod instrument;
 mod reader;
-mod scale;
-mod eq;
-mod settings;
+pub mod scale;
+pub mod settings;
 mod theme;
-mod version;
+pub mod version;
 mod remapper;
 
 pub use fx::*;

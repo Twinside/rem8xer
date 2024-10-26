@@ -85,9 +85,17 @@ function StepsRender(props: {
       const asJson = JSON.parse(strPayload);
       if (!isDraggedChain(asJson))
         return;
-      alert(`Copy ${asJson.chain} from song ${asJson.from_song} at ${line}:${col}`)
-    } catch {
-      /* ignores */
+
+      if (asJson.from_song === props.side) {
+        state.message_banner.value = "We avoid copying a chain into the same song";
+      } else if (asJson.from_song === "left") {
+        W.copy_chain(state.left.song.value, state.right.song.value, asJson.chain, col, line);
+      } else {
+        W.copy_chain(state.right.song.value, state.left.song.value, asJson.chain, col, line);
+      }
+
+    } catch(err) {
+      state.message_banner.value = `Chain copy error: ${err}`;
     }
   }
 
