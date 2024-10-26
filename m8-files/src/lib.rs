@@ -7,6 +7,7 @@ mod eq;
 mod settings;
 mod theme;
 mod version;
+mod remapper;
 
 pub use fx::*;
 pub use instrument::*;

@@ -21,6 +21,8 @@ use crate::eq::Equ;
 pub use crate::fx::*;
 pub use crate::instrument::*;
 use crate::reader::*;
+use crate::remapper::InstrumentMapping;
+use crate::remapper::PhraseMapping;
 pub use crate::scale::*;
 pub use crate::settings::*;
 pub use crate::theme::*;
@@ -54,34 +56,6 @@ pub const V4_OFFSETS : Offsets = Offsets {
     scale: 0x1AA7E,
     eq: 0x1AD5D
 };
-
-pub struct EqMapping {
-    pub mapping: [u8; 32]
-}
-
-impl Default for EqMapping {
-    fn default() -> Self {
-        let mut arr = [0 as u8; 32];
-        for i in 0 .. arr.len() {
-            arr[i] = i as u8;
-        }
-        Self { mapping: arr }
-    }
-}
-/// For every instrument, it's destination instrument
-pub struct InstrumentMapping {
-    pub mapping: [u8; 0x80]
-}
-
-impl Default for InstrumentMapping {
-    fn default() -> Self {
-        let mut arr = [0 as u8; 0x80];
-        for i in 0 .. arr.len() {
-            arr[i] = i as u8;
-        }
-        Self { mapping: arr }
-    }
-}
 
 ////////////////////////////////////////////////////////////////////////////////////
 /// MARK: Song
@@ -142,17 +116,17 @@ impl fmt::Debug for Song {
 impl Song {
     const SIZE_PRIOR_TO_2_5: usize = 0x1A970;
     const SIZE: usize = 0x1AD09;
-    const N_PHRASES: usize = 255;
-    const N_CHAINS: usize = 255;
-    const N_INSTRUMENTS: usize = 128;
-    const N_TABLES: usize = 256;
-    const N_GROOVES: usize = 32;
-    const N_SCALES: usize = 16;
+    pub const N_PHRASES: usize = 255;
+    pub const N_CHAINS: usize = 255;
+    pub const N_INSTRUMENTS: usize = 128;
+    pub const N_TABLES: usize = 256;
+    pub const N_GROOVES: usize = 32;
+    pub const N_SCALES: usize = 16;
 
     /// 32 general EQ + 3 for effects
-
-    const N_EQS: usize = 32 + 3;
-    const N_MIDI_MAPPINGS: usize = 128;
+    pub const N_INSTRUMENT_EQS: usize = 32;
+    pub const N_EQS: usize = Song::N_INSTRUMENT_EQS + 3;
+    pub const N_MIDI_MAPPINGS: usize = 128;
 
     pub fn eq_debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_list().entries(self.eqs.iter()).finish()
@@ -161,7 +135,6 @@ impl Song {
     pub fn read_from_stream(reader: &mut impl std::io::Read) -> M8Result<Self> {
         let mut buf: Vec<u8> = vec![];
         reader.read_to_end(&mut buf).unwrap();
-        let len = buf.len();
         let mut reader = Reader::new(buf);
         Self::read(&mut reader)
     }
@@ -301,10 +274,13 @@ impl Song {
 ////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Clone)]
 pub struct SongSteps {
-    pub steps: [u8; 2048],
+    pub steps: [u8; SongSteps::TRACK_COUNT * SongSteps::ROW_COUNT],
 }
 
 impl SongSteps {
+    pub const TRACK_COUNT : usize = 8;
+    pub const ROW_COUNT : usize = 0x100;
+
     pub fn print_screen(&self) -> String {
         self.print_screen_from(0)
     }
@@ -362,6 +338,16 @@ impl Chain {
         })
     }
 
+    pub fn map(&self, mapping: &PhraseMapping) -> Self {
+        let mut nc = self.clone();
+
+        for i in 0 .. 16 {
+            nc.steps[i] = nc.steps[i].map(mapping);
+        }
+
+        nc
+    }
+
     pub fn write(&self, w: &mut Writer) {
         for cs in &self.steps {
             cs.write(w)
@@ -408,6 +394,13 @@ impl ChainStep {
         }
     }
 
+    pub fn map(&self, mapping: &PhraseMapping) -> Self {
+        Self {
+            phrase: mapping.mapping[self.phrase as usize],
+            transpose: self.transpose
+        }
+    }
+
     pub fn write(&self, w: &mut Writer) {
         w.write(self.phrase);
         w.write(self.transpose);
@@ -439,7 +432,7 @@ impl Phrase {
         })
     }
 
-    pub fn map_instruments(&self, instr_map: &InstrumentMapping) -> Phrase{
+    pub fn map_instruments(&self, instr_map: &InstrumentMapping) -> Self {
         let mut steps = self.steps.clone();
         for i in 0 .. steps.len() {
             steps[i] = steps[i].map_instr(&instr_map);
