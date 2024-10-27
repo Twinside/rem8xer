@@ -61,6 +61,15 @@ function initPane() : SongPane {
     };
 }
 
+export function clearPanel(panel : SongPane) {
+    panel.loaded_name.value = undefined;
+    panel.song.value = undefined;
+    panel.raw_song.value = undefined;
+    panel.selected_chain.value = undefined;
+    panel.selected_phrase.value = undefined;
+    panel.selection_range.value = undefined;
+}
+
 export type State =
     {
         message_banner: Signal<string | undefined>;

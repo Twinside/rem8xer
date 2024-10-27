@@ -84,6 +84,11 @@ pub unsafe fn get_chain_steps(song: &WasmSong, chain_index: usize) -> js_sys::Ui
 }
 
 #[wasm_bindgen]
+pub fn show_phrase(song: &WasmSong, phrase: usize) -> String {
+    song.song.phrases[phrase].print_screen()
+}
+
+#[wasm_bindgen]
 pub fn copy_chain(
     from: &WasmSong,
     to: &mut WasmSong,

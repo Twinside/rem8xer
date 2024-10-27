@@ -1,47 +1,14 @@
 import { render } from "preact";
 import "./style.css";
 import * as W from '../m8-files/pkg/m8_files';
-import { AccumulatingSelection, ChainSelection, EmptySelection, ExtendSelection, initState, SongPane } from "./state";
+import { AccumulatingSelection, ChainSelection, clearPanel, EmptySelection, ExtendSelection, initState, SongPane } from "./state";
 import { downloadBlob } from "./utils";
 import { Signal } from "@preact/signals";
+import emptyUrl from "./V4EMPTY.m8s";
+import { loadDroppedSong, loadUrl } from "./fileio";
 
 W.init();
 const state = initState();
-
-async function loadSong(ev : DragEvent, pane: SongPane) {
-  console.log("DROP!");
-
-  // Prevent default behavior (Prevent file from being opened)
-  ev.preventDefault();
-
-  const loadFile = async (buff : Promise<ArrayBuffer>) => {
-      const loaded_file = new Uint8Array(await buff);
-
-      try {
-        pane.raw_song.value = loaded_file;
-        pane.song.value = W.load_song(loaded_file);
-      } catch (err) {
-        state.message_banner.value = err.toString();
-      }
-  }
-
-  if (ev.dataTransfer.items) {
-    // Use DataTransferItemList interface to access the file(s)
-    [...ev.dataTransfer.items].forEach(async (item, i) => {
-      // If dropped items aren't files, reject them
-      if (item.kind === "file") {
-        const file = item.getAsFile();
-        loadFile(file.arrayBuffer());
-      }
-    });
-  } else {
-    // Use DataTransfer interface to access the file(s)
-    [...ev.dataTransfer.files].forEach((file, i) => {
-      pane.loaded_name.value = file.name;
-      loadFile(file.arrayBuffer())
-    });
-  }
-}
 
 function hexStr(n : number) : string {
   const hexStr = n.toString(16);
@@ -253,12 +220,21 @@ function SongViewer(props: { side: SongSide, panel: SongPane }) {
     : filename;
 
   const viewChain = (n : number) => panel.selected_chain.value = n;
-  const steps = song !== undefined
-    ? <StepsRender side={props.side}
-                   steps={W.get_song_steps(song)}
-                   selection={panel.selection_range}
-                   viewChain={viewChain}/>
-    : "Drag an M8 song file here";
+
+  if (song === undefined) {
+    return <div class="rootcolumn">
+      <button onClick={() => loadUrl(state, panel, emptyUrl)}>Load empty song</button>
+      <div class="filetarget"
+           onDragOver={(ev) => ev.preventDefault()}
+           onDrop={(evt) => loadDroppedSong(state, evt, props.panel)}>Drag M8 song file here</div>
+    </div>;
+  }
+
+  const steps =
+    <StepsRender side={props.side}
+                 steps={W.get_song_steps(song)}
+                 selection={panel.selection_range}
+                 viewChain={viewChain}/>;
 
   const save = () => {
     try {
@@ -270,13 +246,16 @@ function SongViewer(props: { side: SongSide, panel: SongPane }) {
     }
   };
 
-  return <div class="rootcolumn"
-              onDragOver={(ev) => ev.preventDefault()}
-              onDrop={(evt) => loadSong(evt, props.panel)}>
+  const clear = () => {
+    clearPanel(props.panel)
+  };
+
+  return <div class="rootcolumn">
     <div>
       <h3 style="display: inline-block;">{songName}</h3>
       <span class="separator" />
       {song !== undefined ? <button onClick={save}>Save</button> : undefined}
+      {song !== undefined ? <button onClick={clear}>Clear</button> : undefined}
     </div>
     {steps}
   </div>;
@@ -304,6 +283,10 @@ function ChainViewer(props: { panel: SongPane }) {
   const chainSteps = W.get_chain_steps(song, chain);
   const elems = [];
 
+  const phraseSet = (i : number) => {
+    props.panel.selected_phrase.value = i;
+  }
+
   for (let i = 0; i < 32; i += 2) {
     elems.push(`${(i / 2).toString(16)} : `)
     const phrase = chainSteps[i];
@@ -311,17 +294,25 @@ function ChainViewer(props: { panel: SongPane }) {
     if (phrase === 0xFF) {
       elems.push("--\n")
     } else {
-      elems.push(<span class="phrase">{hexStr(phrase)} {hexStr(chainSteps[i + 1])}</span>)
+      elems.push(<span class="phrase" onClick={_ => phraseSet(phrase)}>{hexStr(phrase)} {hexStr(chainSteps[i + 1])}</span>)
       elems.push('\n')
     }
-
   }
+
+  const phrase_idx = props.panel.selected_phrase.value;
+  const phrase = (phrase_idx !== undefined)
+    ? <>
+        <h4>Phrase {phrase_idx}</h4>
+        <pre>{W.show_phrase(song, phrase_idx)}</pre>
+      </>
+    : undefined
 
   return <div class="chain_viewer">
     <h4>Chain viewer</h4>
     <pre>
       {elems}
     </pre>
+    {phrase}
   </div>;
 }
 

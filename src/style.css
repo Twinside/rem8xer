@@ -179,3 +179,14 @@ button:focus-visible {
   opacity: 0;
   pointer-events: none;
 }
+
+.filetarget {
+  border: 6px dashed grey;
+  border-radius: 10px;
+  margin: 10px;
+  min-height: 300px;
+}
+
+.phrase:hover {
+  border: 1px solid darkgray;
+}
