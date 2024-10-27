@@ -395,10 +395,12 @@ impl ChainStep {
     }
 
     pub fn map(&self, mapping: &PhraseMapping) -> Self {
-        Self {
-            phrase: mapping.mapping[self.phrase as usize],
-            transpose: self.transpose
-        }
+        let phrase_ix = self.phrase as usize;
+        let phrase =
+            if phrase_ix >= Song::N_PHRASES { self.phrase }
+            else { mapping.mapping[phrase_ix] };
+
+        Self { phrase, transpose: self.transpose }
     }
 
     pub fn write(&self, w: &mut Writer) {
@@ -507,10 +509,14 @@ impl Step {
     }
 
     pub fn map_instr(&self, mapping: &InstrumentMapping) -> Step {
+        let instrument =
+            if (self.instrument as usize) >= Song::N_INSTRUMENTS { self.instrument }
+            else { mapping.mapping[self.instrument as usize] };
+
         Self {
             note: self.note,
             velocity: self.velocity,
-            instrument: mapping.mapping[self.instrument as usize],
+            instrument,
             fx1: self.fx1,
             fx2: self.fx2,
             fx3: self.fx3

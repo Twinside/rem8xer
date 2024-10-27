@@ -34,6 +34,7 @@ function StepsRender(props: {
     side: SongSide,
     steps: Uint8Array,
     selection: Signal<ChainSelection | undefined>,
+    bumper: Signal<number>,
     viewChain: (chainNumber: number) => void
   }) {
   const elems = [];
@@ -45,6 +46,11 @@ function StepsRender(props: {
     evt.dataTransfer.setData("text/plain", JSON.stringify(asJson));
     evt.dataTransfer.dropEffect = "copy";
   };
+
+  const dragOver = (evt: DragEvent) => {
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = "copy";
+  }
 
   const dragEnd = (evt : DragEvent, line : number, col : number) => {
     const strPayload = evt.dataTransfer.getData('text/plain');
@@ -60,6 +66,8 @@ function StepsRender(props: {
       } else {
         W.copy_chain(state.right.song.value, state.left.song.value, asJson.chain, col, line);
       }
+
+      props.bumper.value = props.bumper.value + 1;
 
     } catch(err) {
       state.message_banner.value = `Chain copy error: ${err}`;
@@ -85,6 +93,7 @@ function StepsRender(props: {
           <span class="scselect"
                 data-line={line}
                 data-col={col}
+                onDragOver={evt => dragOver(evt)}
                 onDrop={evt => dragEnd(evt, line, col)}>-- </span>;
         elems.push(elem);
       } else {
@@ -214,6 +223,7 @@ function SongViewer(props: { side: SongSide, panel: SongPane }) {
   const panel = props.panel;
   const filename =  panel.loaded_name.value;
   const song = panel.song.value;
+  const bump = panel.bumper.value;
 
   const songName = song !== undefined
     ? W.song_name(song)
@@ -234,6 +244,7 @@ function SongViewer(props: { side: SongSide, panel: SongPane }) {
     <StepsRender side={props.side}
                  steps={W.get_song_steps(song)}
                  selection={panel.selection_range}
+                 bumper={panel.bumper}
                  viewChain={viewChain}/>;
 
   const save = () => {

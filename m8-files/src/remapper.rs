@@ -99,7 +99,10 @@ fn find_referenced_phrases(song: &Song) -> [bool; Song::N_PHRASES] {
     let mut allocated_phrases = arr![false; 255];
     for chain in &song.chains {
         for step in &chain.steps {
-            allocated_phrases[step.phrase as usize] = true;
+            let phrase = step.phrase as usize;
+            if phrase < Song::N_PHRASES {
+                allocated_phrases[phrase] = true;
+            }
         }
     }
 
@@ -109,9 +112,9 @@ fn find_referenced_phrases(song: &Song) -> [bool; Song::N_PHRASES] {
 fn find_referenced_chains(song: &Song) -> [bool; Song::N_CHAINS] {
     let mut allocated_chains = arr![false; 255];
     for chain in song.song.steps.iter() {
-
-        if (*chain as usize) < Song::N_CHAINS {
-            allocated_chains[*chain as usize] = true;
+        let chain = *chain as usize;
+        if chain < Song::N_CHAINS {
+            allocated_chains[chain] = true;
         }
     }
 
@@ -137,23 +140,22 @@ impl Remapper {
         let mut to_move = vec![];
 
         for chain_id in from_chains_ids {
-            if seen_chain[*chain_id as usize] {
-                continue;
-            }
+            let chain_id = *chain_id as usize;
+            if chain_id >= Song::N_CHAINS || seen_chain[chain_id] { continue; }
 
-            seen_chain[*chain_id as usize] = true;
-            to_move.push(*chain_id);
+            seen_chain[chain_id] = true;
+            to_move.push(chain_id as u8);
             let to_chain =
-                from_song.chains[*chain_id as usize].map(phrase_mapping);
+                from_song.chains[chain_id].map(phrase_mapping);
 
             match to_song.chains.iter().position(|c| c.steps == to_chain.steps) {
-                Some(c) => mapping[*chain_id as usize] = c as u8,
+                Some(c) => mapping[chain_id] = c as u8,
                 None => {
                     match allocated_chains.iter().position(|a| !a) {
                         None => return Err(format!("No more available chain slots for chain {chain_id}")),
                         Some(free_slot) => {
                             allocated_chains[free_slot] = true;
-                            mapping[*chain_id as usize] = free_slot as u8;
+                            mapping[chain_id] = free_slot as u8;
                         }
                     }
                 }
@@ -187,7 +189,7 @@ impl Remapper {
             for chain_step in from_chain.steps.iter() {
                 let phrase_ix = chain_step.phrase as usize;
 
-                if phrase_ix == 0xFF || seen_phrase[phrase_ix]{
+                if phrase_ix >= Song::N_PHRASES || seen_phrase[phrase_ix]{
                     continue;
                 }
 
@@ -219,9 +221,9 @@ impl Remapper {
         IT: Iterator<Item=&'a u8> {
 
         // flags on instruments in "from"
-        let mut instrument_flags = arr![false; 0x100];
+        let mut instrument_flags : [bool; Song::N_INSTRUMENTS] = arr![false; 128];
         // flags on eqsin "from"
-        let mut eq_flags = arr![false; 32];
+        let mut eq_flags : [bool; Song::N_INSTRUMENT_EQS] = arr![false; 32];
         // flags on eqs in "to"
         let mut allocated_eqs = find_referenced_eq(to_song);
         let mut instrument_mapping = InstrumentMapping::default();
@@ -232,13 +234,16 @@ impl Remapper {
             let from_chain = &from_song.chains[*chain_id as usize];
 
             for chain_step in &from_chain.steps {
-                let phrase = &from_song.phrases[chain_step.phrase as usize];
+                let phrase_id = chain_step.phrase as usize;
+                if phrase_id >= Song::N_PHRASES { continue; }
+
+                let phrase = &from_song.phrases[phrase_id];
         
                 for step in &phrase.steps {
                     let instr_ix = step.instrument as usize;
         
                     // out of bound instrument, dont bother or if already allocated
-                    if step.instrument >= 0x80 || instrument_flags[instr_ix] {
+                    if instr_ix >= Song::N_INSTRUMENTS || instrument_flags[instr_ix] {
                         continue;
                     }
         
@@ -248,13 +253,14 @@ impl Remapper {
                     if let Some(equ) = instr.eq() {
                         let equ = equ as usize;
         
-                        if equ <= 32 && !eq_flags[equ] {
+                        if equ < Song::N_INSTRUMENT_EQS && !eq_flags[equ] {
                             eq_flags[equ as usize] = true;
                             let from_eq = &from_song.eqs[equ];
                             // try to find an already exisint Eq with same parameters
                             match to_song.eqs.iter().position(|to_eq| to_eq == from_eq) {
-                                Some(eq_idx) => eq_mapping.mapping[equ] = eq_idx as u8,
-                                None => {
+                                Some(eq_idx) if (eq_idx as usize) < Song::N_INSTRUMENT_EQS =>
+                                    eq_mapping.mapping[equ] = eq_idx as u8,
+                                Some(_) | None => {
                                     match allocated_eqs.iter().position(|alloc| !alloc) {
                                         None => return Err(format!("No more available eqs for instrument {instr_ix}")),
                                         Some(eq_slot) => {
@@ -320,14 +326,15 @@ impl Remapper {
 
     for instr_id in self.instrument_mapping.to_move.iter() {
         let instr_id = *instr_id as usize;
-        let to_index = self.instrument_mapping.mapping[instr_id];
+        let to_index = self.instrument_mapping.mapping[instr_id] as usize;
         let mut instr = from.instruments[instr_id].clone();
 
         if let Some(eq) = instr.eq() {
             instr.set_eq(self.eq_mapping.mapping[eq as usize]);
         }
 
-        to.instruments[to_index as usize] = instr;
+        to.tables[to_index] = from.tables[instr_id].clone();
+        to.instruments[to_index] = instr;
     }
 
     for phrase_id in self.phrase_mapping.to_move.iter() {
