@@ -1,0 +1,208 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 320px;
+  min-height: 100vh;
+  height: 100%;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+  display: inline-block;
+  margin-left: 20px;
+  margin-bottom: 0px;
+  margin-top: 0px;
+  padding: 0px;
+}
+
+#app {
+  max-width: 1280px;
+  /* margin: 0 auto; */
+  /* padding: 2rem; */
+  /* text-align: center; */
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.vanilla:hover {
+  filter: drop-shadow(0 0 2em #3178c6aa);
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+.rootcontainer {
+  display: flex;
+  flex-direction: row;
+  margin: 20px;
+  width: 100%;
+}
+
+.rootheader {
+  display: flex;
+  flex-direction: row;
+  margin: 20px;
+}
+
+.rootcolumn {
+  display: flex;
+  flex-direction: column;
+  padding: 30px;
+  border-right: 1px solid gray;
+  width: 100%;
+  flex: 0.9;
+}
+
+.visualization {
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+}
+
+.message {
+  display: block;
+  margin: 3.6em;
+  width: 100%;
+}
+
+.separator {
+  min-width: 4px;
+  border: 1px solid darkslategray;
+  margin-left: 1em;
+  margin-right: 1em;
+}
+
+.warncolor {
+  color: orange;
+}
+
+.errorcolor {
+  color: red;
+}
+
+
+.songsteps {
+    color: #444;
+}
+
+.spanline {
+    color: gray;
+}
+
+.songchain {
+    color: #ddd;
+}
+
+.songchain:hover {
+    border: 1px solid white;
+    cursor: pointer;
+}
+
+.songsteps-wrapper {
+   max-height: 800px;
+   margin: 0em;
+   overflow-y: auto;
+}
+
+.songsteps {
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.selected-chain {
+  color: magenta;
+}
+
+.selection-rect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: magenta;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.filetarget {
+  border: 6px dashed grey;
+  border-radius: 10px;
+  margin: 10px;
+  min-height: 300px;
+}
+
+.phrase:hover {
+  border: 1px solid darkgray;
+}
+
+.titlepre {
+  display: inline-block;
+  font-size: 50px;
+}
