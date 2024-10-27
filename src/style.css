@@ -28,12 +28,17 @@ body {
   flex-direction: column;
   min-width: 320px;
   min-height: 100vh;
+  height: 100%;
 }
 
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
   display: inline-block;
+  margin-left: 20px;
+  margin-bottom: 0px;
+  margin-top: 0px;
+  padding: 0px;
 }
 
 #app {
@@ -162,6 +167,12 @@ button:focus-visible {
     cursor: pointer;
 }
 
+.songsteps-wrapper {
+   max-height: 800px;
+   margin: 0em;
+   overflow-y: auto;
+}
+
 .songsteps {
     font-weight: bold;
     font-size: 15px;
@@ -189,4 +200,9 @@ button:focus-visible {
 
 .phrase:hover {
   border: 1px solid darkgray;
+}
+
+.titlepre {
+  display: inline-block;
+  font-size: 50px;
 }

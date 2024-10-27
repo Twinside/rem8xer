@@ -852,6 +852,7 @@ impl HyperSynth {
             w.write(c);
         }
 
+        w.write(self.scale);
         w.write(self.shift);
         w.write(self.swarm);
         w.write(self.width);

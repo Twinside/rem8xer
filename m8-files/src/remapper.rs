@@ -22,11 +22,25 @@ pub struct EqMapping {
     pub to_move: Vec<u8>
 }
 
+impl EqMapping {
+    pub fn print(&self) -> String {
+        let mut acc = String::new();
+
+        for e in self.to_move.iter() {
+            let new_ix = self.mapping[*e as usize];
+            acc = format!("{acc} Eq {e} => {new_ix}\n");
+        }
+
+        acc
+    }
+}
+
 impl Default for EqMapping {
     fn default() -> Self {
         Self { mapping: make_mapping(), to_move: vec![] }
     }
 }
+
 /// For every instrument, it's destination instrument
 pub struct InstrumentMapping {
     /// Mapping from the "from" song instrument index to the "to" 
@@ -36,6 +50,19 @@ pub struct InstrumentMapping {
     /// Instruments to be moved during the remapping
     /// index in the "from" song
     pub to_move: Vec<u8>
+}
+
+impl InstrumentMapping {
+    pub fn print(&self) -> String {
+        let mut acc = String::new();
+
+        for e in self.to_move.iter() {
+            let new_ix = self.mapping[*e as usize];
+            acc = format!("{acc} instr {e} => {new_ix}\n");
+        }
+
+        acc
+    }
 }
 
 impl Default for InstrumentMapping {
@@ -54,6 +81,19 @@ pub struct PhraseMapping {
     pub to_move: Vec<u8>
 }
 
+impl PhraseMapping {
+    pub fn print(&self) -> String {
+        let mut acc = String::new();
+
+        for e in self.to_move.iter() {
+            let new_ix = self.mapping[*e as usize];
+            acc = format!("{acc} phrase {e} => {new_ix}\n");
+        }
+
+        acc
+    }
+}
+
 impl Default for PhraseMapping {
     fn default() -> Self {
         Self { mapping: make_mapping(), to_move: vec![] }
@@ -64,6 +104,20 @@ pub struct ChainMapping {
     pub mapping: [u8; Song::N_CHAINS],
     pub to_move: Vec<u8>
 }
+
+impl ChainMapping {
+    pub fn print(&self) -> String {
+        let mut acc = String::new();
+
+        for e in self.to_move.iter() {
+            let new_ix = self.mapping[*e as usize];
+            acc = format!("{acc} chain {e} => {new_ix}\n");
+        }
+
+        acc
+    }
+}
+
 
 impl Default for ChainMapping {
     fn default() -> Self {
@@ -86,7 +140,12 @@ fn find_referenced_eq(song: &Song) -> [bool; Song::N_INSTRUMENT_EQS] {
     for instr in &song.instruments {
         match instr.eq() {
             None => {}
-            Some(eq) =>  allocated_eqs[eq as usize] = true
+            Some(eq) => {
+                let equ = eq as usize;
+                if equ < allocated_eqs.len() {
+                    allocated_eqs[equ] = true
+                }
+            }
         }
     }
 
@@ -126,6 +185,14 @@ impl Remapper {
         self.chain_mapping.mapping[chain_id as usize]
     }
 
+    pub fn print(&self) -> String {
+        let eq = self.eq_mapping.print();
+        let instr = self.instrument_mapping.print();
+        let phrase = self.phrase_mapping.print();
+        let chain = self.chain_mapping.print();
+        format!("{eq}\n{instr}\n{phrase}\n{chain}")
+    }
+
     fn allocate_chains<'a, IT>(
         from_song: &Song,
         to_song: &Song,
@@ -144,7 +211,6 @@ impl Remapper {
             if chain_id >= Song::N_CHAINS || seen_chain[chain_id] { continue; }
 
             seen_chain[chain_id] = true;
-            to_move.push(chain_id as u8);
             let to_chain =
                 from_song.chains[chain_id].map(phrase_mapping);
 
@@ -156,6 +222,7 @@ impl Remapper {
                         Some(free_slot) => {
                             allocated_chains[free_slot] = true;
                             mapping[chain_id] = free_slot as u8;
+                            to_move.push(chain_id as u8);
                         }
                     }
                 }
@@ -194,7 +261,6 @@ impl Remapper {
                 }
 
                 seen_phrase[phrase_ix] = true;
-                to_move.push(phrase_ix as u8);
                 let phrase = from_song.phrases[phrase_ix].map_instruments(&instrument_mapping);
                 match to_song.phrases.iter().position(|p| p.steps == phrase.steps) {
                     Some(known) => phrase_mapping[phrase_ix] = known as u8,
@@ -202,6 +268,7 @@ impl Remapper {
                         match allocated_phrases.iter().position(|v| !v) {
                             None => return Err(format!("No more available phrase slots for phrase {phrase_ix}")),
                             Some(slot) => {
+                                to_move.push(phrase_ix as u8);
                                 allocated_phrases[slot] = true;
                                 phrase_mapping[phrase_ix] = slot as u8;
                             }
@@ -266,6 +333,7 @@ impl Remapper {
                                         Some(eq_slot) => {
                                             allocated_eqs[eq_slot] = true;
                                             eq_mapping.mapping[equ] = eq_slot as u8;
+                                            eq_mapping.to_move.push(equ as u8);
                                         }
                                     }
                                 }
@@ -287,6 +355,7 @@ impl Remapper {
                                 None => return Err(format!("No more available instrument slots for instrument {instr_ix}")),
                                 Some(to_instr_ix) => {
                                     instrument_mapping.mapping[instr_ix] = to_instr_ix as u8;
+                                    instrument_mapping.to_move.push(instr_ix as u8)
                                 }
                             }
                         }
@@ -330,7 +399,10 @@ impl Remapper {
         let mut instr = from.instruments[instr_id].clone();
 
         if let Some(eq) = instr.eq() {
-            instr.set_eq(self.eq_mapping.mapping[eq as usize]);
+            let eq = eq as usize;
+            if eq < Song::N_INSTRUMENT_EQS {
+                instr.set_eq(self.eq_mapping.mapping[eq]);
+            }
         }
 
         to.tables[to_index] = from.tables[instr_id].clone();

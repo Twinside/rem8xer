@@ -19,6 +19,11 @@ pub fn set_panic_hook() {
 #[wasm_bindgen]
 extern "C" {
     fn alert(s: &str);
+
+    // Use `js_namespace` here to bind `console.log(..)` instead of just
+    // `log(..)`
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
 }
 
 
@@ -105,6 +110,7 @@ pub fn copy_chain(
     let mapping =
         Remapper::create(from_song, to_song, iter::once(&(chain as u8)))?;
 
+    log(&mapping.print());
     mapping.apply(from_song, to_song);
     let final_chain = mapping.out_chain(chain as u8);
 
