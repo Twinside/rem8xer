@@ -4,3 +4,8 @@ run: wasm
 
 wasm:
 	cd m8-files; wasm-pack build --dev
+
+release:
+	cd m8-files; wasm-pack build --release
+	npm run build
+
