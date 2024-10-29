@@ -323,6 +323,7 @@ pub enum MacroSynthOsc {
     PLUCKED,
     BOWED,
     BLOWN,
+    FLUTED,
     STRUCK_BELL,
     STRUCK_DRUM,
     KICK,
@@ -336,7 +337,9 @@ pub enum MacroSynthOsc {
     TWIN_PEAKS_NOISE,
     CLOCKED_NOISE,
     GRANULAR_CLOUD,
-    PARTICLE_NOISE
+    PARTICLE_NOISE,
+    DIGITAL_MOD,
+    MORSE_NOISE,
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -375,6 +378,7 @@ impl MacroSynth {
     }
 
     pub fn from_reader(reader: &mut Reader, number: u8, version: Version) -> M8Result<Self> {
+        let ms_pos = reader.pos();
         let name = reader.read_string(12);
 
         let transp_eq = reader.read().into();
@@ -383,6 +387,7 @@ impl MacroSynth {
         let pitch = reader.read();
         let fine_tune = reader.read();
 
+        let ofs_shape = reader.pos();
         let shape = reader.read();
         let timbre = reader.read();
         let color = reader.read();
@@ -396,6 +401,7 @@ impl MacroSynth {
                 SynthParams::from_reader2(reader, volume, pitch, fine_tune)?
             };
 
+        let nc = name.clone();
         Ok(MacroSynth {
             number,
             name,
@@ -403,7 +409,7 @@ impl MacroSynth {
             table_tick,
             synth_params,
 
-            shape: shape.try_into().map_err(|_| ParseError(format!("Wrong shape")))?,
+            shape: shape.try_into().map_err(|_| ParseError(format!("I{number:X} Wrong macrosynth@{ms_pos} ({nc}) shape {shape}@0x{ofs_shape}")))?,
             timbre,
             color,
             degrade,

@@ -11,7 +11,7 @@
 //! use m8_files::*;
 //!
 //! let mut f = std::fs::File::open("./examples/songs/TEST-FILE.m8s").unwrap();
-//! let song = Song::read(&mut f).unwrap();
+//! let song = song::Song::read_from_stream(&mut f).unwrap();
 //! dbg!(song);
 //! ```
 //!
@@ -151,6 +151,8 @@ impl Song {
                 "File is not long enough to be a M8 song".to_string(),
             ));
         }
+
+        println!("Version: {}.{}", version.major, version.minor);
 
         Self::from_reader(&mut reader, version)
     }
