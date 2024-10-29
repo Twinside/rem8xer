@@ -331,7 +331,7 @@
     if ("function" == typeof e2 && (a2 = e2.defaultProps)) for (c2 in a2) void 0 === l2[c2] && (l2[c2] = a2[c2]);
     return l$3.vnode && l$3.vnode(p2), p2;
   }
-  const __vite__wasmUrl = "" + new URL("m8_files_bg-BkoHscJW.wasm", import.meta.url).href;
+  const __vite__wasmUrl = "" + new URL("m8_files_bg-COOE-OrU.wasm", import.meta.url).href;
   const __vite__initWasm = async (opts = {}, url) => {
     let result;
     if (url.startsWith("data:")) {
