@@ -205,13 +205,13 @@ impl Song {
             .collect::<M8Result<Vec<Groove>>>()?;
         let song = SongSteps::from_reader(reader)?;
         let phrases = (0..Self::N_PHRASES)
-            .map(|i| Phrase::from_reader(reader, i as u8, version))
+            .map(|_| Phrase::from_reader(reader, version))
             .collect::<M8Result<Vec<Phrase>>>()?;
         let chains = (0..Self::N_CHAINS)
-            .map(|i| Chain::from_reader(reader, i as u8))
+            .map(|_| Chain::from_reader(reader))
             .collect::<M8Result<Vec<Chain>>>()?;
         let tables = (0..Self::N_TABLES)
-            .map(|i| Table::from_reader(reader, i as u8, version))
+            .map(|_| Table::from_reader(reader, version))
             .collect::<M8Result<Vec<Table>>>()?;
 
         println!("Instrument {}", reader.pos());
@@ -332,7 +332,6 @@ impl fmt::Debug for SongSteps {
 ////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Clone, Default)]
 pub struct Chain {
-    pub number: u8,
     pub steps: [ChainStep; 16],
 }
 
@@ -363,17 +362,14 @@ impl Chain {
         }
     }
 
-    fn from_reader(reader: &mut Reader, number: u8) -> M8Result<Self> {
-        Ok(Self {
-            number,
-            steps: arr![ChainStep::from_reader(reader)?; 16],
-        })
+    fn from_reader(reader: &mut Reader) -> M8Result<Self> {
+        Ok(Self { steps: arr![ChainStep::from_reader(reader)?; 16] })
     }
 }
 
 impl fmt::Display for Chain {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "CHAIN {:02x}\n\n{}", self.number, self.print_screen())
+        write!(f, "CHAIN\n\n{}", self.print_screen())
     }
 }
 impl fmt::Debug for Chain {
@@ -435,7 +431,6 @@ impl ChainStep {
 ////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Clone, Default)]
 pub struct Phrase {
-    pub number: u8,
     pub steps: [Step; 16],
     version: Version,
 }
@@ -458,7 +453,6 @@ impl Phrase {
         }
 
         Self {
-            number: self.number,
             steps,
             version: self.version
         }
@@ -470,9 +464,8 @@ impl Phrase {
         }
     }
 
-    fn from_reader(reader: &mut Reader, number: u8, version: Version) -> M8Result<Self> {
+    fn from_reader(reader: &mut Reader,  version: Version) -> M8Result<Self> {
         Ok(Self {
-            number,
             steps: arr![Step::from_reader(reader)?; 16],
             version,
         })
@@ -481,7 +474,7 @@ impl Phrase {
 
 impl fmt::Display for Phrase {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "PHRASE {:02x}\n\n{}", self.number, self.print_screen())
+        write!(f, "PHRASE \n\n{}", self.print_screen())
     }
 }
 impl fmt::Debug for Phrase {
@@ -622,7 +615,6 @@ impl fmt::Display for Note {
 ////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Clone)]
 pub struct Table {
-    pub number: u8,
     pub steps: [TableStep; 16],
     version: Version,
 }
@@ -643,18 +635,14 @@ impl Table {
         }
     }
 
-    fn from_reader(reader: &mut Reader, number: u8, version: Version) -> M8Result<Self> {
-        Ok(Self {
-            number,
-            steps: arr![TableStep::from_reader(reader)?; 16],
-            version,
-        })
+    fn from_reader(reader: &mut Reader, version: Version) -> M8Result<Self> {
+        Ok(Self { steps: arr![TableStep::from_reader(reader)?; 16], version })
     }
 }
 
 impl fmt::Display for Table {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "TABLE {:02x}\n\n{}", self.number, self.print_screen())
+        write!(f, "TABLE\n\n{}", self.print_screen())
     }
 }
 impl fmt::Debug for Table {

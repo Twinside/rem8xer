@@ -165,6 +165,13 @@ fn find_referenced_phrases(song: &Song) -> [bool; Song::N_PHRASES] {
         }
     }
 
+    for (phrase_id, phrase) in song.phrases.iter().enumerate() {
+        if !phrase.is_empty() {
+            allocated_phrases[phrase_id] = true;
+        }
+
+    }
+
     allocated_phrases 
 }
 
