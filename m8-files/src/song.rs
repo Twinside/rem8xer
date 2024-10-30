@@ -19,8 +19,9 @@ use std::fmt;
 
 use crate::eq::Equ;
 pub use crate::fx::*;
-pub use crate::instrument::*;
+pub use crate::instruments::*;
 use crate::reader::*;
+use crate::instruments::modulator::Mod;
 use crate::remapper::InstrumentMapping;
 use crate::remapper::PhraseMapping;
 pub use crate::scale::*;
@@ -336,6 +337,10 @@ pub struct Chain {
 }
 
 impl Chain {
+    pub fn is_empty(&self) -> bool {
+        self.steps.iter().all(|s| s.is_empty())
+    }
+
     pub fn print_screen(&self) -> String {
         (0..16).fold("  PH TSP\n".to_string(), |s, row| {
             s + &self.steps[row].print(row as u8) + "\n"
@@ -377,7 +382,7 @@ impl fmt::Debug for Chain {
     }
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub struct ChainStep {
     pub phrase: u8,
     pub transpose: u8,
@@ -390,8 +395,12 @@ impl Default for ChainStep {
 }
 
 impl ChainStep {
+    pub fn is_empty(self) -> bool {
+        self.phrase == 0xFF
+    }
+
     pub fn print(&self, row: u8) -> String {
-        if self.phrase == 255 {
+        if self.is_empty() {
             format!("{:x} -- 00", row)
         } else {
             format!("{:x} {:02x} {:02x}", row, self.phrase, self.transpose)
@@ -432,6 +441,10 @@ pub struct Phrase {
 }
 
 impl Phrase {
+    pub fn is_empty(&self) -> bool {
+        self.steps.iter().all(|s| s.is_empty())
+    }
+
     pub fn print_screen(&self) -> String {
         (0..16).fold("  N   V  I  FX1   FX2   FX3  \n".to_string(), |s, row| {
             s + &self.steps[row].print(row as u8, self.version) + "\n"
@@ -512,6 +525,15 @@ impl Step {
         )
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.note.is_empty() &&
+            self.velocity == 0xFF &&
+            self.instrument == 0xFF &&
+            self.fx1.is_empty() &&
+            self.fx2.is_empty() &&
+            self.fx3.is_empty()
+    }
+
     pub fn map_instr(&self, mapping: &InstrumentMapping) -> Step {
         let instrument =
             if (self.instrument as usize) >= Song::N_INSTRUMENTS { self.instrument }
@@ -554,6 +576,12 @@ impl Step {
 ////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub struct Note(pub u8);
+
+impl Note {
+    pub fn is_empty(self) -> bool {
+        self.0 == 0xFF
+    }
+}
 
 impl Default for Note {
     fn default() -> Self {
@@ -599,6 +627,10 @@ pub struct Table {
     version: Version,
 }
 impl Table {
+    pub fn is_empty(&self) -> bool {
+        self.steps.iter().all(|s| s.is_empty())
+    }
+
     pub fn print_screen(&self) -> String {
         (0..16).fold("  N  V  FX1   FX2   FX3  \n".to_string(), |s, row| {
             s + &self.steps[row].print(row as u8, self.version) + "\n"
@@ -641,6 +673,14 @@ pub struct TableStep {
 }
 
 impl TableStep {
+    pub fn is_empty(&self) -> bool {
+        self.transpose == 0xFF &&
+            self.velocity == 0xFF &&
+            self.fx1.is_empty() &&
+            self.fx2.is_empty() &&
+            self.fx3.is_empty()
+    }
+
     pub fn print(&self, row: u8, version: Version) -> String {
         let transpose = if self.transpose == 255 {
             format!("--")

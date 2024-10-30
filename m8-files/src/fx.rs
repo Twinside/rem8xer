@@ -20,8 +20,12 @@ impl FX {
         w.write(self.value);
     }
 
+    pub fn is_empty(self) -> bool {
+        self.command == 0xFF
+    }
+
     pub fn print(&self, version: Version) -> String {
-        if self.command == 255 {
+        if self.is_empty() {
             format!("---00")
         } else {
             let c = if version.at_least(3, 0) {
