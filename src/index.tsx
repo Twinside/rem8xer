@@ -58,6 +58,7 @@ function ChainNumberEditor(props: {
   };
 
   return <input
+    autoFocus={true}
     class="songchain scselect"
     type="text"
     maxlength={2}
@@ -274,7 +275,7 @@ function ChainViewer(props: { panel: SongPane }) {
 function App() {
   return <>
       <div class="selection-rect"></div>
-      <h1>Re<pre class="titlepre">M8</pre>xer</h1>
+      <div><h1>Re<pre class="titlepre">M8</pre>xer</h1><span>v0.2</span></div>
       <MessageBanner />
       <div class="rootcontainer">
         <div class="rootcolumn">

@@ -154,6 +154,19 @@ fn find_referenced_eq(song: &Song) -> [bool; Song::N_INSTRUMENT_EQS] {
     allocated_eqs
 }
 
+fn find_allocated_instruments(song: &Song) -> [bool; Song::N_INSTRUMENTS] {
+    let mut allocated_instr = arr![false; 128];
+
+    for (i, instr) in song.instruments.iter().enumerate() {
+        match instr {
+            Instrument::None => {},
+            _ => allocated_instr[i] = true
+        }
+    }
+
+    allocated_instr
+}
+
 fn find_referenced_phrases(song: &Song) -> [bool; Song::N_PHRASES] {
     let mut allocated_phrases = arr![false; 255];
     for chain in &song.chains {
@@ -190,6 +203,20 @@ fn find_referenced_chains(song: &Song) -> [bool; Song::N_CHAINS] {
     }
 
     allocated_chains 
+}
+
+/// Try to allocate in the new song by keeping previous numbers
+fn try_allocate(allocation_state: &[bool], previous_id: u8) -> Option<usize> {
+    let prev = previous_id as usize;
+    if !allocation_state[prev] { Some(prev) }
+    else {
+        match allocation_state[prev..].iter().position(|v| ! v) {
+            // we take a slot above the existing one
+            Some(p) => Some(p + prev),
+            // nothing else worked, just try to find any free slot
+            None => allocation_state.iter().position(|v| !v)
+        }
+    }
 }
 
 impl Remapper {
@@ -229,7 +256,7 @@ impl Remapper {
             match to_song.chains.iter().position(|c| c.steps == to_chain.steps) {
                 Some(c) => mapping[chain_id] = c as u8,
                 None => {
-                    match allocated_chains.iter().position(|a| !a) {
+                    match try_allocate(&allocated_chains, chain_id as u8) {
                         None => return Err(format!("No more available chain slots for chain {chain_id}")),
                         Some(free_slot) => {
                             allocated_chains[free_slot] = true;
@@ -277,7 +304,7 @@ impl Remapper {
                 match to_song.phrases.iter().position(|p| p.steps == phrase.steps) {
                     Some(known) => phrase_mapping[phrase_ix] = known as u8,
                     None => {
-                        match allocated_phrases.iter().position(|v| !v) {
+                        match try_allocate(&allocated_phrases, phrase_ix as u8) {
                             None => return Err(format!("No more available phrase slots for phrase {phrase_ix}")),
                             Some(slot) => {
                                 to_move.push(phrase_ix as u8);
@@ -305,6 +332,7 @@ impl Remapper {
         let mut eq_flags : [bool; Song::N_INSTRUMENT_EQS] = arr![false; 32];
         // flags on eqs in "to"
         let mut allocated_eqs = find_referenced_eq(to_song);
+        let mut allocated_instruments = find_allocated_instruments(to_song);
         let mut instrument_mapping = InstrumentMapping::default();
         // eqs from "from" to "to"
         let mut eq_mapping = EqMapping::default();
@@ -340,7 +368,7 @@ impl Remapper {
                                 Some(eq_idx) if (eq_idx as usize) < Song::N_INSTRUMENT_EQS =>
                                     eq_mapping.mapping[equ] = eq_idx as u8,
                                 Some(_) | None => {
-                                    match allocated_eqs.iter().position(|alloc| !alloc) {
+                                    match try_allocate(&allocated_eqs, equ as u8) {
                                         None => return Err(format!("No more available eqs for instrument {instr_ix}")),
                                         Some(eq_slot) => {
                                             allocated_eqs[eq_slot] = true;
@@ -363,10 +391,11 @@ impl Remapper {
                             instrument_mapping.mapping[instr_ix] = to_instr_ix as u8,
                         // no luck, allocate a fresh one
                         None => {
-                            match to_song.instruments.iter().position(|i| i == &Instrument::None) {
+                            match try_allocate(&allocated_instruments, instr_ix as u8) {
                                 None => return Err(format!("No more available instrument slots for instrument {instr_ix}")),
                                 Some(to_instr_ix) => {
                                     instrument_mapping.mapping[instr_ix] = to_instr_ix as u8;
+                                    allocated_instruments[to_instr_ix] = true;
                                     instrument_mapping.to_move.push(instr_ix as u8)
                                 }
                             }

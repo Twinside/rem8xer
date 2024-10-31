@@ -1,4 +1,4 @@
-use std::{fmt::format, iter};
+use std::iter;
 
 use wasm_bindgen::prelude::*;
 
