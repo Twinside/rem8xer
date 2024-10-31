@@ -331,7 +331,7 @@
     if ("function" == typeof e2 && (a2 = e2.defaultProps)) for (c2 in a2) void 0 === l2[c2] && (l2[c2] = a2[c2]);
     return l$3.vnode && l$3.vnode(p2), p2;
   }
-  const __vite__wasmUrl = "" + new URL("m8_files_bg-COOE-OrU.wasm", import.meta.url).href;
+  const __vite__wasmUrl = "" + new URL("m8_files_bg-kPn3FQM4.wasm", import.meta.url).href;
   const __vite__initWasm = async (opts = {}, url) => {
     let result;
     if (url.startsWith("data:")) {
@@ -447,14 +447,34 @@
       wasm$1.__wbindgen_free(deferred1_0, deferred1_1, 1);
     }
   }
-  function copy_chain$1(from, to, chain, x2, y2) {
-    _assertClass(from, WasmSong);
-    _assertClass(to, WasmSong);
-    const ret = wasm$1.copy_chain(from.__wbg_ptr, to.__wbg_ptr, chain, x2, y2);
+  function renumber_chain$1(song, chain, to_chain) {
+    _assertClass(song, WasmSong);
+    const ret = wasm$1.renumber_chain(song.__wbg_ptr, chain, to_chain);
     if (ret[2]) {
       throw takeFromExternrefTable0(ret[1]);
     }
-    return ret[0] >>> 0;
+    return ret[0] !== 0;
+  }
+  function copy_chain$1(from, to, chain, x2, y2) {
+    let deferred2_0;
+    let deferred2_1;
+    try {
+      _assertClass(from, WasmSong);
+      _assertClass(to, WasmSong);
+      const ret = wasm$1.copy_chain(from.__wbg_ptr, to.__wbg_ptr, chain, x2, y2);
+      var ptr1 = ret[0];
+      var len1 = ret[1];
+      if (ret[3]) {
+        ptr1 = 0;
+        len1 = 0;
+        throw takeFromExternrefTable0(ret[2]);
+      }
+      deferred2_0 = ptr1;
+      deferred2_1 = len1;
+      return getStringFromWasm0(ptr1, len1);
+    } finally {
+      wasm$1.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    }
   }
   let WASM_VECTOR_LEN = 0;
   const lTextEncoder = typeof TextEncoder === "undefined" ? (0, module.require)("util").TextEncoder : TextEncoder;
@@ -631,6 +651,7 @@
   const get_song_steps = __vite__wasmModule.get_song_steps;
   const get_chain_steps = __vite__wasmModule.get_chain_steps;
   const show_phrase = __vite__wasmModule.show_phrase;
+  const renumber_chain = __vite__wasmModule.renumber_chain;
   const copy_chain = __vite__wasmModule.copy_chain;
   const __wbindgen_export_0 = __vite__wasmModule.__wbindgen_export_0;
   const __wbindgen_free = __vite__wasmModule.__wbindgen_free;
@@ -653,6 +674,7 @@
     init,
     load_song,
     memory,
+    renumber_chain,
     show_phrase,
     song_name,
     write_song
@@ -1268,11 +1290,18 @@
       y: -1
     }
   };
+  const EmptyEdition = {
+    x: -1,
+    y: -1,
+    base_chain: -1,
+    current_value: -1
+  };
   function initPane() {
     return {
       loaded_name: d$1(void 0),
       song: d$1(void 0),
       bumper: d$1(0),
+      edited_chain: d$1(void 0),
       raw_song: d$1(new Uint8Array(0)),
       selected_chain: d$1(void 0),
       selected_phrase: d$1(void 0),
@@ -1357,9 +1386,45 @@
   function isDraggedChain(o2) {
     return o2 !== null && typeof o2 === "object" && "chain" in o2 && "from_song" in o2 && typeof o2.chain === "number" && typeof o2.from_song === "string";
   }
+  function ChainNumberEditor(props) {
+    const chn = props.chain.value;
+    const onDown = (evt) => {
+      if (evt.key === "Enter") {
+        props.chain.value = void 0;
+        const strVal = evt.currentTarget.value;
+        const asNum = Number.parseInt(strVal, 16);
+        try {
+          renumber_chain$1(props.song, chn.base_chain, asNum);
+        } catch (err) {
+          state.message_banner.value = err.toString();
+        }
+        props.bump.value = props.bump.value + 1;
+      }
+    };
+    const onChange = (evt) => {
+      const strVal = evt.currentTarget.value;
+      const asNum = Number.parseInt(strVal, 16);
+      props.chain.value = {
+        ...chn,
+        current_value: asNum
+      };
+    };
+    return u$2("input", {
+      autoFocus: true,
+      class: "songchain scselect",
+      type: "text",
+      maxlength: 2,
+      pattern: "[a-fA-F0-9]{2}",
+      value: hexStr(chn.current_value),
+      onChange: (evt) => onChange(evt),
+      onKeyDown: (evt) => onDown(evt)
+    });
+  }
   function StepsRender(props) {
     const elems = [];
+    const pane = props.pane;
     const steps = props.steps;
+    props.pane.bumper.value;
     let read_cursor = 0;
     const dragStart = (evt, chain) => {
       const asJson = {
@@ -1385,13 +1450,14 @@
         } else {
           copy_chain$1(state.right.song.value, state.left.song.value, asJson.chain, col, line);
         }
-        props.bumper.value = props.bumper.value + 1;
+        pane.bumper.value = pane.bumper.value + 1;
       } catch (err) {
         state.message_banner.value = `Chain copy error: ${err}`;
       }
     };
-    const selection = props.selection.value || EmptySelection;
+    const selection = pane.selection_range.value || EmptySelection;
     const isSelected = (line, column) => selection.start.x <= column && column <= selection.end.x && selection.end.y <= line && line <= selection.end.y;
+    const edition = pane.edited_chain.value || EmptyEdition;
     for (let line = 0; line < 256; line++) {
       elems.push(u$2("span", {
         class: "spanline",
@@ -1413,6 +1479,12 @@
             children: "-- "
           });
           elems.push(elem);
+        } else if (edition.x === col && edition.y === line) {
+          elems.push(u$2(ChainNumberEditor, {
+            song: pane.song.value,
+            bump: pane.bumper,
+            chain: pane.edited_chain
+          }));
         } else {
           const elem = u$2("span", {
             class: "songchain scselect" + selClass,
@@ -1422,7 +1494,13 @@
             onDragStart: (evt) => dragStart(evt, chain),
             onDragOver: (evt) => dragOver(evt),
             onDrop: (evt) => dragEnd(evt, line, col),
-            onClick: () => props.viewChain(chain),
+            onDblClick: () => pane.edited_chain.value = {
+              x: col,
+              y: line,
+              current_value: chain,
+              base_chain: chain
+            },
+            onClick: () => pane.selected_chain.value = chain,
             children: [
               hexStr(chain),
               " "
@@ -1444,7 +1522,6 @@
     const song = panel.song.value;
     panel.bumper.value;
     const songName = song !== void 0 ? song_name$1(song) : filename;
-    const viewChain = (n2) => panel.selected_chain.value = n2;
     if (song === void 0) {
       return u$2("div", {
         class: "rootcolumn",
@@ -1465,9 +1542,7 @@
     const steps = u$2(StepsRender, {
       side: props.side,
       steps: get_song_steps$1(song),
-      selection: panel.selection_range,
-      bumper: panel.bumper,
-      viewChain
+      pane: props.panel
     });
     const save = () => {
       try {
@@ -1592,14 +1667,21 @@
         u$2("div", {
           class: "selection-rect"
         }),
-        u$2("h1", {
+        u$2("div", {
           children: [
-            "Re",
-            u$2("pre", {
-              class: "titlepre",
-              children: "M8"
+            u$2("h1", {
+              children: [
+                "Re",
+                u$2("pre", {
+                  class: "titlepre",
+                  children: "M8"
+                }),
+                "xer"
+              ]
             }),
-            "xer"
+            u$2("span", {
+              children: "v0.2"
+            })
           ]
         }),
         u$2(MessageBanner, {}),
