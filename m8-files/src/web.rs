@@ -1,4 +1,4 @@
-use std::iter;
+use std::{fmt::format, iter};
 
 use wasm_bindgen::prelude::*;
 
@@ -94,12 +94,37 @@ pub fn show_phrase(song: &WasmSong, phrase: usize) -> String {
 }
 
 #[wasm_bindgen]
+pub fn renumber_chain(song: &mut WasmSong, chain: usize, to_chain: usize) -> Result<bool, String> {
+    if chain >= Song::N_CHAINS { return Err(format!("Error invalid source chain number {chain}")) }
+    if to_chain >= Song::N_CHAINS { return Err(format!("Error invalid destination chain number {to_chain}")) }
+
+    if chain == to_chain { return Ok(true) }
+
+    if !song.song.chains[to_chain].is_empty() {
+        return Err(format!("Destination chain {to_chain} is not empty"))
+    }
+
+    song.song.chains[to_chain] = song.song.chains[chain].clone();
+
+    let song_steps = &mut song.song.song.steps;
+    for i in 0 .. song_steps.len() {
+        if song_steps[i] == chain as u8 {
+            song_steps[i] = to_chain as u8 ;
+        }
+    }
+
+    log(&format!("RENUMBERED {chain} -> {to_chain}"));
+
+    Ok(true)
+}
+
+#[wasm_bindgen]
 pub fn copy_chain(
     from: &WasmSong,
     to: &mut WasmSong,
     chain: usize,
     x: usize,
-    y: usize) -> Result<usize, String> {
+    y: usize) -> Result<String, String> {
 
     if x >= SongSteps::TRACK_COUNT { return Err(format!("Invalid track number {x}")) }
     if y >= SongSteps::ROW_COUNT { return Err(format!("Invalid row number {y}")) }
@@ -110,11 +135,10 @@ pub fn copy_chain(
     let mapping =
         Remapper::create(from_song, to_song, iter::once(&(chain as u8)))?;
 
-    log(&mapping.print());
     mapping.apply(from_song, to_song);
     let final_chain = mapping.out_chain(chain as u8);
 
     to_song.song.steps[x + y * SongSteps::TRACK_COUNT] = final_chain;
 
-    Ok(final_chain as usize)
+    Ok(mapping.print())
 }

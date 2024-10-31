@@ -1,7 +1,7 @@
 import { render } from "preact";
 import "./style.css";
 import * as W from '../m8-files/pkg/m8_files';
-import { ChainSelection, clearPanel, EmptySelection, initState, SongPane } from "./state";
+import { ChainNumberEdition, ChainSelection, clearPanel, EmptyEdition, EmptySelection, initState, SongPane } from "./state";
 import { downloadBlob } from "./utils";
 import { Signal } from "@preact/signals";
 import emptyUrl from "./V4EMPTY.m8s";
@@ -30,15 +30,52 @@ function isDraggedChain(o : any) : o is DraggedChain {
     && typeof o.from_song === 'string';
 }
 
+function ChainNumberEditor(props: {
+    bump: Signal<number>,
+    song: W.WasmSong,
+    chain: Signal<ChainNumberEdition | undefined>
+  }) {
+  const chn = props.chain.value;
+
+  const onDown = (evt : KeyboardEvent) => {
+    if (evt.key === 'Enter') {
+      props.chain.value = undefined;
+      const strVal = (evt.currentTarget as HTMLInputElement).value;
+      const asNum = Number.parseInt(strVal, 16)
+      try {
+        W.renumber_chain(props.song, chn.base_chain, asNum);
+      } catch (err) {
+        state.message_banner.value = err.toString();
+      }
+      props.bump.value = props.bump.value + 1;
+    }
+  };
+
+  const onChange = (evt : Event) => {
+    const strVal = (evt.currentTarget as HTMLInputElement).value;
+    const asNum = Number.parseInt(strVal, 16)
+    props.chain.value = { ...chn, current_value: asNum };
+  };
+
+  return <input
+    class="songchain scselect"
+    type="text"
+    maxlength={2}
+    pattern="[a-fA-F0-9]{2}"
+    value={hexStr(chn.current_value)}
+    onChange={(evt) => onChange(evt)}
+    onKeyDown={(evt) => onDown(evt)} />
+}
+
 function StepsRender(props: {
     side: SongSide,
     steps: Uint8Array,
-    selection: Signal<ChainSelection | undefined>,
-    bumper: Signal<number>,
-    viewChain: (chainNumber: number) => void
+    pane: SongPane,
   }) {
   const elems = [];
+  const pane = props.pane;
   const steps = props.steps;
+  const bump_val = props.pane.bumper.value;
   let read_cursor = 0;
 
   const dragStart = (evt : DragEvent, chain: number) => {
@@ -67,18 +104,19 @@ function StepsRender(props: {
         W.copy_chain(state.right.song.value, state.left.song.value, asJson.chain, col, line);
       }
 
-      props.bumper.value = props.bumper.value + 1;
+      pane.bumper.value = pane.bumper.value + 1;
 
     } catch(err) {
       state.message_banner.value = `Chain copy error: ${err}`;
     }
   }
 
-  const selection = props.selection.value || EmptySelection;
+  const selection = pane.selection_range.value || EmptySelection;
   const isSelected = (line : number, column : number) =>
       selection.start.x <= column && column <= selection.end.x &&
       selection.end.y <= line && line <= selection.end.y;
 
+  const edition = pane.edited_chain.value || EmptyEdition;
   for (let line = 0; line < 0x100; line++) {
     elems.push(<span class="spanline">{hexStr(line)} : </span>)
 
@@ -96,6 +134,8 @@ function StepsRender(props: {
                 onDragOver={evt => dragOver(evt)}
                 onDrop={evt => dragEnd(evt, line, col)}>-- </span>;
         elems.push(elem);
+      } else if (edition.x === col && edition.y === line) {
+        elems.push(<ChainNumberEditor song={pane.song.value} bump={pane.bumper} chain={pane.edited_chain} />);
       } else {
         const elem =
           <span class={"songchain scselect" + selClass}
@@ -105,7 +145,8 @@ function StepsRender(props: {
                 onDragStart={evt => dragStart(evt, chain)}
                 onDragOver={evt => dragOver(evt)}
                 onDrop={evt => dragEnd(evt, line, col)}
-                onClick={() => props.viewChain(chain)}>{hexStr(chain)} </span>; 
+                onDblClick={() => pane.edited_chain.value = { x: col, y: line, current_value: chain, base_chain: chain }}
+                onClick={() => pane.selected_chain.value = chain}>{hexStr(chain)} </span>; 
 
         elems.push(elem);
       }
@@ -134,8 +175,6 @@ function SongViewer(props: { side: SongSide, panel: SongPane }) {
     ? W.song_name(song)
     : filename;
 
-  const viewChain = (n : number) => panel.selected_chain.value = n;
-
   if (song === undefined) {
     return <div class="rootcolumn">
       <button onClick={() => loadUrl(state, panel, emptyUrl)}>Load empty song</button>
@@ -148,9 +187,7 @@ function SongViewer(props: { side: SongSide, panel: SongPane }) {
   const steps =
     <StepsRender side={props.side}
                  steps={W.get_song_steps(song)}
-                 selection={panel.selection_range}
-                 bumper={panel.bumper}
-                 viewChain={viewChain}/>;
+                 pane={props.panel} />;
 
   const save = () => {
     try {

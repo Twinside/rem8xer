@@ -169,7 +169,6 @@ fn find_referenced_phrases(song: &Song) -> [bool; Song::N_PHRASES] {
         if !phrase.is_empty() {
             allocated_phrases[phrase_id] = true;
         }
-
     }
 
     allocated_phrases 
@@ -181,6 +180,12 @@ fn find_referenced_chains(song: &Song) -> [bool; Song::N_CHAINS] {
         let chain = *chain as usize;
         if chain < Song::N_CHAINS {
             allocated_chains[chain] = true;
+        }
+    }
+
+    for (i, chain) in song.chains.iter().enumerate() {
+        if !chain.is_empty() {
+            allocated_chains[i] = true
         }
     }
 

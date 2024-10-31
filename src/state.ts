@@ -38,12 +38,26 @@ export function ExtendSelection(cs : ChainSelection, x: number, y: number) : Cha
     }
 }
 
+export type ChainNumberEdition =
+    {
+        x: number,
+        y: number,
+        base_chain: number,
+        current_value: number
+    }
+
+export const EmptyEdition : ChainNumberEdition =
+    {
+        x: -1, y: -1, base_chain: -1, current_value: -1
+    };
+
 export type SongPane =
     {
         loaded_name: Signal<string | undefined>,
         song: Signal<WasmSong | undefined>,
         raw_song: Signal<Uint8Array>,
         bumper: Signal<number>,
+        edited_chain: Signal<ChainNumberEdition | undefined>,
         selected_chain: Signal<number | undefined>,
         selected_phrase: Signal<number | undefined>,
         selection_range: Signal<ChainSelection | undefined>
@@ -54,6 +68,7 @@ function initPane() : SongPane {
         loaded_name: signal(undefined),
         song: signal(undefined),
         bumper: signal(0),
+        edited_chain: signal(undefined),
         raw_song: signal(new Uint8Array(0)),
         selected_chain: signal(undefined),
         selected_phrase: signal(undefined),
