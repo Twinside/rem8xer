@@ -142,3 +142,22 @@ pub fn copy_chain(
 
     Ok(mapping.print())
 }
+
+#[wasm_bindgen]
+pub fn instrument_name(song: &WasmSong, instr: u8) -> String {
+    String::from(song.song.instruments[instr as usize].name().unwrap_or(&""))
+}
+
+#[wasm_bindgen]
+pub fn allocated_instrument_list(song: &WasmSong) -> Vec<usize> {
+    song.song.instruments
+        .iter()
+        .enumerate()
+        .filter_map(|(i, inst)|
+            if inst.is_empty() {
+                None
+            } else {
+                Some(i)
+            })
+        .collect()
+}

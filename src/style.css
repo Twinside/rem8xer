@@ -160,6 +160,7 @@ button:focus-visible {
 
 .songchain {
     color: #ddd;
+    max-width: 20px;
 }
 
 .songchain:hover {
@@ -205,4 +206,14 @@ button:focus-visible {
 .titlepre {
   display: inline-block;
   font-size: 50px;
+}
+
+.songsection {
+  width: 100%;
+  margin-bottom: 3px;
+}
+
+.songsection summary {
+  padding-left: 5px;
+  border: 1px solid darkslategrey;
 }

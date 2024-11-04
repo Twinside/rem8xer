@@ -55,6 +55,19 @@ impl Instrument {
         }
     }
 
+    pub fn name(&self) -> Option<&str> {
+        match self {
+            Instrument::WavSynth(ws)     => Some(&ws.name),
+            Instrument::MacroSynth(ms) => Some(&ms.name),
+            Instrument::Sampler(s)        => Some(&s.name),
+            Instrument::MIDIOut(_)                  => None,
+            Instrument::FMSynth(fs)       => Some(&fs.name),
+            Instrument::HyperSynth(hs) => Some(&hs.name),
+            Instrument::External(ex) => Some(&ex.name),
+            Instrument::None => None,
+        }
+    }
+
     pub fn eq(&self) -> Option<u8> {
         match self {
             Instrument::WavSynth(ws)     => Some(ws.transp_eq.eq),

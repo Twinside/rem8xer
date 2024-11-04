@@ -272,6 +272,40 @@ function ChainViewer(props: { panel: SongPane }) {
   </div>;
 }
 
+function InstrumentList(props: { song: W.WasmSong } ) {
+  const instruments = W.allocated_instrument_list(props.song);
+  const elems = [];
+
+  for (const vix of instruments) {
+    const name = W.instrument_name(props.song, vix)
+    elems.push(
+      <div class="instr">
+        <span>{hexStr(vix)} : </span>
+        <span>{name}</span>
+      </div>
+    )
+  }
+  return <pre>{elems}</pre>;
+}
+
+function SongExplorer(props: { pane: SongPane }) {
+  const song = props.pane.song.value;
+  if (song === undefined) return <></>;
+
+  return <>
+    <details class="songsection">
+      <summary>Chains</summary>
+    </details>
+    <details class="songsection">
+      <summary>Phrases</summary>
+    </details>
+    <details class="songsection">
+      <summary>Intruments</summary>
+      <InstrumentList song={song} />
+    </details>
+  </>;
+}
+
 function App() {
   return <>
       <div class="selection-rect"></div>
@@ -279,11 +313,13 @@ function App() {
       <MessageBanner />
       <div class="rootcontainer">
         <div class="rootcolumn">
+          <SongExplorer pane={state.left} />
           <ChainViewer panel={state.left} />
         </div>
         <SongViewer side="left" panel={state.left} />
         <SongViewer side="right" panel={state.right} />
         <div class="rootcolumn">
+          <SongExplorer pane={state.right}/>
           <ChainViewer panel={state.right} />
         </div>
       </div>
