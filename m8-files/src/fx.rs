@@ -1,10 +1,16 @@
 use crate::reader::*;
 use crate::version::*;
 
-#[derive(PartialEq, Debug, Clone, Copy, Default)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub struct FX {
     pub command: u8,
     pub value: u8,
+}
+
+impl Default for FX {
+    fn default() -> Self {
+        Self { command: 0xFF, value: 0 }
+    }
 }
 
 impl FX {

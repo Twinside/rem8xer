@@ -340,6 +340,14 @@ impl Chain {
         self.steps.iter().all(|s| s.is_empty())
     }
 
+    pub fn clear(&mut self) {
+        let dflt = ChainStep::default();
+
+        for s in &mut self.steps{
+            *s = dflt;
+        }
+    }
+
     pub fn print_screen(&self) -> String {
         (0..16).fold("  PH TSP\n".to_string(), |s, row| {
             s + &self.steps[row].print(row as u8) + "\n"
@@ -440,6 +448,12 @@ impl Phrase {
         self.steps.iter().all(|s| s.is_empty())
     }
 
+    pub fn clear(&mut self) {
+        for s in &mut self.steps {
+            s.clear();
+        }
+    }
+
     pub fn print_screen(&self) -> String {
         (0..16).fold("  N   V  I  FX1   FX2   FX3  \n".to_string(), |s, row| {
             s + &self.steps[row].print(row as u8, self.version) + "\n"
@@ -516,6 +530,15 @@ impl Step {
             self.fx2.print(version),
             self.fx3.print(version)
         )
+    }
+
+    pub fn clear(&mut self) {
+        self.note = Note::default();
+        self.velocity = 0xFF;
+        self.instrument = 0xFF;
+        self.fx1 = FX::default();
+        self.fx2 = FX::default();
+        self.fx3 = FX::default();
     }
 
     pub fn is_empty(&self) -> bool {

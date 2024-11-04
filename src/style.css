@@ -163,6 +163,11 @@ button:focus-visible {
     max-width: 20px;
 }
 
+.nameedit {
+    color: #ddd;
+    max-width: 60px;
+}
+
 .songchain:hover {
     border: 1px solid white;
     cursor: pointer;

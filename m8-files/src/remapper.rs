@@ -126,10 +126,10 @@ impl Default for ChainMapping {
 }
 
 pub struct Remapper {
-    eq_mapping: EqMapping,
-    instrument_mapping: InstrumentMapping,
-    phrase_mapping: PhraseMapping,
-    chain_mapping: ChainMapping,
+    pub eq_mapping: EqMapping,
+    pub instrument_mapping: InstrumentMapping,
+    pub phrase_mapping: PhraseMapping,
+    pub chain_mapping: ChainMapping,
 }
 
 /// Iter on all instruments to find allocated Eqs
@@ -138,7 +138,7 @@ fn find_referenced_eq(song: &Song) -> [bool; Song::N_INSTRUMENT_EQS] {
     let mut allocated_eqs = arr![false; 32];
 
     for instr in &song.instruments {
-        match instr.eq() {
+        match instr.equ() {
             None => {}
             Some(eq) => {
                 let equ = eq as usize;
@@ -215,6 +215,17 @@ fn try_allocate(allocation_state: &[bool], previous_id: u8) -> Option<usize> {
             Some(p) => Some(p + prev),
             // nothing else worked, just try to find any free slot
             None => allocation_state.iter().position(|v| !v)
+        }
+    }
+}
+
+impl Default for Remapper {
+    fn default() -> Self {
+        Self {
+            eq_mapping: Default::default(),
+            instrument_mapping: Default::default(),
+            phrase_mapping: Default::default(),
+            chain_mapping: Default::default()
         }
     }
 }
@@ -357,7 +368,7 @@ impl Remapper {
                     let mut instr = from_song.instruments[instr_ix].clone();
         
                     // first we search the new EQ
-                    if let Some(equ) = instr.eq() {
+                    if let Some(equ) = instr.equ() {
                         let equ = equ as usize;
         
                         if equ < Song::N_INSTRUMENT_EQS && !eq_flags[equ] {
@@ -426,6 +437,66 @@ impl Remapper {
     Ok(Self { eq_mapping, instrument_mapping, phrase_mapping, chain_mapping })
   }
 
+  /// Same as apply but the same song is the source and destination
+  pub fn renumber(&self, song: &mut Song) {
+    // move eq
+    for equ in self.eq_mapping.to_move.iter() {
+        let equ = *equ as usize;
+        let to_index = self.eq_mapping.mapping[equ];
+        song.eqs[to_index as usize] = song.eqs[equ].clone();
+    }
+
+    // move instr
+    for instr_id in self.instrument_mapping.to_move.iter() {
+        let instr_id = *instr_id as usize;
+        let to_index = self.instrument_mapping.mapping[instr_id] as usize;
+        let instr = song.instruments[instr_id].clone();
+
+        song.tables[to_index] = song.tables[instr_id].clone();
+        song.instruments[to_index] = instr;
+        song.instruments[instr_id] = Instrument::None;
+    }
+
+    // remap eq in instr
+    for instr_id in 0 .. Song::N_INSTRUMENTS {
+        let instr = &mut song.instruments[instr_id];
+
+        if let Some(eq) = instr.equ() {
+            let eq = eq as usize;
+            if eq < Song::N_INSTRUMENT_EQS {
+                instr.set_eq(self.eq_mapping.mapping[eq]);
+            }
+        }
+    }
+
+    // move phrases
+    for phrase_id in self.phrase_mapping.to_move.iter() {
+        let phrase_id = *phrase_id as usize;
+        let to_index = self.phrase_mapping.mapping[phrase_id];
+        song.phrases[to_index as usize] = song.phrases[phrase_id].clone();
+        song.phrases[phrase_id].clear()
+    }
+
+    // remap instr in phrases
+    for phrase_id in 0 .. Song::N_PHRASES {
+        song.phrases[phrase_id] = song.phrases[phrase_id].map_instruments(&self.instrument_mapping);
+    }
+
+    // move chain
+    for chain_id in self.chain_mapping.to_move.iter() {
+        let chain_id = *chain_id as usize;
+        let to_index = self.chain_mapping.mapping[chain_id];
+        song.chains[to_index as usize] = song.chains[chain_id].clone();
+        song.chains[chain_id].clear();
+    }
+
+    // remap chain
+    for chain_id in 0 .. Song::N_CHAINS {
+        song.chains[chain_id] = song.chains[chain_id].map(&self.phrase_mapping)
+    }
+
+  }
+
   /// apply the reampping, cannot fail once mapping has been created
   pub fn apply(&self, from: &Song, to: &mut Song) {
     for equ in self.eq_mapping.to_move.iter() {
@@ -439,7 +510,7 @@ impl Remapper {
         let to_index = self.instrument_mapping.mapping[instr_id] as usize;
         let mut instr = from.instruments[instr_id].clone();
 
-        if let Some(eq) = instr.eq() {
+        if let Some(eq) = instr.equ() {
             let eq = eq as usize;
             if eq < Song::N_INSTRUMENT_EQS {
                 instr.set_eq(self.eq_mapping.mapping[eq]);

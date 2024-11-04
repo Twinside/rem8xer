@@ -68,7 +68,20 @@ impl Instrument {
         }
     }
 
-    pub fn eq(&self) -> Option<u8> {
+    pub fn set_name(&mut self, name: String) {
+        match self {
+            Instrument::WavSynth(ws)     => ws.name = name,
+            Instrument::MacroSynth(ms) => ms.name = name,
+            Instrument::Sampler(s)        => s.name = name,
+            Instrument::MIDIOut(mo)       => mo.name = name,
+            Instrument::FMSynth(fs)       => fs.name = name,
+            Instrument::HyperSynth(hs) => hs.name = name,
+            Instrument::External(ex) => ex.name = name,
+            Instrument::None => {}
+        }
+    }
+
+    pub fn equ(&self) -> Option<u8> {
         match self {
             Instrument::WavSynth(ws)     => Some(ws.transp_eq.eq),
             Instrument::MacroSynth(ms) => Some(ms.transp_eq.eq),
