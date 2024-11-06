@@ -38,8 +38,59 @@ pub struct Sampler {
     pub degrade: u8,
 }
 
+const SAMPLER_FX_COMMANDS : [&'static str; 37] =
+  [
+    "VOL",
+    "PIT",
+    "FIN",
+    "PLY",
+    "STA",
+    "LOP",
+    "LEN",
+    "DEG",
+    "FLT",
+    "CUT",
+    "RES",
+    "AMP",
+    "LIM",
+    "PAN",
+    "DRY",
+
+    "SCH",
+    "SDL",
+    "SRV",
+
+    "EA1",
+    "AT1",
+    "HO1",
+    "DE1",
+    "ET1",
+
+    "EA2",
+    "AT2",
+    "HO2",
+    "DE2",
+    "ET2",
+
+    "LA1",
+    "LF1",
+    "LT1",
+
+    "LA2",
+    "LF2",
+    "LT2",
+
+    "SLI",
+    "---",
+    "---"
+  ];
+
 impl Sampler {
     pub const MOD_OFFSET : usize = 29;
+
+    pub fn command_name(&self, _ver: Version) -> &[&'static str] {
+        &SAMPLER_FX_COMMANDS 
+    }
 
     pub fn write(&self, w: &mut Writer) {
         let pos = w.pos();

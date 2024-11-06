@@ -97,8 +97,59 @@ pub struct WavSynth {
     pub scan: u8,
 }
 
+const WAVSYNTH_COMMAND_NAMES : [&'static str; 37] =
+  [
+    "VOL",
+    "PIT",
+    "FIN",
+    "OSC",
+    "SIZ",
+    "MUL",
+    "WRP",
+    "MIR",
+    "FLT",
+    "CUT",
+    "RES",
+    "AMP",
+    "LIM",
+    "PAN",
+    "DRY",
+
+    "SCH",
+    "SDL",
+    "SRV",
+
+    "EA1",
+    "AT1",
+    "HO1",
+    "DE1",
+    "ET1",
+
+    "EA2",
+    "AT2",
+    "HO2",
+    "DE2",
+    "ET2",
+
+    "LA1",
+    "LF1",
+    "LT1",
+
+    "LA2",
+    "LF2",
+    "LT2",
+
+    "XX1",
+    "XX2",
+    "XX3"
+  ];
+
 impl WavSynth {
     pub const MOD_OFFSET : usize = 30;
+
+    pub fn command_name(&self, _ver: Version) -> &[&'static str] {
+        &WAVSYNTH_COMMAND_NAMES
+    }
 
     pub fn write(&self, w: &mut Writer) {
         w.write_string(&self.name[..], 12);

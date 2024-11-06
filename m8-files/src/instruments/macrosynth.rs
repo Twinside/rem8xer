@@ -60,6 +60,55 @@ pub enum MacroSynthOsc {
     MORSE_NOISE,
 }
 
+const MACRO_SYNTH_COMMANDS : [&'static str; 38] =
+  [
+    "VOL",
+    "PIT",
+    "FIN",
+    "OSC",
+    "TBR",
+    "COL",
+    "DEG",
+    "RED",
+    "FLT",
+    "CUT",
+    "RES",
+    "AMP",
+    "LIM",
+    "PAN",
+    "DRY",
+
+    "SCH",
+    "SDL",
+    "SRV",
+
+    "EA1",
+    "AT1",
+    "HO1",
+    "DE1",
+    "ET1",
+
+    "EA2",
+    "AT2",
+    "HO2",
+    "DE2",
+    "ET2",
+
+    "LA1",
+    "LF1",
+    "LT1",
+
+    "LA2",
+    "LF2",
+    "LT2",
+
+    "TRG",
+
+    "XX1",
+    "XX2",
+    "XX3",
+  ];
+
 #[derive(PartialEq, Debug, Clone)]
 pub struct MacroSynth {
     pub number: u8,
@@ -77,6 +126,10 @@ pub struct MacroSynth {
 
 impl MacroSynth {
     pub const MOD_OFFSET : usize = 30;
+
+    pub fn command_name(&self, _ver: Version) -> &[&'static str] {
+        &MACRO_SYNTH_COMMANDS 
+    }
 
     pub fn write(&self, w: &mut Writer) {
         w.write_string(&self.name, 12);

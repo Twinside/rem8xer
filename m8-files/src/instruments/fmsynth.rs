@@ -72,6 +72,55 @@ pub enum FMWave {
     CLK
 }
 
+const FM_FX_COMMANDS : [&'static str; 38] =
+  [
+    "VOL",
+    "PIT",
+    "FIN",
+    "ALG",
+    "FM1",
+    "FM2",
+    "FM3",
+    "FM4",
+    "FLT",
+    "CUT",
+    "RES",
+    "AMP",
+    "LIM",
+    "PAN",
+    "DRY",
+    
+    "SCH",
+    "SDL",
+    "SRV",
+    
+    "EA1",
+    "AT1",
+    "HO1",
+    "DE1",
+    "ET1",
+    
+    "EA2",
+    "AT2",
+    "HO2",
+    "DE2",
+    "ET2",
+    
+    "LA1",
+    "LF1",
+    "LT1",
+    
+    "LA2",
+    "LF2",
+    "LT2",
+    
+    "FMP",
+    
+    "---",
+    "---",
+    "---"
+  ];
+
 #[derive(PartialEq, Debug, Default, Clone)]
 pub struct Operator {
     pub shape: FMWave,
@@ -102,6 +151,10 @@ pub struct FMSynth {
 
 impl FMSynth {
     const MOD_OFFSET : usize = 2;
+
+    pub fn command_name(&self, _ver: Version) -> &[&'static str] {
+        &FM_FX_COMMANDS
+    }
 
     pub fn write(&self, w: &mut Writer) {
         w.write_string(&self.name, 12);
