@@ -31,6 +31,37 @@ pub enum Instrument {
     None
 }
 
+/// For every instrument, retrieve the command names
+#[derive(Clone, Copy)]
+pub struct CommandPack {
+    /// Instruments command
+    pub instr: &'static [&'static str],
+
+    /// For all the modulators, their respective
+    /// command names
+    pub mod_commands: [&'static[&'static str]; 4]
+}
+
+impl Default for CommandPack {
+    fn default() -> Self {
+        Self { instr: Default::default(), mod_commands: Default::default() }
+    }
+}
+
+impl CommandPack {
+    pub fn try_render(self, cmd: u8) -> Option<&'static str> {
+        if cmd < 0x80 { return None }
+
+        let cmd = cmd as usize - 0x80;
+
+        if cmd < self.instr.len() {
+            Some(self.instr[cmd])
+        } else {
+            None
+        }
+    }
+}
+
 pub const INSTRUMENT_MEMORY_SIZE : usize = 215;
 // const MOD_OFFSET : usize = 0x3B;
 
@@ -39,6 +70,30 @@ impl Instrument {
         match self {
             Instrument::None => true,
             _ => false
+        }
+    }
+
+    pub fn instr_command_text(&self, ver: Version) -> CommandPack {
+        let (commands, mods) =
+            match self {
+                Instrument::WavSynth(ws)     => (ws.command_name(ver), &ws.synth_params.mods),
+                Instrument::MacroSynth(ms) => (ms.command_name(ver), &ms.synth_params.mods),
+                Instrument::Sampler(s)        => (s.command_name(ver), &s.synth_params.mods),
+                Instrument::MIDIOut(mo)       => (mo.command_name(ver), &mo.mods.mods),
+                Instrument::FMSynth(fs)       => (fs.command_name(ver), &fs.synth_params.mods),
+                Instrument::HyperSynth(hs) => (hs.command_name(ver), &hs.synth_params.mods),
+                Instrument::External(ex) => (ex.command_name(ver), &ex.synth_params.mods),
+                Instrument::None => return CommandPack::default()
+            };
+
+        CommandPack {
+            instr: commands,
+            mod_commands: [
+                mods[0].command_name(ver),
+                mods[1].command_name(ver),
+                mods[2].command_name(ver),
+                mods[3].command_name(ver)
+            ]
         }
     }
 

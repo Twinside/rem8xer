@@ -1,5 +1,6 @@
 use crate::reader::*;
-use crate::instruments::modulator::*;
+use crate::instruments::modulator::ahd_env::AHDEnv;
+use crate::instruments::modulator::lfo::LFO;
 
 use arr_macro::arr;
 

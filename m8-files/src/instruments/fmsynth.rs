@@ -152,7 +152,7 @@ pub struct FMSynth {
 impl FMSynth {
     const MOD_OFFSET : usize = 2;
 
-    pub fn command_name(&self, _ver: Version) -> &[&'static str] {
+    pub fn command_name(&self, _ver: Version) -> &'static [&'static str] {
         &FM_FX_COMMANDS
     }
 

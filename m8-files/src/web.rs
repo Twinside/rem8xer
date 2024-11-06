@@ -90,7 +90,8 @@ pub unsafe fn get_chain_steps(song: &WasmSong, chain_index: usize) -> js_sys::Ui
 
 #[wasm_bindgen]
 pub fn show_phrase(song: &WasmSong, phrase: usize) -> String {
-    song.song.phrases[phrase].print_screen()
+    let song = &song.song;
+    song.phrases[phrase].print_screen(&song.instruments)
 }
 
 #[wasm_bindgen]

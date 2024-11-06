@@ -127,7 +127,7 @@ pub struct MacroSynth {
 impl MacroSynth {
     pub const MOD_OFFSET : usize = 30;
 
-    pub fn command_name(&self, _ver: Version) -> &[&'static str] {
+    pub fn command_name(&self, _ver: Version) -> &'static [&'static str] {
         &MACRO_SYNTH_COMMANDS 
     }
 

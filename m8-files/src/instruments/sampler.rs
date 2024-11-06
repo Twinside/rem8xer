@@ -88,7 +88,7 @@ const SAMPLER_FX_COMMANDS : [&'static str; 37] =
 impl Sampler {
     pub const MOD_OFFSET : usize = 29;
 
-    pub fn command_name(&self, _ver: Version) -> &[&'static str] {
+    pub fn command_name(&self, _ver: Version) -> &'static[&'static str] {
         &SAMPLER_FX_COMMANDS 
     }
 

@@ -2,6 +2,7 @@ import * as W from '../../m8-files/pkg/m8_files';
 import { clearPanel, GlobalState, SongPane } from "../state";
 import { downloadBlob } from "../utils";
 import emptyUrl from "../V4EMPTY.m8s";
+import revUrl from "../CMDMAPPING.m8s";
 import { loadDroppedSong, loadUrl } from "../fileio";
 import { SongSide } from "./common";
 import { StepsRender } from "./steps_render";
@@ -22,6 +23,7 @@ export function SongViewer(props: { side: SongSide, panel: SongPane }) {
   if (song === undefined) {
     return <div class="rootcolumn">
       <button onClick={() => loadUrl(state, panel, emptyUrl)}>Load empty song</button>
+      <button onClick={() => loadUrl(state, panel, revUrl)}>Reversing</button>
       <div class="filetarget"
            onDragOver={(ev) => ev.preventDefault()}
            onDrop={(evt) => loadDroppedSong(state, evt, props.panel)}>Drag M8 song file here</div>

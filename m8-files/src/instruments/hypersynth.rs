@@ -1,6 +1,7 @@
 use crate::reader::*;
 use super::common::SynthParams;
 use super::common::TranspEq;
+use super::Version;
 
 use arr_macro::arr;
 
@@ -22,8 +23,16 @@ pub struct HyperSynth {
     pub chords: [[u8; 6]; 0x10]
 }
 
+const HYPERSYNTH_COMMAND_NAMES : [&'static str; 0] =
+    [
+    ];
+
 impl HyperSynth {
     const MOD_OFFSET : usize = 23;
+
+    pub fn command_name(&self, _ver : Version) -> &'static[&'static str] {
+        &HYPERSYNTH_COMMAND_NAMES 
+    }
 
     pub fn write(&self, w: &mut Writer) {
         w.write_string(&self.name, 12);

@@ -21,7 +21,6 @@ use crate::eq::Equ;
 pub use crate::fx::*;
 pub use crate::instruments::*;
 use crate::reader::*;
-use crate::instruments::modulator::Mod;
 use crate::remapper::InstrumentMapping;
 use crate::remapper::PhraseMapping;
 pub use crate::scale::*;
@@ -98,12 +97,12 @@ impl fmt::Debug for Song {
             .field("key", &self.key)
             .field("song", &self.song)
             .field("chains", self.chains.get(0).unwrap_or(&Chain::default()))
-            .field("phrases", self.phrases.get(0).unwrap_or(&Phrase::default()))
+            .field("phrases", &self.phrase_view(0))
             .field(
                 "instruments",
                 self.instruments.get(0).unwrap_or(&Instrument::default()),
             )
-            .field("tables", &self.tables[0])
+            .field("tables", &self.table_view(0))
             .field("grooves", &self.grooves[0])
             .field("scales", &self.scales[0])
             .field("eqs", self.eqs.get(0).unwrap_or(&Equ::default() ) )
@@ -128,6 +127,25 @@ impl Song {
     pub const N_INSTRUMENT_EQS: usize = 32;
     pub const N_EQS: usize = Song::N_INSTRUMENT_EQS + 3;
     pub const N_MIDI_MAPPINGS: usize = 128;
+
+    pub fn phrase_view(&self, ix: usize) -> PhraseView {
+        PhraseView {
+            phrase: &self.phrases[ix],
+            instruments: &self.instruments
+        }
+    }
+
+    pub fn table_view(&self, ix: usize) -> TableView {
+        TableView {
+            table: &self.tables[ix],
+            instrument:
+                if ix < Song::N_INSTRUMENTS {
+                    self.instruments[ix].instr_command_text(self.version)
+                } else {
+                    CommandPack::default()
+                }
+        }
+    }
 
     pub fn eq_debug(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_list().entries(self.eqs.iter()).finish()
@@ -454,10 +472,25 @@ impl Phrase {
         }
     }
 
-    pub fn print_screen(&self) -> String {
-        (0..16).fold("  N   V  I  FX1   FX2   FX3  \n".to_string(), |s, row| {
-            s + &self.steps[row].print(row as u8, self.version) + "\n"
-        })
+    pub fn print_screen(&self, instruments: &[Instrument]) -> String {
+        let mut cmd_pack = CommandPack::default();
+        let fx_commands = FX::fx_command_names(self.version);
+        let mut acc = String::from("  N   V  I  FX1   FX2   FX3  \n");
+
+
+        for i in 0 .. 16 {
+            let step = &self.steps[i];
+            let instrument = step.instrument as usize;
+
+            if instrument < Song::N_INSTRUMENTS {
+                cmd_pack = instruments[instrument].instr_command_text(self.version);
+            }
+
+            acc += &step.print(i as u8, fx_commands, cmd_pack);
+            acc += "\n";
+        }
+
+        acc
     }
 
     pub fn map_instruments(&self, instr_map: &InstrumentMapping) -> Self {
@@ -486,12 +519,18 @@ impl Phrase {
     }
 }
 
-impl fmt::Display for Phrase {
+pub struct PhraseView<'a> {
+    phrase: &'a Phrase,
+    instruments: &'a [Instrument]
+}
+
+impl<'a> fmt::Display for PhraseView<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "PHRASE \n\n{}", self.print_screen())
+        write!(f, "PHRASE \n\n{}", self.phrase.print_screen(self.instruments))
     }
 }
-impl fmt::Debug for Phrase {
+
+impl<'a> fmt::Debug for PhraseView<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", &self)
     }
@@ -509,7 +548,7 @@ pub struct Step {
 
 
 impl Step {
-    pub fn print(&self, row: u8, version: Version) -> String {
+    pub fn print(&self, row: u8, fx_cmds: FxCommands, cmd_pack: CommandPack ) -> String {
         let velocity = if self.velocity == 255 {
             format!("--")
         } else {
@@ -520,15 +559,16 @@ impl Step {
         } else {
             format!("{:02x}", self.instrument)
         };
+
         format!(
             "{:x} {} {} {} {} {} {}",
             row,
             self.note,
             velocity,
             instrument,
-            self.fx1.print(version),
-            self.fx2.print(version),
-            self.fx3.print(version)
+            self.fx1.print(fx_cmds, cmd_pack),
+            self.fx2.print(fx_cmds, cmd_pack),
+            self.fx3.print(fx_cmds, cmd_pack)
         )
     }
 
@@ -646,10 +686,19 @@ impl Table {
         self.steps.iter().all(|s| s.is_empty())
     }
 
-    pub fn print_screen(&self) -> String {
-        (0..16).fold("  N  V  FX1   FX2   FX3  \n".to_string(), |s, row| {
-            s + &self.steps[row].print(row as u8, self.version) + "\n"
-        })
+    pub fn print_screen(&self, cmd: CommandPack) -> String {
+        let fx_cmd = FX::fx_command_names(self.version);
+        let cmd = CommandPack::default();
+        let mut acc = String::from("  N  V  FX1   FX2   FX3  \n");
+
+        for i in 0 .. 16 {
+            let step = &self.steps[i];
+
+            acc += &step.print(i as u8, fx_cmd, cmd);
+            acc += "\n";
+        }
+
+        acc
     }
 
     pub fn write(&self, w: &mut Writer) {
@@ -663,12 +712,18 @@ impl Table {
     }
 }
 
-impl fmt::Display for Table {
+pub struct TableView<'a> {
+    table: &'a Table,
+    instrument: CommandPack
+}
+
+impl<'a> fmt::Display for TableView<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "TABLE\n\n{}", self.print_screen())
+        write!(f, "TABLE\n\n{}", self.table.print_screen(self.instrument))
     }
 }
-impl fmt::Debug for Table {
+
+impl<'a> fmt::Debug for TableView<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", &self)
     }
@@ -692,7 +747,7 @@ impl TableStep {
             self.fx3.is_empty()
     }
 
-    pub fn print(&self, row: u8, version: Version) -> String {
+    pub fn print(&self, row: u8, fx_cmd: FxCommands, cmds: CommandPack) -> String {
         let transpose = if self.transpose == 255 {
             format!("--")
         } else {
@@ -708,9 +763,9 @@ impl TableStep {
             row,
             transpose,
             velocity,
-            self.fx1.print(version),
-            self.fx2.print(version),
-            self.fx3.print(version)
+            self.fx1.print(fx_cmd, cmds),
+            self.fx2.print(fx_cmd, cmds),
+            self.fx3.print(fx_cmd, cmds)
         )
     }
 
@@ -775,6 +830,8 @@ impl fmt::Debug for Groove {
 ////////////////////////////////////////////////////////////////////////////////////
 #[cfg(test)]
 mod tests {
+    use modulator::Mod;
+
     use crate::song::*;
     use std::fs::File;
 

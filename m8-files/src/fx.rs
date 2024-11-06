@@ -1,5 +1,27 @@
 use crate::reader::*;
 use crate::version::*;
+use crate::CommandPack;
+
+#[derive(Copy, Clone)]
+pub struct FxCommands {
+    pub seq_commands: &'static[&'static str],
+    pub mixer_commands: &'static[&'static str]
+}
+
+impl FxCommands {
+    pub fn try_render(self, cmd: u8) -> Option<&'static str> {
+        let seq_count = self.seq_commands.len();
+        let cmd = cmd as usize;
+
+        if cmd < seq_count {
+            Some(self.seq_commands[cmd as usize])
+        } else if cmd - seq_count < self.mixer_commands.len() {
+            Some(self.mixer_commands[cmd - seq_count])
+        } else {
+            None
+        }
+    }
+}
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub struct FX {
@@ -168,36 +190,39 @@ impl FX {
         self.command == 0xFF
     }
 
-    pub fn print(&self, version: Version) -> String {
+    pub fn print(&self, fx: FxCommands, pack: CommandPack) -> String {
         if self.is_empty() {
-            format!("---00")
+            format!("---  ")
         } else {
-            let c = if version.at_least(3, 0) {
-                self.format_command3()
-            } else {
-                self.format_command2()
-            };
+            let c = self.format_command(fx, pack);
             format!("{}{:02x}", c, self.value)
         }
     }
 
-    fn format_command2(&self) -> String {
-        match self.command {
-            c if c <= 0x16 => String::from(SEQ_COMMAND_V2[c as usize]),
-            c if c <= 0x3A => String::from(FX_MIXER_COMMAND_V2[c as usize]),
-            c if 0x80 <= c && c <= 0xA2 => format!("I{:02X}", c - 0x80),
-            // Unknown
-            x => format!("{:02x} ", x),
+    pub fn fx_command_names(ver: Version) -> FxCommands {
+        if ver.at_least(3, 0) {
+            FxCommands {
+                seq_commands: &SEQ_COMMAND_V3,
+                mixer_commands: &FX_MIXER_COMMAND_V3
+            }
+        } else {
+            FxCommands {
+                seq_commands: &SEQ_COMMAND_V2,
+                mixer_commands: &FX_MIXER_COMMAND_V2
+            }
         }
     }
 
-    fn format_command3(&self) -> String {
-        match self.command {
-            c if c <= 0x1A => String::from(SEQ_COMMAND_V3[c as usize]),
-            c if c <= 0x3E => String::from(FX_MIXER_COMMAND_V3[c as usize]),
-            c if 0x80 <= c && c <= 0xA7 => format!("I{:02x}", c),
-            // Unknown
-            x => format!("{:02x} ", x),
+    fn format_command(&self, fx: FxCommands, instr: CommandPack) -> String {
+        match fx.try_render(self.command) {
+            Some(s) => String::from(s),
+            None => {
+                match instr.try_render(self.command) {
+                    Some(v) => String::from(v),
+                    None if self.command <= 0xA2 => format!("I{:02X}", self.command - 0x80),
+                    None => format!(" {:02x} ", self.command),
+                }
+            }
         }
     }
 }

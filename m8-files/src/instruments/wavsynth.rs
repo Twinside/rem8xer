@@ -147,7 +147,7 @@ const WAVSYNTH_COMMAND_NAMES : [&'static str; 37] =
 impl WavSynth {
     pub const MOD_OFFSET : usize = 30;
 
-    pub fn command_name(&self, _ver: Version) -> &[&'static str] {
+    pub fn command_name(&self, _ver: Version) -> &'static [&'static str] {
         &WAVSYNTH_COMMAND_NAMES
     }
 

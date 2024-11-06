@@ -2,6 +2,7 @@ use crate::reader::*;
 use super::common::SynthParams;
 use super::common::TranspEq;
 use super::midi::ControlChange;
+use super::Version;
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct ExternalInst {
@@ -22,8 +23,16 @@ pub struct ExternalInst {
     pub ccd: ControlChange,
 }
 
+const EXTERNAL_INST_COMMANDS : [&'static str; 0] =
+    [
+    ];
+
 impl ExternalInst {
     const MOD_OFFSET: usize = 22;
+
+    pub fn command_name(&self, _ver: Version) -> &'static [&'static str] {
+        &EXTERNAL_INST_COMMANDS
+    }
 
     pub fn write(&self, w: &mut Writer) {
         w.write_string(&self.name, 12);

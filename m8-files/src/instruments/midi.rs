@@ -26,6 +26,11 @@ impl ControlChange {
         })
     }
 }
+
+const MIDI_OUT_COMMAND_NAMES : [&'static str; 0] =
+    [
+    ];
+
 #[derive(PartialEq, Debug, Clone)]
 pub struct MIDIOut {
     pub number: u8,
@@ -44,6 +49,10 @@ pub struct MIDIOut {
 
 impl MIDIOut {
     const MOD_OFFSET : usize = 21;
+
+    pub fn command_name(&self, _ver: Version) -> &'static[&'static str] {
+        &MIDI_OUT_COMMAND_NAMES 
+    }
 
     pub fn write(&self, w: &mut Writer) {
         w.write_string(&self.name, 12);
