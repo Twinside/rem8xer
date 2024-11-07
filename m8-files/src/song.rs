@@ -688,7 +688,6 @@ impl Table {
 
     pub fn print_screen(&self, cmd: CommandPack) -> String {
         let fx_cmd = FX::fx_command_names(self.version);
-        let cmd = CommandPack::default();
         let mut acc = String::from("  N  V  FX1   FX2   FX3  \n");
 
         for i in 0 .. 16 {

@@ -1,23 +1,19 @@
+use array_concat::*;
 use crate::reader::*;
 use crate::version::*;
 use crate::CommandPack;
 
 #[derive(Copy, Clone)]
 pub struct FxCommands {
-    pub seq_commands: &'static[&'static str],
-    pub mixer_commands: &'static[&'static str],
-    pub extra_commands: &'static[&'static str]
+    pub commands: &'static[&'static str]
 }
 
 impl FxCommands {
     pub fn try_render(self, cmd: u8) -> Option<&'static str> {
-        let seq_count = self.seq_commands.len();
         let cmd = cmd as usize;
 
-        if cmd < seq_count {
-            Some(self.seq_commands[cmd as usize])
-        } else if cmd - seq_count < self.mixer_commands.len() {
-            Some(self.mixer_commands[cmd - seq_count])
+        if cmd < self.commands.len() {
+            Some(self.commands[cmd])
         } else {
             None
         }
@@ -36,6 +32,10 @@ impl Default for FX {
     }
 }
 
+
+//////////////////////////////////////////
+/// MARK: V2 commands
+//////////////////////////////////////////
 const SEQ_COMMAND_V2 : [&'static str; 23] =
     [
         "ARP",
@@ -103,6 +103,12 @@ const FX_MIXER_COMMAND_V2 : [&'static str; 36] =
         "USB",
     ];
 
+const COMMANDS_V2 : [&'static str; concat_arrays_size!(SEQ_COMMAND_V2, FX_MIXER_COMMAND_V2)] =
+    concat_arrays!(SEQ_COMMAND_V2, FX_MIXER_COMMAND_V2);
+
+//////////////////////////////////////////
+/// MARK: V3 commands
+//////////////////////////////////////////
 const SEQ_COMMAND_V3 : [&'static str; 27] =
     [
         "ARP",
@@ -174,7 +180,13 @@ const FX_MIXER_COMMAND_V3 : [&'static str; 36] =
         "USB",
     ];
 
-const FX_MIXER_COMMAND_V4 : [&'static str; 36] =
+const COMMANDS_V3 : [&'static str; concat_arrays_size!(SEQ_COMMAND_V3, FX_MIXER_COMMAND_V3)] =
+    concat_arrays!(SEQ_COMMAND_V3, FX_MIXER_COMMAND_V3);
+
+//////////////////////////////////////////
+/// MARK: V4 commands
+//////////////////////////////////////////
+const FX_MIXER_COMMAND_V4 : [&'static str; 44] =
     [
         "VMV",
         "XCM",
@@ -192,7 +204,7 @@ const FX_MIXER_COMMAND_V4 : [&'static str; 36] =
         "XRW",
         "XRZ",
         "VCH",
-        "VCD",
+        "VDE",
         "VRE",
         "VT1",
         "VT2",
@@ -202,29 +214,29 @@ const FX_MIXER_COMMAND_V4 : [&'static str; 36] =
         "VT6",
         "VT7",
         "VT8",
-        "DJF",
-        "IVO",
+        "DJC",
+        "VIN",
         "ICH",
         "IDE",
         "IRE",
-        "IV2",
+        "VI2",
         "IC2",
         "ID2",
         "IR2",
         "USB",
+
+        "DJR", // 0x3F
+        "DJT", // 0x40
+        "EQM", // 0x41
+        "EQI", // 0x42
+        "INS", // 0x43
+        "RTO", // 0x44
+        "ARC", // 0x45
+        "GGR", // 0x46
     ];
 
-const EXTRA_COMMAND_V4 : [&'static str; 8] =
-  [
-    "DJR", // 0x3F
-    "DJT", // 0x40
-    "EQM", // 0x41
-    "EQI", // 0x42
-    "INS", // 0x43
-    "RTO", // 0x44
-    "ARC", // 0x45
-    "GGR", // 0x46
-  ];
+const COMMANDS_V4 : [&'static str; concat_arrays_size!(SEQ_COMMAND_V3, FX_MIXER_COMMAND_V4)] =
+    concat_arrays!(SEQ_COMMAND_V3, FX_MIXER_COMMAND_V4);
 
 impl FX {
     pub(crate) fn from_reader(reader: &mut Reader) -> M8Result<Self> {
@@ -255,23 +267,11 @@ impl FX {
     /// Retrieve command names for a given version
     pub fn fx_command_names(ver: Version) -> FxCommands {
         if ver.at_least(4, 0) {
-            FxCommands {
-                seq_commands: &SEQ_COMMAND_V3,
-                mixer_commands: &FX_MIXER_COMMAND_V3,
-                extra_commands: &[]
-            }
+            FxCommands { commands: &COMMANDS_V4 }
         } else if ver.at_least(3, 0) {
-            FxCommands {
-                seq_commands: &SEQ_COMMAND_V3,
-                mixer_commands: &FX_MIXER_COMMAND_V3,
-                extra_commands: &[]
-            }
+            FxCommands { commands: &COMMANDS_V3 }
         } else {
-            FxCommands {
-                seq_commands: &SEQ_COMMAND_V2,
-                mixer_commands: &FX_MIXER_COMMAND_V2,
-                extra_commands: &[]
-            }
+            FxCommands { commands: &COMMANDS_V2 }
         }
     }
 

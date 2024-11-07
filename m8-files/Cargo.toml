@@ -14,6 +14,7 @@ keywords = ["music"]
 
 [dependencies]
 arr_macro = "0.2.1"
+array-concat = "0.5.3"
 byteorder = "1.4.3"
 console_error_panic_hook = "=0.1.7"
 js-sys = "0.3.72"
