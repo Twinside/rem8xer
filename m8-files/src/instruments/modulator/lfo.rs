@@ -55,13 +55,17 @@ pub struct LFO {
     pub retrigger: u8
 }
 
-const LFO_COMMAND_NAMES : [&'static str; 0] =
-    [
-    ];
+const LFO_COMMAND_NAMES : [[&'static str; 5]; 4] =
+  [
+    ["LA1", "LO1", "LS1", "LF1", "LT1"],
+    ["LA2", "LO2", "LS2", "LF2", "LT2"],
+    ["LA3", "LO3", "LS3", "LF3", "LT3"],
+    ["LA4", "LO4", "LS4", "LF4", "LT4"],
+  ];
 
 impl LFO {
-    pub fn command_name(_ver: Version) -> &'static[&'static str] {
-        &LFO_COMMAND_NAMES
+    pub fn command_name(_ver: Version, mod_id: usize) -> &'static[&'static str] {
+        &LFO_COMMAND_NAMES[mod_id]
     }
 
     pub fn from_reader2(reader: &mut Reader) -> M8Result<Self> {

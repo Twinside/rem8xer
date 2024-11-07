@@ -4,6 +4,8 @@ use crate::instruments::common::*;
 use num_enum::IntoPrimitive;
 use num_enum::TryFromPrimitive;
 
+use super::CommandPack;
+
 #[repr(u8)]
 #[allow(non_camel_case_types)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
@@ -97,7 +99,7 @@ pub struct WavSynth {
     pub scan: u8,
 }
 
-const WAVSYNTH_COMMAND_NAMES : [&'static str; 37] =
+const WAVSYNTH_COMMAND_NAMES : [&'static str; CommandPack::BASE_INSTRUMENT_COMMAND_COUNT] =
   [
     "VOL",
     "PIT",
@@ -107,7 +109,7 @@ const WAVSYNTH_COMMAND_NAMES : [&'static str; 37] =
     "MUL",
     "WRP",
     "MIR",
-    "FLT",
+    "FIL",
     "CUT",
     "RES",
     "AMP",
@@ -118,30 +120,6 @@ const WAVSYNTH_COMMAND_NAMES : [&'static str; 37] =
     "SCH",
     "SDL",
     "SRV",
-
-    "EA1",
-    "AT1",
-    "HO1",
-    "DE1",
-    "ET1",
-
-    "EA2",
-    "AT2",
-    "HO2",
-    "DE2",
-    "ET2",
-
-    "LA1",
-    "LF1",
-    "LT1",
-
-    "LA2",
-    "LF2",
-    "LT2",
-
-    "XX1",
-    "XX2",
-    "XX3"
   ];
 
 impl WavSynth {

@@ -4,6 +4,8 @@ use crate::instruments::common::*;
 
 use arr_macro::arr;
 
+use super::CommandPack;
+
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub struct ControlChange {
     /// CC number (target)
@@ -27,9 +29,25 @@ impl ControlChange {
     }
 }
 
-const MIDI_OUT_COMMAND_NAMES : [&'static str; 0] =
-    [
-    ];
+const MIDI_OUT_COMMAND_NAMES : [&'static str; CommandPack::BASE_INSTRUMENT_COMMAND_COUNT - 2] =
+  [
+    "VOL",
+    "PIT",
+    "MPG",
+    "MPB",
+    "ADD",
+    "CHD",
+    "CCA",
+    "CCB",
+    "CCC",
+    "CCD",
+    "CCE",
+    "CCF",
+    "CCG",
+    "CCH",
+    "CCI",
+    "CCJ",
+  ];
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct MIDIOut {

@@ -1,10 +1,12 @@
 use crate::reader::*;
 use crate::version::*;
+use common::SynthParams;
 use external_inst::ExternalInst;
 use fmsynth::FMSynth;
 use hypersynth::HyperSynth;
 use macrosynth::MacroSynth;
 use midi::MIDIOut;
+use modulator::Mod;
 use sampler::Sampler;
 use wavsynth::WavSynth;
 
@@ -39,7 +41,7 @@ pub struct CommandPack {
 
     /// For all the modulators, their respective
     /// command names
-    pub mod_commands: [&'static[&'static str]; 4]
+    pub mod_commands: [&'static[&'static str]; SynthParams::MODULATOR_COUNT]
 }
 
 impl Default for CommandPack {
@@ -49,16 +51,45 @@ impl Default for CommandPack {
 }
 
 impl CommandPack {
+    pub const BASE_INSTRUMENT_COMMAND_COUNT : usize = 18;
+    pub const INSTRUMENT_COMMAND_OFFSET : usize = 0x80;
+    pub const BASE_INSTRUMENT_COMMAND_END : usize =
+        CommandPack::INSTRUMENT_COMMAND_OFFSET +
+            Mod::COMMAND_PER_MOD * SynthParams::MODULATOR_COUNT;
+
+    pub fn accepts(self, cmd: u8) -> bool {
+        let cmd = cmd as usize;
+        CommandPack::INSTRUMENT_COMMAND_OFFSET <= cmd &&
+            cmd <= (CommandPack::BASE_INSTRUMENT_COMMAND_END + self.instr.len())
+    }
+
     pub fn try_render(self, cmd: u8) -> Option<&'static str> {
-        if cmd < 0x80 { return None }
+        if (cmd as usize) < CommandPack::INSTRUMENT_COMMAND_OFFSET { return None }
 
-        let cmd = cmd as usize - 0x80;
+        let cmd = cmd as usize - CommandPack::INSTRUMENT_COMMAND_OFFSET;
 
-        if cmd < self.instr.len() {
-            Some(self.instr[cmd])
-        } else {
-            None
+        if  cmd < CommandPack::BASE_INSTRUMENT_COMMAND_COUNT {
+            if cmd < self.instr.len() {
+                return Some(self.instr[cmd])
+            } else {
+                return None
+            }
         }
+
+        let mod_cmd = cmd - CommandPack::BASE_INSTRUMENT_COMMAND_COUNT;
+        let mod_ix = mod_cmd / Mod::COMMAND_PER_MOD;
+
+        if mod_ix < self.mod_commands.len() {
+            let ix = mod_cmd - Mod::COMMAND_PER_MOD * mod_ix;
+            return Some(self.mod_commands[mod_ix][ix])
+        }
+
+        let extra_cmd = cmd - (Mod::COMMAND_PER_MOD * SynthParams::MODULATOR_COUNT);
+        if extra_cmd < self.instr.len() {
+            return Some(self.instr[extra_cmd])
+        }
+
+        None
     }
 }
 
@@ -89,10 +120,10 @@ impl Instrument {
         CommandPack {
             instr: commands,
             mod_commands: [
-                mods[0].command_name(ver),
-                mods[1].command_name(ver),
-                mods[2].command_name(ver),
-                mods[3].command_name(ver)
+                mods[0].command_name(ver, 0),
+                mods[1].command_name(ver, 1),
+                mods[2].command_name(ver, 2),
+                mods[3].command_name(ver, 3)
             ]
         }
     }

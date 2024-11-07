@@ -5,7 +5,8 @@ use crate::CommandPack;
 #[derive(Copy, Clone)]
 pub struct FxCommands {
     pub seq_commands: &'static[&'static str],
-    pub mixer_commands: &'static[&'static str]
+    pub mixer_commands: &'static[&'static str],
+    pub extra_commands: &'static[&'static str]
 }
 
 impl FxCommands {
@@ -173,6 +174,58 @@ const FX_MIXER_COMMAND_V3 : [&'static str; 36] =
         "USB",
     ];
 
+const FX_MIXER_COMMAND_V4 : [&'static str; 36] =
+    [
+        "VMV",
+        "XCM",
+        "XCF",
+        "XCW",
+        "XCR",
+        "XDT",
+        "XDF",
+        "XDW",
+        "XDR",
+        "XRS",
+        "XRD",
+        "XRM",
+        "XRF",
+        "XRW",
+        "XRZ",
+        "VCH",
+        "VCD",
+        "VRE",
+        "VT1",
+        "VT2",
+        "VT3",
+        "VT4",
+        "VT5",
+        "VT6",
+        "VT7",
+        "VT8",
+        "DJF",
+        "IVO",
+        "ICH",
+        "IDE",
+        "IRE",
+        "IV2",
+        "IC2",
+        "ID2",
+        "IR2",
+        "USB",
+    ];
+
+const EXTRA_COMMAND_V4 : [&'static str; 8] =
+  [
+    "DJR", // 0x3F
+    "DJT", // 0x40
+    "EQM", // 0x41
+    "EQI", // 0x42
+    "INS", // 0x43
+    "RTO", // 0x44
+    "ARC", // 0x45
+    "GGR", // 0x46
+  ];
+
 impl FX {
     pub(crate) fn from_reader(reader: &mut Reader) -> M8Result<Self> {
         Ok(Self {
@@ -199,16 +252,25 @@ impl FX {
         }
     }
 
+    /// Retrieve command names for a given version
     pub fn fx_command_names(ver: Version) -> FxCommands {
-        if ver.at_least(3, 0) {
+        if ver.at_least(4, 0) {
             FxCommands {
                 seq_commands: &SEQ_COMMAND_V3,
-                mixer_commands: &FX_MIXER_COMMAND_V3
+                mixer_commands: &FX_MIXER_COMMAND_V3,
+                extra_commands: &[]
+            }
+        } else if ver.at_least(3, 0) {
+            FxCommands {
+                seq_commands: &SEQ_COMMAND_V3,
+                mixer_commands: &FX_MIXER_COMMAND_V3,
+                extra_commands: &[]
             }
         } else {
             FxCommands {
                 seq_commands: &SEQ_COMMAND_V2,
-                mixer_commands: &FX_MIXER_COMMAND_V2
+                mixer_commands: &FX_MIXER_COMMAND_V2,
+                extra_commands: &[]
             }
         }
     }
@@ -217,10 +279,13 @@ impl FX {
         match fx.try_render(self.command) {
             Some(s) => String::from(s),
             None => {
-                match instr.try_render(self.command) {
-                    Some(v) => String::from(v),
-                    None if self.command <= 0xA2 => format!("I{:02X}", self.command - 0x80),
-                    None => format!(" {:02x} ", self.command),
+                if instr.accepts(self.command) {
+                    match instr.try_render(self.command) {
+                        Some(v) => String::from(v),
+                        None => format!("I{:02X}", self.command - 0x80),
+                    }
+                } else {
+                    format!("?{:02x}", self.command)
                 }
             }
         }

@@ -91,10 +91,12 @@ pub struct SynthParams {
     pub mixer_delay: u8,
     pub mixer_reverb: u8,
 
-    pub mods: [Mod; 4],
+    pub mods: [Mod; SynthParams::MODULATOR_COUNT],
 }
 
 impl SynthParams {
+    pub const MODULATOR_COUNT : usize = 4;
+
     pub fn mod_only2(_reader: &mut Reader) -> M8Result<Self>{
         Ok(Self {
             volume: 0,

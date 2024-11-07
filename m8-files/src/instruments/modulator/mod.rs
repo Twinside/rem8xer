@@ -26,16 +26,20 @@ pub enum Mod {
 }
 
 impl Mod {
+    /// Size in bytes of the modulator
     const SIZE: usize = 6;
 
-    pub fn command_name(&self, ver: Version) -> &'static[&'static str] {
+    /// Number of commands associated to each mode
+    pub const COMMAND_PER_MOD : usize = 5;
+
+    pub fn command_name(&self, ver: Version, mod_id: usize) -> &'static[&'static str] {
         match self {
-            Mod::AHDEnv(_)  => AHDEnv::command_names(ver),
-            Mod::ADSREnv(_) => ADSREnv::command_name(ver),
-            Mod::DrumEnv(_) => DrumEnv::command_names(ver),
-            Mod::LFO(_) => LFO::command_name(ver),
-            Mod::TrigEnv(_) => TrigEnv::command_name(ver),
-            Mod::TrackingEnv(_) => TrackingEnv::command_name(ver),
+            Mod::AHDEnv(_)  => AHDEnv::command_names(ver, mod_id),
+            Mod::ADSREnv(_) => ADSREnv::command_name(ver, mod_id),
+            Mod::DrumEnv(_) => DrumEnv::command_names(ver, mod_id),
+            Mod::LFO(_) => LFO::command_name(ver, mod_id),
+            Mod::TrigEnv(_) => TrigEnv::command_name(ver, mod_id),
+            Mod::TrackingEnv(_) => TrackingEnv::command_name(ver, mod_id),
         }
     }
 

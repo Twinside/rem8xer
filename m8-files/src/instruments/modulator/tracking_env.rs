@@ -3,9 +3,14 @@ use crate::Version;
 use super::{M8Result, Reader, Writer};
 
 
-const TRACKING_ENV_COMMAND_NAMES : [&'static str; 0] =
-    [
-    ];
+const TRACKING_ENV_COMMAND_NAMES : [[&'static str; 5]; 4] =
+  [
+    ["TA1", "TS1", "TL1", "TH1", "TX1"],
+    ["TA2", "TS2", "TL2", "TH2", "TX2"],
+    ["TA3", "TS3", "TL3", "TH3", "TX3"],
+    ["TA4", "TS4", "TL4", "TH4", "TX4"],
+  ];
+
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct TrackingEnv {
@@ -17,8 +22,8 @@ pub struct TrackingEnv {
 }
 
 impl TrackingEnv {
-    pub fn command_name(_ver: Version) -> &'static[&'static str] {
-        &TRACKING_ENV_COMMAND_NAMES
+    pub fn command_name(_ver: Version, env_id: usize) -> &'static[&'static str] {
+        &TRACKING_ENV_COMMAND_NAMES[env_id]
     }
 
     pub fn write(&self, writer: &mut Writer) {

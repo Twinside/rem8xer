@@ -4,6 +4,8 @@ use crate::instruments::common::*;
 use num_enum::IntoPrimitive;
 use num_enum::TryFromPrimitive;
 
+use super::CommandPack;
+
 #[repr(u8)]
 #[allow(non_camel_case_types)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
@@ -38,7 +40,7 @@ pub struct Sampler {
     pub degrade: u8,
 }
 
-const SAMPLER_FX_COMMANDS : [&'static str; 37] =
+const SAMPLER_FX_COMMANDS : [&'static str; CommandPack::BASE_INSTRUMENT_COMMAND_COUNT + 1] =
   [
     "VOL",
     "PIT",
@@ -60,29 +62,8 @@ const SAMPLER_FX_COMMANDS : [&'static str; 37] =
     "SDL",
     "SRV",
 
-    "EA1",
-    "AT1",
-    "HO1",
-    "DE1",
-    "ET1",
-
-    "EA2",
-    "AT2",
-    "HO2",
-    "DE2",
-    "ET2",
-
-    "LA1",
-    "LF1",
-    "LT1",
-
-    "LA2",
-    "LF2",
-    "LT2",
-
-    "SLI",
-    "---",
-    "---"
+    // EXTRA command
+    "SLI"
   ];
 
 impl Sampler {

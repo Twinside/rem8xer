@@ -6,6 +6,8 @@ use num_enum::TryFromPrimitive;
 
 use arr_macro::arr;
 
+use super::CommandPack;
+
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct FmAlgo(u8);
 
@@ -72,7 +74,7 @@ pub enum FMWave {
     CLK
 }
 
-const FM_FX_COMMANDS : [&'static str; 38] =
+const FM_FX_COMMANDS : [&'static str; CommandPack::BASE_INSTRUMENT_COMMAND_COUNT + 1] =
   [
     "VOL",
     "PIT",
@@ -94,31 +96,7 @@ const FM_FX_COMMANDS : [&'static str; 38] =
     "SDL",
     "SRV",
     
-    "EA1",
-    "AT1",
-    "HO1",
-    "DE1",
-    "ET1",
-    
-    "EA2",
-    "AT2",
-    "HO2",
-    "DE2",
-    "ET2",
-    
-    "LA1",
-    "LF1",
-    "LT1",
-    
-    "LA2",
-    "LF2",
-    "LT2",
-    
     "FMP",
-    
-    "---",
-    "---",
-    "---"
   ];
 
 #[derive(PartialEq, Debug, Default, Clone)]

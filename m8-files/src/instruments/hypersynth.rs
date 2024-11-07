@@ -1,6 +1,7 @@
 use crate::reader::*;
 use super::common::SynthParams;
 use super::common::TranspEq;
+use super::CommandPack;
 use super::Version;
 
 use arr_macro::arr;
@@ -23,8 +24,31 @@ pub struct HyperSynth {
     pub chords: [[u8; 6]; 0x10]
 }
 
-const HYPERSYNTH_COMMAND_NAMES : [&'static str; 0] =
+const HYPERSYNTH_COMMAND_NAMES : [&'static str; CommandPack::BASE_INSTRUMENT_COMMAND_COUNT + 2] =
     [
+      "VOL",
+      "PIT",
+      "FIN",
+      "CRD",
+      "SHF",
+      "SWM",
+      "WID",
+      "SUB",
+      "FLT",
+      "CUT",
+      "RES",
+      "AMP",
+      "LIM",
+      "PAN",
+      "DRY",
+      
+      "SCH",
+      "SDL",
+      "SRV",
+
+      // EXTRA
+      "CVO",
+      "SNC"
     ];
 
 impl HyperSynth {

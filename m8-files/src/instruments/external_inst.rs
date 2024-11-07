@@ -2,6 +2,7 @@ use crate::reader::*;
 use super::common::SynthParams;
 use super::common::TranspEq;
 use super::midi::ControlChange;
+use super::CommandPack;
 use super::Version;
 
 #[derive(PartialEq, Debug, Clone)]
@@ -23,8 +24,31 @@ pub struct ExternalInst {
     pub ccd: ControlChange,
 }
 
-const EXTERNAL_INST_COMMANDS : [&'static str; 0] =
+const EXTERNAL_INST_COMMANDS : [&'static str; CommandPack::BASE_INSTRUMENT_COMMAND_COUNT + 2] =
     [
+      "VOL",
+      "PIT",
+      "MPB",
+      "MPG",
+      "CCA",
+      "CCB",
+      "CCC",
+      "CCD",
+      "FLT",
+      "CUT",
+      "RES",
+      "AMP",
+      "LIM",
+      "PAN",
+      "DRY",
+      
+      "SCH",
+      "SDL",
+      "SRV",
+
+      // EXTRA
+      "ADD",
+      "CHD"
     ];
 
 impl ExternalInst {

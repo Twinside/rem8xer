@@ -13,13 +13,17 @@ pub struct TrigEnv {
     pub src: u8,
 }
 
-const TRIGENV_COMMAND_NAMES : [&'static str; 0] =
-    [
-    ];
+const TRIGENV_COMMAND_NAMES : [[&'static str; 5]; 4] =
+  [
+    ["EA1", "AT1", "HO1", "SU1", "ET1"],
+    ["EA2", "AT2", "HO2", "SU2", "ET2"],
+    ["EA3", "AT3", "HO3", "SU3", "ET3"],
+    ["EA4", "AT4", "HO4", "SU4", "ET4"]
+  ];
 
 impl TrigEnv {
-    pub fn command_name(_ver: Version) -> &'static[&'static str] {
-        &TRIGENV_COMMAND_NAMES
+    pub fn command_name(_ver: Version, mod_id: usize) -> &'static[&'static str] {
+        &TRIGENV_COMMAND_NAMES[mod_id]
     }
 
     pub fn write(&self, w: &mut Writer) {

@@ -18,12 +18,12 @@ pub fn set_panic_hook() {
 
 #[wasm_bindgen]
 extern "C" {
-    fn alert(s: &str);
+    pub fn alert(s: &str);
 
     // Use `js_namespace` here to bind `console.log(..)` instead of just
     // `log(..)`
     #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
+    pub fn log(s: &str);
 }
 
 
