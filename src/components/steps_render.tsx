@@ -91,13 +91,18 @@ export function StepsRender(props: {
           <HexNumberEditor
             value={edition.current_value}
             onChange={onChange}
-            onValidate={onValidate} />);
+            onValidate={onValidate}
+            onCancel={() => {
+              pane.edited_chain.value = undefined
+              pane.bumper.value = pane.bumper.value + 1;
+            } }/>);
       } else {
         const elem =
           <span class={"songchain scselect" + selClass}
                 data-line={line}
                 data-col={col}
                 draggable={true}
+                title="Double click to renumber"
                 onDragStart={evt => dragStart(evt, chain)}
                 onDragOver={evt => dragOver(evt)}
                 onDrop={evt => dragEnd(evt, line, col)}

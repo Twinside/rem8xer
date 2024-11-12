@@ -5,6 +5,7 @@ import { GlobalState, initState, SongPane } from "./state";
 import { InstrumentList } from "./components/instrument_list";
 import { ChainViewer } from "./components/chain_viewer";
 import { SongViewer } from "./components/song_viwer";
+import { PhraseList } from "./components/phrase_list";
 
 W.init();
 const state = initState();
@@ -25,6 +26,11 @@ function SongExplorer(props: { pane: SongPane }) {
     </details>
     <details class="songsection">
       <summary>Phrases</summary>
+      <PhraseList
+        bump={props.pane.bumper}
+        song={song}
+        selected_phrase={props.pane.selected_phrase}
+        edited_phrase={props.pane.edited_phrase} />
     </details>
     <details class="songsection">
       <summary>Intruments</summary>

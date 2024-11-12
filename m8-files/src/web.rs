@@ -211,10 +211,26 @@ pub fn allocated_instrument_list(song: &WasmSong) -> Vec<usize> {
         .iter()
         .enumerate()
         .filter_map(|(i, inst)|
-            if inst.is_empty() {
-                None
-            } else {
-                Some(i)
-            })
+            if inst.is_empty() { None } else { Some(i) })
+        .collect()
+}
+
+#[wasm_bindgen]
+pub fn allocated_phrase_list(song: &WasmSong) -> Vec<usize> {
+    song.song.phrases
+        .iter()
+        .enumerate()
+        .filter_map(|(i, phrase)|
+            if phrase.is_empty() { None } else { Some(i) })
+        .collect()
+}
+
+#[wasm_bindgen]
+pub fn allocated_chain_list(song: &WasmSong) -> Vec<usize> {
+    song.song.chains
+        .iter()
+        .enumerate()
+        .filter_map(|(i, chain)|
+            if chain.is_empty() { None } else { Some(i) })
         .collect()
 }

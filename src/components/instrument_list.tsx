@@ -22,7 +22,9 @@ export function InstrumentList(props: {
   const bump = props.bump.value;
 
   for (const vix of instruments) {
-    const name = W.instrument_name(props.song, vix)
+    const real_name = W.instrument_name(props.song, vix);
+    let name =
+      real_name === '' ? '\u00A0\u00A0\u00A0\u00A0' : real_name;
 
     const toggle_instr = () =>
       props.edited_instrument.value = {
@@ -33,7 +35,7 @@ export function InstrumentList(props: {
     const toggle_name = () =>
       props.edited_instrument_name.value = {
         instrument_id: vix,
-        name: name
+        name: real_name
       };
 
     const id_change = (v: number) =>
@@ -72,17 +74,25 @@ export function InstrumentList(props: {
             ? <HexNumberEditor
                 onChange={id_change}
                 onValidate={id_validate}
+                onCancel={() => props.edited_instrument.value = undefined}
                 value={edited_instr.current_value}/>
-            : <span onDblClick={allow_new_edit ? toggle_instr : undefined}>{hexStr(vix)} : </span>
+            : <span onDblClick={allow_new_edit ? toggle_instr : undefined}
+                    title="Double click to renumber">{hexStr(vix)} : </span>
         }
         {
           edited_name.instrument_id === vix
             ? <NameEditor
                 onValidate={name_validate}
                 onChange={name_change}
+                onCancel={() => {
+                  props.edited_instrument_name.value = undefined;
+                  props.bump.value = bump + 1;
+                }}
                 value={edited_name.name}
                 max={12} />
-            : <span onDblClick={allow_new_edit ? toggle_name : undefined}>{name}</span>
+            : <span onDblClick={allow_new_edit ? toggle_name : undefined}
+                    class="instr_name"
+                    title="Double click to rename">{name}</span>
         }
       </div>
     )

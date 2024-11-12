@@ -3,6 +3,7 @@ import { hexStr } from "./common";
 export function HexNumberEditor(props: {
     onChange: (value: number) => void,
     onValidate: (value: number) => void,
+    onCancel: () => void,
     value: number
   }) {
 
@@ -11,6 +12,8 @@ export function HexNumberEditor(props: {
       const strVal = (evt.currentTarget as HTMLInputElement).value;
       const asNum = Number.parseInt(strVal, 16)
       props.onValidate(asNum);
+    } else if (evt.key === 'Escape') {
+      props.onCancel();
     }
   };
 
@@ -34,6 +37,7 @@ export function HexNumberEditor(props: {
 export function NameEditor(props: {
     onChange: (value: string) => void,
     onValidate: (value: string) => void,
+    onCancel: () => void,
     max: number,
     value: string
   }) {
@@ -42,6 +46,8 @@ export function NameEditor(props: {
     if (evt.key === 'Enter') {
       const strVal = (evt.currentTarget as HTMLInputElement).value;
       props.onValidate(strVal);
+    } else if (evt.key === 'Escape') {
+      props.onCancel();
     }
   };
 
