@@ -686,6 +686,14 @@ impl Table {
         self.steps.iter().all(|s| s.is_empty())
     }
 
+    pub fn clear(&mut self) {
+        let dflt = TableStep::default();
+
+        for s in &mut self.steps{
+            *s = dflt.clone();
+        }
+    }
+
     pub fn print_screen(&self, cmd: CommandPack) -> String {
         let fx_cmd = FX::fx_command_names(self.version);
         let mut acc = String::from("  N  V  FX1   FX2   FX3  \n");
@@ -735,6 +743,18 @@ pub struct TableStep {
     pub fx1: FX,
     pub fx2: FX,
     pub fx3: FX,
+}
+
+impl Default for TableStep {
+    fn default() -> Self {
+        Self {
+            transpose: 0,
+            velocity: 0xFF,
+            fx1: Default::default(),
+            fx2: Default::default(),
+            fx3: Default::default()
+        }
+    }
 }
 
 impl TableStep {

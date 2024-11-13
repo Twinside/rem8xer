@@ -28,9 +28,7 @@ extern "C" {
 
 
 #[wasm_bindgen]
-pub fn init() {
-    set_panic_hook();
-}
+pub fn init() { set_panic_hook(); }
 
 #[wasm_bindgen]
 pub struct WasmSong {
@@ -125,22 +123,46 @@ pub fn rename_instrument(song: &mut WasmSong, instrument: usize, new_name: Strin
 
 
 #[wasm_bindgen]
-pub fn renumber_table(_song: &mut WasmSong, _table: usize, _to_table: usize) -> Result<bool, String> {
-    Err(format!("Not implemented"))
+pub fn renumber_table(song: &mut WasmSong, table: usize, to_table: usize) -> Result<bool, String> {
+    if table >= Song::N_TABLES {
+        return Err(format!("Invalid table number {table:02X}"))
+    }
+
+    if to_table >= Song::N_TABLES {
+        return Err(format!("Invalid destination table number {to_table:02X}"))
+    }
+
+    if table <= Song::N_INSTRUMENTS {
+        return Err(format!("Cannot renumber instrument table {table:02X}"))
+    }
+
+    if to_table <= Song::N_INSTRUMENTS {
+        return Err(format!("Cannot renumber to instrument table {to_table:02X}"))
+    }
+
+    if !song.song.tables[to_table].is_empty() {
+        return Err(format!("Destination table is not empty"))
+    }
+
+    let mut remapper = Remapper::default();
+    remapper.table_mapping.remap_table(table as u8, to_table as u8);
+    remapper.renumber(&mut song.song);
+
+    Ok(true)
 }
 
 #[wasm_bindgen]
 pub fn renumber_instrument(song: &mut WasmSong, instrument: usize, to_instrument: usize) -> Result<bool, String> {
     if instrument >= Song::N_INSTRUMENTS {
-        return Err(format!("Error invalid source instrument number {instrument}"));
+        return Err(format!("Error invalid source instrument number {instrument:02X}"));
     }
 
     if to_instrument >= Song::N_INSTRUMENTS {
-        return Err(format!("Error invalid source destination number {to_instrument}"));
+        return Err(format!("Error invalid source destination number {to_instrument:02X}"));
     }
 
     if ! song.song.instruments[to_instrument].is_empty() {
-        return Err(format!("Destination instrument{to_instrument} is not empty"));
+        return Err(format!("Destination instrument {to_instrument:02X} is not empty"));
     }
 
     let mut remapper = Remapper::default();

@@ -3,10 +3,10 @@ use arr_macro::arr;
 use crate::{song::Song, Instrument};
 
 
-fn make_mapping<const C : usize>() -> [u8; C] {
+fn make_mapping<const C : usize>(offset: u8) -> [u8; C] {
     let mut arr = [0 as u8; C];
     for i in 0 .. arr.len() {
-        arr[i] = i as u8;
+        arr[i] = i as u8 + offset;
     }
 
     arr
@@ -37,7 +37,7 @@ impl EqMapping {
 
 impl Default for EqMapping {
     fn default() -> Self {
-        Self { mapping: make_mapping(), to_move: vec![] }
+        Self { mapping: make_mapping(0), to_move: vec![] }
     }
 }
 
@@ -67,7 +67,30 @@ impl InstrumentMapping {
 
 impl Default for InstrumentMapping {
     fn default() -> Self {
-        Self { mapping: make_mapping(), to_move: vec![] }
+        Self { mapping: make_mapping(0), to_move: vec![] }
+    }
+}
+
+pub struct TableMapping {
+    /// Mapping from the "from" song index to the to
+    pub mapping: [u8; TableMapping::EXTRA_TABLES],
+
+    /// Table to be moved during remapping
+    pub to_move: Vec<u8>
+}
+
+impl TableMapping {
+    const EXTRA_TABLES : usize = Song::N_TABLES - Song::N_INSTRUMENTS;
+
+    pub fn remap_table(&mut self, from: u8, to: u8) {
+        self.mapping[from as usize - Song::N_INSTRUMENTS] = to;
+        self.to_move.push(from);
+    }
+}
+
+impl Default for TableMapping {
+    fn default() -> Self {
+        Self { mapping: make_mapping(Song::N_INSTRUMENTS as u8), to_move: vec![] }
     }
 }
 
@@ -96,7 +119,7 @@ impl PhraseMapping {
 
 impl Default for PhraseMapping {
     fn default() -> Self {
-        Self { mapping: make_mapping(), to_move: vec![] }
+        Self { mapping: make_mapping(0), to_move: vec![] }
     }
 }
 
@@ -121,13 +144,14 @@ impl ChainMapping {
 
 impl Default for ChainMapping {
     fn default() -> Self {
-        Self { mapping: make_mapping(), to_move: vec![] }
+        Self { mapping: make_mapping(0), to_move: vec![] }
     }
 }
 
 pub struct Remapper {
     pub eq_mapping: EqMapping,
     pub instrument_mapping: InstrumentMapping,
+    pub table_mapping: TableMapping,
     pub phrase_mapping: PhraseMapping,
     pub chain_mapping: ChainMapping,
 }
@@ -224,6 +248,7 @@ impl Default for Remapper {
         Self {
             eq_mapping: Default::default(),
             instrument_mapping: Default::default(),
+            table_mapping: Default::default(),
             phrase_mapping: Default::default(),
             chain_mapping: Default::default()
         }
@@ -253,7 +278,7 @@ impl Remapper {
 
         let mut seen_chain : [bool; Song::N_CHAINS] = arr![false; 255];
         let mut allocated_chains = find_referenced_chains(to_song);
-        let mut mapping : [u8; Song::N_CHAINS] = make_mapping();
+        let mut mapping : [u8; Song::N_CHAINS] = make_mapping(0);
         let mut to_move = vec![];
 
         for chain_id in from_chains_ids {
@@ -434,7 +459,15 @@ impl Remapper {
     let chain_mapping =
         Remapper::allocate_chains(from_song, to_song, &phrase_mapping, chain_vec.iter())?;
 
-    Ok(Self { eq_mapping, instrument_mapping, phrase_mapping, chain_mapping })
+    let table_mapping = Default::default();
+
+    Ok(Self {
+        eq_mapping,
+        instrument_mapping,
+        table_mapping,
+        phrase_mapping,
+        chain_mapping
+    })
   }
 
   /// Same as apply but the same song is the source and destination
@@ -455,6 +488,16 @@ impl Remapper {
         song.tables[to_index] = song.tables[instr_id].clone();
         song.instruments[to_index] = instr;
         song.instruments[instr_id] = Instrument::None;
+    }
+
+    // move table
+    for table_id in self.table_mapping.to_move.iter() {
+        let table_id = *table_id as usize;
+        let to_index = self.table_mapping.mapping[table_id + Song::N_INSTRUMENTS] as usize;
+        let table = song.tables[table_id].clone();
+
+        song.tables[to_index] = table;
+        song.tables[table_id].clear();
     }
 
     // remap eq in instr
@@ -494,7 +537,6 @@ impl Remapper {
     for chain_id in 0 .. Song::N_CHAINS {
         song.chains[chain_id] = song.chains[chain_id].map(&self.phrase_mapping)
     }
-
   }
 
   /// apply the reampping, cannot fail once mapping has been created
@@ -519,6 +561,13 @@ impl Remapper {
 
         to.tables[to_index] = from.tables[instr_id].clone();
         to.instruments[to_index] = instr;
+    }
+
+    // move table
+    for table_id in self.table_mapping.to_move.iter() {
+        let table_id = *table_id as usize;
+        let to_index = self.table_mapping.mapping[table_id + Song::N_INSTRUMENTS] as usize;
+        to.tables[to_index] = from.tables[table_id].clone();
     }
 
     for phrase_id in self.phrase_mapping.to_move.iter() {
