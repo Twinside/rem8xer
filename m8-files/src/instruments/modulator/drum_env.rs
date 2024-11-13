@@ -1,4 +1,4 @@
-use crate::Version;
+use crate::{ParameterGatherer, Version};
 
 use super::{M8Result, Reader, Writer};
 
@@ -24,6 +24,16 @@ pub struct DrumEnv {
 impl DrumEnv {
     pub fn command_names(_ver: Version, mod_id: usize) -> &'static[&'static str] {
         &DRUMENV_COMMAND_NAMES[mod_id]
+    }
+
+    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str]) {
+        let dest = self.dest as usize;
+        let dest_str = if dest < dests.len() { dests[dest] } else { "??" };
+        pg.str("DEST", dest_str);
+        pg.hex("AMOUNT", self.amount);
+        pg.hex("PEAK", self.peak);
+        pg.hex("BODY", self.body);
+        pg.hex("DECAY", self.decay);
     }
 
     pub fn write(&self, w: &mut Writer) {

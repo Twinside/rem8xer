@@ -7,6 +7,7 @@ use num_enum::TryFromPrimitive;
 use arr_macro::arr;
 
 use super::CommandPack;
+use super::ParameterGatherer;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct FmAlgo(u8);
@@ -99,6 +100,8 @@ const FM_FX_COMMANDS : [&'static str; CommandPack::BASE_INSTRUMENT_COMMAND_COUNT
     "FMP",
   ];
 
+const DESTINATIONS : [&'static str; 0] = [];
+
 #[derive(PartialEq, Debug, Default, Clone)]
 pub struct Operator {
     pub shape: FMWave,
@@ -109,6 +112,17 @@ pub struct Operator {
     pub retrigger: u8,
     pub mod_a: u8,
     pub mod_b: u8,
+}
+
+impl Operator {
+    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG) {
+        pg.str("SHAPE", &format!("{:?}", self.shape));
+        pg.float("RATIO", (self.ratio as f64) + (self.ratio_fine as f64) / 100.0);
+        pg.hex("LEVEL", self.level);
+        pg.hex("FBK", self.feedback);
+        pg.hex("MOD_A", self.mod_a);
+        pg.hex("MOD_B", self.mod_b);
+    }
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -132,6 +146,26 @@ impl FMSynth {
 
     pub fn command_name(&self, _ver: Version) -> &'static [&'static str] {
         &FM_FX_COMMANDS
+    }
+
+    pub fn destination_names(&self, _ver: Version) -> &'static [&'static str] {
+        &DESTINATIONS
+    }
+
+    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
+        pg.str("NAME", &self.name);
+        pg.bool("TRANSPOSE", self.transp_eq.transpose);
+        pg.hex("EQ", self.transp_eq.eq);
+        pg.hex("TICS", self.table_tick);
+        pg.str("ALG", self.algo.str());
+
+        self.operators[0].describe(&mut pg.nest("A"));
+        self.operators[1].describe(&mut pg.nest("B"));
+        self.operators[2].describe(&mut pg.nest("C"));
+        self.operators[3].describe(&mut pg.nest("D"));
+
+        self.synth_params.describe(pg);
+        self.synth_params.describe_modulators(pg, self.destination_names(ver));
     }
 
     pub fn write(&self, w: &mut Writer) {

@@ -5,6 +5,7 @@ use num_enum::IntoPrimitive;
 use num_enum::TryFromPrimitive;
 
 use super::CommandPack;
+use super::ParameterGatherer;
 
 #[repr(u8)]
 #[allow(non_camel_case_types)]
@@ -88,6 +89,8 @@ const MACRO_SYNTH_COMMANDS : [&'static str;  CommandPack::BASE_INSTRUMENT_COMMAN
     "TRG"
   ];
 
+const DESTINATIONS : [&'static str; 0] = [];
+
 #[derive(PartialEq, Debug, Clone)]
 pub struct MacroSynth {
     pub number: u8,
@@ -108,6 +111,25 @@ impl MacroSynth {
 
     pub fn command_name(&self, _ver: Version) -> &'static [&'static str] {
         &MACRO_SYNTH_COMMANDS 
+    }
+
+    pub fn destination_names(&self, _ver: Version) -> &'static [&'static str] {
+        &DESTINATIONS
+    }
+
+    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
+        pg.str("NAME", &self.name);
+        pg.bool("TRANSPOSE", self.transp_eq.transpose);
+        pg.hex("EQ", self.transp_eq.eq);
+        pg.hex("TICS", self.table_tick);
+        pg.str("SHAPE", &format!("{:?}", self.shape));
+        pg.hex("TIMBRE", self.timbre);
+        pg.hex("COLOR", self.color);
+        pg.hex("DEGRADE", self.degrade);
+        pg.hex("REDUX", self.redux);
+
+        self.synth_params.describe(pg);
+        self.synth_params.describe_modulators(pg, self.destination_names(ver));
     }
 
     pub fn write(&self, w: &mut Writer) {

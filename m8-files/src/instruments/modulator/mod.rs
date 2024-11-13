@@ -6,7 +6,7 @@ use lfo::LFO;
 use tracking_env::TrackingEnv;
 use trig_env::TrigEnv;
 
-use super::Version;
+use super::{ParameterGatherer, Version};
 
 pub mod ahd_env;
 pub mod lfo;
@@ -31,6 +31,17 @@ impl Mod {
 
     /// Number of commands associated to each mode
     pub const COMMAND_PER_MOD : usize = 5;
+
+    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, dests:&'static[&'static str]) {
+        match self {
+            Mod::AHDEnv(ahd)  => ahd.describe(pg, dests),
+            Mod::ADSREnv(adsr) => adsr.describe(pg, dests),
+            Mod::DrumEnv(drum_env) => drum_env.describe(pg, dests),
+            Mod::LFO(lfo) => lfo.describe(pg, dests),
+            Mod::TrigEnv(tenv) => tenv.describe(pg, dests),
+            Mod::TrackingEnv(tenv) => tenv.describe(pg, dests),
+        }
+    }
 
     pub fn command_name(&self, ver: Version, mod_id: usize) -> &'static[&'static str] {
         match self {

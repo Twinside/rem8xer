@@ -1,4 +1,4 @@
-use crate::Version;
+use crate::{ParameterGatherer, Version};
 
 use super::{M8Result, Mod, Reader, Writer};
 
@@ -23,6 +23,16 @@ const AHDENV_COMMAND_NAMES : [[&'static str; 5]; 4] =
 impl AHDEnv {
     pub fn command_names(_ver: Version, mod_id: usize) -> &'static[&'static str] {
         &AHDENV_COMMAND_NAMES[mod_id]
+    }
+
+    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str]) {
+        let dest = self.dest as usize;
+        let dest_str = if dest < dests.len() { dests[dest] } else { "??" };
+        pg.str("DEST", dest_str);
+        pg.hex("AMOUNT", self.amount);
+        pg.hex("ATTACK", self.attack);
+        pg.hex("HOLD", self.hold);
+        pg.hex("DECAY", self.decay);
     }
 
     pub fn from_reader2(reader: &mut Reader) -> M8Result<Self> {

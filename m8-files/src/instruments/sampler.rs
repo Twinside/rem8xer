@@ -5,6 +5,7 @@ use num_enum::IntoPrimitive;
 use num_enum::TryFromPrimitive;
 
 use super::CommandPack;
+use super::ParameterGatherer;
 
 #[repr(u8)]
 #[allow(non_camel_case_types)]
@@ -66,11 +67,35 @@ const SAMPLER_FX_COMMANDS : [&'static str; CommandPack::BASE_INSTRUMENT_COMMAND_
     "SLI"
   ];
 
+const DESTINATIONS : [&'static str; 0] = [];
+
 impl Sampler {
     pub const MOD_OFFSET : usize = 29;
 
     pub fn command_name(&self, _ver: Version) -> &'static[&'static str] {
         &SAMPLER_FX_COMMANDS 
+    }
+
+    pub fn destination_names(&self, _ver: Version) -> &'static [&'static str] {
+        &DESTINATIONS
+    }
+
+    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
+        pg.str("NAME", &self.name);
+        pg.bool("TRANSPOSE", self.transp_eq.transpose);
+        pg.hex("EQ", self.transp_eq.eq);
+        pg.str("SAMPLE", &self.sample_path);
+        pg.str("PLAY", &format!("{:?}", self.play_mode));
+        pg.hex("TICS", self.table_tick);
+        pg.hex("SLICE", self.slice);
+        pg.hex("START", self.start);
+        pg.hex("LOOP", self.loop_start);
+        pg.hex("LEN", self.length);
+
+        pg.hex("DEGRADE", self.degrade);
+
+        self.synth_params.describe(pg);
+        self.synth_params.describe_modulators(pg, self.destination_names(ver));
     }
 
     pub fn write(&self, w: &mut Writer) {

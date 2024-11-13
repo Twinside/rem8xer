@@ -5,6 +5,7 @@ use crate::instruments::common::*;
 use arr_macro::arr;
 
 use super::CommandPack;
+use super::ParameterGatherer;
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub struct ControlChange {
@@ -16,6 +17,11 @@ pub struct ControlChange {
 }
 
 impl ControlChange {
+    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG) {
+        pg.hex("CC", self.number);
+        pg.hex("VAL", self.value);
+    }
+
     pub fn write(self, writer: &mut Writer) {
         writer.write(self.number);
         writer.write(self.value);
@@ -49,6 +55,8 @@ const MIDI_OUT_COMMAND_NAMES : [&'static str; CommandPack::BASE_INSTRUMENT_COMMA
     "CCJ",
   ];
 
+const DESTINATIONS : [&'static str; 0] = [];
+
 #[derive(PartialEq, Debug, Clone)]
 pub struct MIDIOut {
     pub number: u8,
@@ -70,6 +78,33 @@ impl MIDIOut {
 
     pub fn command_name(&self, _ver: Version) -> &'static[&'static str] {
         &MIDI_OUT_COMMAND_NAMES 
+    }
+
+    pub fn destination_names(&self, _ver: Version) -> &'static [&'static str] {
+        &DESTINATIONS
+    }
+
+    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
+        pg.str("NAME", &self.name);
+        pg.bool("TRANSPOSE", self.transpose);
+        pg.hex("TICS", self.table_tick);
+
+        pg.hex("PORT", self.port);
+        pg.hex("CHANNEL", self.channel);
+        pg.hex("BANK", self.bank_select);
+        pg.hex("PROGRAM", self.program_change);
+        self.custom_cc[0].describe(&mut pg.nest("CCA"));
+        self.custom_cc[1].describe(&mut pg.nest("CCB"));
+        self.custom_cc[2].describe(&mut pg.nest("CCC"));
+        self.custom_cc[3].describe(&mut pg.nest("CCD"));
+        self.custom_cc[4].describe(&mut pg.nest("CCE"));
+        self.custom_cc[5].describe(&mut pg.nest("CCF"));
+        self.custom_cc[6].describe(&mut pg.nest("CCG"));
+        self.custom_cc[7].describe(&mut pg.nest("CCH"));
+        self.custom_cc[8].describe(&mut pg.nest("CCI"));
+        self.custom_cc[9].describe(&mut pg.nest("CCJ"));
+
+        self.mods.describe_modulators(pg, self.destination_names(ver));
     }
 
     pub fn write(&self, w: &mut Writer) {

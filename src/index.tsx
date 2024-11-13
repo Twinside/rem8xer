@@ -10,6 +10,7 @@ import { PhraseViewer, TableViewer } from "./components/phrase_viewer";
 import { hexStr } from "./components/common";
 import { ChainList } from "./components/chain_list";
 import { TableList } from "./components/table_list";
+import { InstrumentViewer } from "./components/instrument_view";
 
 W.init();
 const state = initState();
@@ -33,6 +34,9 @@ function SongExplorer(props: { pane: SongPane }) {
   const selectedTable = props.pane.selected_table.value;
   const displayedTable = selectedTable === undefined ? '' : ' ' + hexStr(selectedTable);
 
+  const selectedInstrument = props.pane.selected_instrument.value;
+  const displayedInstrument = selectedInstrument === undefined ? '' : ' ' + hexStr(selectedInstrument );
+
   return <div class="rootcolumn">
     <details class="songsection">
       <summary>Chains</summary>
@@ -55,6 +59,7 @@ function SongExplorer(props: { pane: SongPane }) {
       <InstrumentList
         bump={props.pane.bumper}
         song={song}
+        selected_instrument={props.pane.selected_instrument}
         edited_instrument={props.pane.edited_instrument}
         edited_instrument_name={props.pane.edited_instrument_name} />
     </details>
@@ -73,6 +78,10 @@ function SongExplorer(props: { pane: SongPane }) {
     <details class="songsection">
       <summary>Phrase{displayedPhrase}</summary>
       <PhraseViewer panel={props.pane} />
+    </details>
+    <details class="songsection">
+      <summary>Instrument{displayedInstrument}</summary>
+      <InstrumentViewer panel={props.pane} />
     </details>
     <details class="songsection">
       <summary>Table{displayedTable}</summary>

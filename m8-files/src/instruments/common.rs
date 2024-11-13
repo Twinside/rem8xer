@@ -5,6 +5,7 @@ use crate::instruments::modulator::lfo::LFO;
 use arr_macro::arr;
 
 use super::modulator::Mod;
+use super::ParameterGatherer;
 
 /// Type storing transpose field and eq number
 #[derive(PartialEq, Copy, Clone, Default, Debug)]
@@ -96,6 +97,28 @@ pub struct SynthParams {
 
 impl SynthParams {
     pub const MODULATOR_COUNT : usize = 4;
+
+    pub fn describe_modulators<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str]) {
+        self.mods[0].describe(&mut pg.nest("MOD1"), dests);
+        self.mods[1].describe(&mut pg.nest("MOD2"), dests);
+        self.mods[2].describe(&mut pg.nest("MOD3"), dests);
+        self.mods[3].describe(&mut pg.nest("MOD4"), dests);
+    }
+
+    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG) {
+        pg.hex("FINE", self.fine_tune);
+        pg.hex("FILTER", self.filter_type);
+        pg.hex("CUT", self.filter_cutoff);
+        pg.hex("RES", self.filter_res);
+        pg.hex("AMP", self.amp);
+        pg.str("LIM", &format!("{:?}", self.limit));
+
+        pg.hex("PAN", self.mixer_pan);
+        pg.hex("DRY", self.mixer_dry);
+        pg.hex("CHORUS", self.mixer_chorus);
+        pg.hex("DELAY", self.mixer_delay);
+        pg.hex("REVERB", self.mixer_reverb);
+    }
 
     pub fn mod_only2(_reader: &mut Reader) -> M8Result<Self>{
         Ok(Self {

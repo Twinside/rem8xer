@@ -2,6 +2,7 @@ use crate::reader::*;
 use super::common::SynthParams;
 use super::common::TranspEq;
 use super::CommandPack;
+use super::ParameterGatherer;
 use super::Version;
 
 use arr_macro::arr;
@@ -51,11 +52,36 @@ const HYPERSYNTH_COMMAND_NAMES : [&'static str; CommandPack::BASE_INSTRUMENT_COM
       "SNC"
     ];
 
+const DESTINATIONS : [&'static str; 0] = [];
+
 impl HyperSynth {
     const MOD_OFFSET : usize = 23;
 
     pub fn command_name(&self, _ver : Version) -> &'static[&'static str] {
         &HYPERSYNTH_COMMAND_NAMES 
+    }
+
+    pub fn destination_names(&self, _ver: Version) -> &'static [&'static str] {
+        &DESTINATIONS
+    }
+
+    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
+        pg.str("NAME", &self.name);
+        pg.bool("TRANSPOSE", self.transp_eq.transpose);
+        pg.hex("EQ", self.transp_eq.eq);
+        let dc = &self.default_chord;
+        pg.str("CHORD", &format!("{:02X} | {:02X} {:02X} {:02X} {:02X} {:02X} {:02X}", dc[0], dc[1], dc[2], dc[3], dc[4], dc[5], dc[6]));
+        pg.hex("TICS", self.table_tick);
+        pg.hex("SCALE", self.scale);
+        pg.hex("SHIFT", self.shift);
+        pg.hex("SWARM", self.swarm);
+        pg.hex("WIDTH", self.width);
+        pg.hex("SUBOSC", self.subosc);
+
+        self.synth_params.describe(pg);
+        self.synth_params.describe_modulators(pg, self.destination_names(ver));
+
+        // TODO: other chords
     }
 
     pub fn write(&self, w: &mut Writer) {

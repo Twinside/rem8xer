@@ -3,6 +3,7 @@ use super::common::SynthParams;
 use super::common::TranspEq;
 use super::midi::ControlChange;
 use super::CommandPack;
+use super::ParameterGatherer;
 use super::Version;
 
 #[derive(PartialEq, Debug, Clone)]
@@ -51,11 +52,34 @@ const EXTERNAL_INST_COMMANDS : [&'static str; CommandPack::BASE_INSTRUMENT_COMMA
       "CHD"
     ];
 
+const DESTINATIONS : [&'static str; 0] = [];
+
 impl ExternalInst {
     const MOD_OFFSET: usize = 22;
 
     pub fn command_name(&self, _ver: Version) -> &'static [&'static str] {
         &EXTERNAL_INST_COMMANDS
+    }
+
+    pub fn destination_names(&self, _ver: Version) -> &'static [&'static str] {
+        &DESTINATIONS
+    }
+
+    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
+        pg.str("NAME", &self.name);
+        pg.bool("TRANSPOSE", self.transp_eq.transpose);
+        pg.hex("EQ", self.transp_eq.eq);
+        pg.hex("TICS", self.table_tick);
+        pg.hex("PORT", self.port);
+        pg.hex("CHANNEL", self.channel);
+        pg.hex("BANK", self.bank);
+        pg.hex("PROGRAM", self.program);
+        self.cca.describe(&mut pg.nest("CCA"));
+        self.ccb.describe(&mut pg.nest("CCB"));
+        self.ccc.describe(&mut pg.nest("CCC"));
+        self.ccd.describe(&mut pg.nest("CCD"));
+        self.synth_params.describe(pg);
+        self.synth_params.describe_modulators(pg, self.destination_names(ver));
     }
 
     pub fn write(&self, w: &mut Writer) {

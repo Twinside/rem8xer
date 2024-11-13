@@ -8,6 +8,7 @@ import { useContext } from 'preact/hooks';
 export function InstrumentList(props: {
   song: W.WasmSong,
   bump: Signal<number>,
+  selected_instrument: Signal<number | undefined>,
   edited_instrument: Signal<InstrumentNumberEdition | undefined>,
   edited_instrument_name: Signal<InstrumentNameEditor | undefined>,
 } ) {
@@ -77,6 +78,7 @@ export function InstrumentList(props: {
                 onCancel={() => props.edited_instrument.value = undefined}
                 value={edited_instr.current_value}/>
             : <span onDblClick={allow_new_edit ? toggle_instr : undefined}
+                    onClick={() => props.selected_instrument.value = vix}
                     title="Double click to renumber">{hexStr(vix)} : </span>
         }
         {
@@ -91,6 +93,7 @@ export function InstrumentList(props: {
                 value={edited_name.name}
                 max={12} />
             : <span onDblClick={allow_new_edit ? toggle_name : undefined}
+                    onClick={() => props.selected_instrument.value = vix}
                     class="instr_name"
                     title="Double click to rename">{name}</span>
         }

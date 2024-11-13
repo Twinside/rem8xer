@@ -2,7 +2,7 @@ use std::iter;
 
 use wasm_bindgen::prelude::*;
 
-use crate::{reader::{Reader, Writer}, remapper::Remapper, song::{Song, SongSteps, V4_OFFSETS}};
+use crate::{reader::{Reader, Writer}, remapper::Remapper, song::{Song, SongSteps, V4_OFFSETS}, ParameterGatherer};
 
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the
@@ -294,4 +294,110 @@ pub fn allocated_table(song: &WasmSong) -> Vec<usize> {
             if table.is_empty() { None } else { Some(i) }
         })
         .collect()
+}
+
+struct JsonGatherer {
+    gather: js_sys::Array
+}
+
+impl JsonGatherer {
+    pub fn new() -> Self {
+        Self { gather: js_sys::Array::new() }
+    }
+}
+
+impl From<JsonGatherer> for js_sys::Array {
+    fn from(v: JsonGatherer) -> Self { v.gather }
+}
+
+impl ParameterGatherer for JsonGatherer {
+    fn hex(&mut self, name: &'static str, val: u8) {
+        let obj = js_sys::Object::new();
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"name".into(), 
+            &JsValue::from_str(name));
+
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"hex".into(), 
+            &JsValue::from_f64(val as f64));
+
+        self.gather.push(&obj);
+    }
+
+    fn bool(&mut self, name: &'static str, val: bool) {
+        let obj = js_sys::Object::new();
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"name".into(), 
+            &JsValue::from_str(name));
+
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"bool".into(), 
+            &JsValue::from_bool(val));
+
+        self.gather.push(&obj);
+    }
+
+    fn float(&mut self, name: &'static str, val: f64) {
+        let obj = js_sys::Object::new();
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"name".into(), 
+            &JsValue::from_str(name));
+
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"f32".into(), 
+            &JsValue::from_f64(val));
+
+        self.gather.push(&obj);
+    }
+
+    fn str(&mut self, name: &'static str, val: &str) {
+        let obj = js_sys::Object::new();
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"name".into(), 
+            &JsValue::from_str(name));
+
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"str".into(), 
+            &JsValue::from_str(val));
+
+        self.gather.push(&obj);
+    }
+
+    fn nest(&mut self, name: &'static str) -> Self {
+        let obj = js_sys::Object::new();
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"name".into(), 
+            &JsValue::from_str(name));
+
+        let gather = js_sys::Array::new();
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"nest".into(), 
+            &gather);
+
+        self.gather.push(&obj);
+
+        Self { gather }
+    }
+}
+
+#[wasm_bindgen]
+pub fn describe_instrument(song: &WasmSong, instrument: usize) -> Result<js_sys::Array, String> {
+    if instrument >= Song::N_INSTRUMENTS {
+        return Err(format!("Error invalid source instrument number {instrument:02X}"));
+    }
+
+    let mut pg = JsonGatherer::new();
+    song.song.instruments[instrument].describe(&mut pg, song.song.version);
+
+    Ok(pg.into())
 }

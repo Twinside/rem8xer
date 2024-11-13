@@ -1,4 +1,4 @@
-use crate::Version;
+use crate::{instruments::ParameterGatherer, Version};
 
 use super::{M8Result, Reader, Writer};
 
@@ -24,6 +24,17 @@ const ADSRENV_COMMAND_NAMES : [[&'static str; 5]; 4] =
 impl ADSREnv {
     pub fn command_name(_ver: Version, mod_id: usize) -> &'static[&'static str] {
         &ADSRENV_COMMAND_NAMES[mod_id]
+    }
+
+    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str]) {
+        let dest = self.dest as usize;
+        let dest_str = if dest < dests.len() { dests[dest] } else { "??" };
+        pg.str("DEST", dest_str);
+        pg.hex("AMOUNT", self.amount);
+        pg.hex("ATTACK", self.attack);
+        pg.hex("DECAY", self.decay);
+        pg.hex("SUSTAIN", self.sustain);
+        pg.hex("RELEASE", self.release);
     }
 
     pub fn write(&self, w: &mut Writer) {

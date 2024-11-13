@@ -33,6 +33,15 @@ pub enum Instrument {
     None
 }
 
+pub trait ParameterGatherer {
+    fn hex(&mut self, name: &'static str, val: u8);
+    fn bool(&mut self, name: &'static str, val: bool);
+    fn float(&mut self, name: &'static str, val: f64);
+    fn str(&mut self, name: &'static str, val: &str);
+
+    fn nest(&mut self, name: &'static str) -> Self;
+}
+
 /// For every instrument, retrieve the command names
 #[derive(Clone, Copy)]
 pub struct CommandPack {
@@ -103,6 +112,19 @@ impl Instrument {
             Instrument::None => true,
             _ => false
         }
+    }
+
+    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
+        match self {
+            Instrument::WavSynth(ws)     => ws.describe(&mut pg.nest("WAVSYNTH"), ver),
+            Instrument::MacroSynth(ms) => ms.describe(&mut pg.nest("MACROSYN"), ver),
+            Instrument::Sampler(s)        => s.describe(&mut pg.nest("SAMPLE"), ver),
+            Instrument::MIDIOut(mo)       => mo.describe(&mut pg.nest("MIDIOUT"), ver),
+            Instrument::FMSynth(fs)       => fs.describe(&mut pg.nest("FMSYNTH"), ver),
+            Instrument::HyperSynth(hs) => hs.describe(&mut pg.nest("HYPERSYNTH"), ver),
+            Instrument::External(ex) => ex.describe(&mut pg.nest("EXTERNALINST"), ver),
+            Instrument::None => {}
+        };
     }
 
     pub fn instr_command_text(&self, ver: Version) -> CommandPack {

@@ -1,4 +1,4 @@
-use crate::Version;
+use crate::{ParameterGatherer, Version};
 
 use super::{M8Result, Reader, Writer};
 
@@ -26,6 +26,15 @@ impl TrigEnv {
         &TRIGENV_COMMAND_NAMES[mod_id]
     }
 
+    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str]) {
+        let dest = self.dest as usize;
+        let dest_str = if dest < dests.len() { dests[dest] } else { "??" };
+        pg.str("DEST", dest_str);
+        pg.hex("AMOUNT", self.amount);
+        pg.str("ATTACK", &format!("{:?}", self.attack));
+        pg.hex("HOLD", self.hold);
+        pg.str("SRC", &format!("{:?}", self.src));
+    }
     pub fn write(&self, w: &mut Writer) {
         w.write(self.amount);
         w.write(self.attack);
