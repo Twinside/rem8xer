@@ -1,5 +1,5 @@
 import * as W from '../../m8-files/pkg/m8_files';
-import { EmptyInstrumentNameEdition, EmptyInstrumentNumberEidition, EmptyPhraseEdition, GlobalState, InstrumentNameEditor, InstrumentNumberEdition, PhraseNumberEdition } from "../state";
+import { EmptyPhraseEdition, GlobalState, PhraseNumberEdition } from "../state";
 import { Signal } from "@preact/signals";
 import { hexStr } from "./common";
 import { HexNumberEditor, NameEditor } from "./hexnumbereditor";

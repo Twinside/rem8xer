@@ -201,7 +201,14 @@ button:focus-visible {
   border: 6px dashed grey;
   border-radius: 10px;
   margin: 10px;
-  min-height: 300px;
+  height: 300px;
+  font-size: 30px;
+  font-weight: bold;
+
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .phrase:hover {

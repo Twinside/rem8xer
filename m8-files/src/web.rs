@@ -169,7 +169,7 @@ pub fn renumber_phrase(song: &mut WasmSong, phrase: usize, to_phrase: usize) -> 
 
     let mut remapper = Remapper::default();
     remapper.phrase_mapping.mapping[phrase] = to_phrase as u8;
-    remapper.instrument_mapping.to_move.push(phrase as u8);
+    remapper.phrase_mapping.to_move.push(phrase as u8);
     remapper.renumber(&mut song.song);
 
     Ok(true)

@@ -11,8 +11,7 @@ export function ChainViewer(props: { panel: SongPane }) {
   const chain = props.panel.selected_chain.value;
   if (chain === undefined) {
     return <div class="rootcolumn">
-      <h4>Chain viewer</h4>
-      <p>Click a chain to view</p>
+      <p>Select a chain to view</p>
     </div>;
   }
 
@@ -35,19 +34,9 @@ export function ChainViewer(props: { panel: SongPane }) {
     }
   }
 
-  const phrase_idx = props.panel.selected_phrase.value;
-  const phrase = (phrase_idx !== undefined)
-    ? <>
-        <h4>Phrase {phrase_idx}</h4>
-        <pre>{W.show_phrase(song, phrase_idx)}</pre>
-      </>
-    : undefined
-
   return <div class="chain_viewer">
-    <h4>Chain viewer</h4>
     <pre>
       {elems}
     </pre>
-    {phrase}
   </div>;
 }

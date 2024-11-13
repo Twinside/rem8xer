@@ -64,6 +64,7 @@ impl CommandPack {
     }
 
     pub fn try_render(self, cmd: u8) -> Option<&'static str> {
+        if self.instr.len() == 0 { return None }
         if (cmd as usize) < CommandPack::INSTRUMENT_COMMAND_OFFSET { return None }
 
         let cmd = cmd as usize - CommandPack::INSTRUMENT_COMMAND_OFFSET;

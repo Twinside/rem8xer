@@ -26,7 +26,9 @@ export function SongViewer(props: { side: SongSide, panel: SongPane }) {
       <button onClick={() => loadUrl(state, panel, revUrl)}>Reversing</button>
       <div class="filetarget"
            onDragOver={(ev) => ev.preventDefault()}
-           onDrop={(evt) => loadDroppedSong(state, evt, props.panel)}>Drag M8 song file here</div>
+           onDrop={(evt) => loadDroppedSong(state, evt, props.panel)}>
+        <span>Drag M8 song file here</span>
+      </div>
     </div>;
   }
 

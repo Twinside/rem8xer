@@ -147,9 +147,16 @@ export function clearPanel(panel : SongPane) {
     panel.selection_range.value = undefined;
 }
 
+export type LogEntry =
+    {
+        song: string,
+        content: string
+    }
+
 export type State =
     {
         message_banner: Signal<string | undefined>;
+        remap_log: Signal<LogEntry[]>
         left: SongPane;
         right: SongPane;
     }
@@ -158,7 +165,8 @@ export function initState() : State {
     return {
         message_banner: signal(undefined),
         left: initPane(),
-        right: initPane()
+        right: initPane(),
+        remap_log: signal([])
     }
 }
 
