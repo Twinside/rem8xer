@@ -90,8 +90,22 @@ pub unsafe fn get_chain_steps(song: &WasmSong, chain_index: usize) -> js_sys::Ui
 
 #[wasm_bindgen]
 pub fn show_phrase(song: &WasmSong, phrase: usize) -> String {
+    if phrase >= Song::N_PHRASES {
+        return format!("Invalid phrase number {phrase:02x}");
+    }
+
     let song = &song.song;
     song.phrases[phrase].print_screen(&song.instruments)
+}
+
+#[wasm_bindgen]
+pub fn show_table(song: &WasmSong, table: usize) -> String {
+    if table >= Song::N_TABLES {
+        return format!("Invalid table number {table:02x}");
+    }
+
+    let song = &song.song;
+    song.table_view(table).to_string()
 }
 
 #[wasm_bindgen]
@@ -109,6 +123,11 @@ pub fn rename_instrument(song: &mut WasmSong, instrument: usize, new_name: Strin
     Ok(true)
 }
 
+
+#[wasm_bindgen]
+pub fn renumber_table(_song: &mut WasmSong, _table: usize, _to_table: usize) -> Result<bool, String> {
+    Err(format!("Not implemented"))
+}
 
 #[wasm_bindgen]
 pub fn renumber_instrument(song: &mut WasmSong, instrument: usize, to_instrument: usize) -> Result<bool, String> {
@@ -232,5 +251,25 @@ pub fn allocated_chain_list(song: &WasmSong) -> Vec<usize> {
         .enumerate()
         .filter_map(|(i, chain)|
             if chain.is_empty() { None } else { Some(i) })
+        .collect()
+}
+
+#[wasm_bindgen]
+pub fn allocated_table(song: &WasmSong) -> Vec<usize> {
+    song.song.tables
+        .iter()
+        .enumerate()
+        .filter_map(|(i, table)| {
+            if i < Song::N_INSTRUMENTS  {
+                // always show instrument table
+                if song.song.instruments[i].is_empty() {
+                    return None;
+                } else {
+                    return Some(i)
+                }
+            }
+
+            if table.is_empty() { None } else { Some(i) }
+        })
         .collect()
 }

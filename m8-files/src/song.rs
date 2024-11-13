@@ -739,7 +739,7 @@ pub struct TableStep {
 
 impl TableStep {
     pub fn is_empty(&self) -> bool {
-        self.transpose == 0xFF &&
+        self.transpose == 0 &&
             self.velocity == 0xFF &&
             self.fx1.is_empty() &&
             self.fx2.is_empty() &&

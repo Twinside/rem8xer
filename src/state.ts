@@ -54,16 +54,16 @@ export const EmptyChainEdition : ChainNumberEdition =
 
 export type PhraseNumberEdition =
     {
-        chain_source: number,
-        chain_offset: number,
+        // chain_source: number,
+        // chain_offset: number,
         base_phrase: number,
         current_value: number
     }
 
 export const EmptyPhraseEdition : PhraseNumberEdition =
     {
-        chain_source: -1,
-        chain_offset: -1,
+        // chain_source: -1,
+        // chain_offset: -1,
         base_phrase: -1,
         current_value: -1
     }
@@ -103,6 +103,12 @@ export type SongPane =
         /** Currently selected chain in the song view */
         selected_chain: Signal<number | undefined>,
 
+        /** Currently selected table in the explorer */
+        selected_table: Signal<number | undefined>,
+
+        /** Currently selected instrument in the explorer */
+        selected_instrument: Signal<number | undefined>,
+
         /** Currently selected phrase within the selected chain */
         selected_phrase: Signal<number | undefined>,
 
@@ -111,6 +117,9 @@ export type SongPane =
 
         /** Currently edited phrase number */
         edited_phrase: Signal<PhraseNumberEdition | undefined>,
+
+        /** Currently edited table number */
+        edited_table: Signal<PhraseNumberEdition | undefined>,
 
         /** Currently edited phrase number */
         edited_instrument: Signal<InstrumentNumberEdition | undefined>,
@@ -131,10 +140,13 @@ function initPane() : SongPane {
         edited_phrase: signal(undefined),
         edited_instrument: signal(undefined),
         edited_instrument_name: signal(undefined),
+        edited_table: signal(undefined),
         raw_song: signal(new Uint8Array(0)),
         selected_chain: signal(undefined),
         selected_phrase: signal(undefined),
-        selection_range: signal(undefined)
+        selection_range: signal(undefined),
+        selected_table: signal(undefined),
+        selected_instrument: signal(undefined)
     };
 }
 
