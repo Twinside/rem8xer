@@ -1,4 +1,4 @@
-use crate::{ParameterGatherer, Version};
+use crate::{ParameterGatherer, params, Version};
 
 use super::{M8Result, Reader, Writer};
 
@@ -25,11 +25,11 @@ impl TrackingEnv {
     pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str]) {
         let dest = self.dest as usize;
         let dest_str = if dest < dests.len() { dests[dest] } else { "??" };
-        pg.str("DEST", dest_str);
-        pg.hex("AMOUNT", self.amount);
-        pg.hex("SRC", self.src);
-        pg.str("LVAL", &format!("{:?}", self.lval));
-        pg.str("HVAL", &format!("{:?}", self.hval));
+        pg.enumeration(params::DEST, self.dest, dest_str);
+        pg.hex(params::AMOUNT, self.amount);
+        pg.hex(params::SOURCE, self.src);
+        pg.hex("LVAL", self.lval);
+        pg.hex("HVAL", self.hval);
     }
 
     pub fn command_name(_ver: Version, env_id: usize) -> &'static[&'static str] {

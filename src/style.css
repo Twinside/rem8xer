@@ -235,3 +235,15 @@ button:focus-visible {
   min-width: 90px;
   border: 1px solid lightgray;
 }
+
+.instrparam {
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.hexgauge {
+  display: inline-block;
+  background-color:cornflowerblue;
+  width: calc(calc(var(--hex)) * 0.5px);
+  height: 8px;
+}

@@ -6,6 +6,7 @@ use num_enum::TryFromPrimitive;
 
 use super::CommandPack;
 use super::ParameterGatherer;
+use super::params;
 
 #[repr(u8)]
 #[allow(non_camel_case_types)]
@@ -67,7 +68,9 @@ const SAMPLER_FX_COMMANDS : [&'static str; CommandPack::BASE_INSTRUMENT_COMMAND_
     "SLI"
   ];
 
-const DESTINATIONS : [&'static str; 0] = [];
+const DESTINATIONS : [&'static str; 0] =
+    [
+    ];
 
 impl Sampler {
     pub const MOD_OFFSET : usize = 29;
@@ -81,12 +84,12 @@ impl Sampler {
     }
 
     pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
-        pg.str("NAME", &self.name);
-        pg.bool("TRANSPOSE", self.transp_eq.transpose);
-        pg.hex("EQ", self.transp_eq.eq);
+        pg.str(params::NAME, &self.name);
+        pg.bool(params::TRANSPOSE, self.transp_eq.transpose);
+        pg.hex(params::TBLTIC, self.table_tick);
+        pg.hex(params::EQ, self.transp_eq.eq);
         pg.str("SAMPLE", &self.sample_path);
-        pg.str("PLAY", &format!("{:?}", self.play_mode));
-        pg.hex("TICS", self.table_tick);
+        pg.enumeration("PLAY", self.play_mode as u8, &format!("{:?}", self.play_mode));
         pg.hex("SLICE", self.slice);
         pg.hex("START", self.start);
         pg.hex("LOOP", self.loop_start);

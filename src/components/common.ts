@@ -1,5 +1,5 @@
 export function hexStr(n : number) : string {
-  const hexStr = n.toString(16);
+  const hexStr = n.toString(16).toUpperCase();
   return hexStr.length <= 1 ? "0" + hexStr : hexStr;
 }
 

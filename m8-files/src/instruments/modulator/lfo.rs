@@ -1,6 +1,6 @@
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
-use crate::{ParameterGatherer, Version};
+use crate::{ParameterGatherer, params, Version};
 
 use super::{M8Result, Mod, ParseError, Reader, Writer};
 
@@ -71,11 +71,11 @@ impl LFO {
     pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str]) {
         let dest = self.dest as usize;
         let dest_str = if dest < dests.len() { dests[dest] } else { "??" };
-        pg.str("DEST", dest_str);
-        pg.str("SHAPE", &format!("{:?}", self.shape));
-        pg.hex("AMOUNT", self.amount);
-        pg.hex("FREQ", self.freq);
-        pg.str("TRIGGER", &format!("{:?}", self.trigger_mode));
+        pg.enumeration(params::DEST, self.dest, dest_str);
+        pg.enumeration(params::LFOSHAPE, self.shape as u8, &format!("{:?}", self.shape));
+        pg.hex(params::AMOUNT, self.amount);
+        pg.hex(params::FREQ, self.freq);
+        pg.enumeration(params::TRIGGER, self.shape as u8, &format!("{:?}", self.trigger_mode));
     }
 
     pub fn from_reader2(reader: &mut Reader) -> M8Result<Self> {

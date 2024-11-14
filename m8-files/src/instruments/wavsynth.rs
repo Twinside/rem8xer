@@ -4,6 +4,7 @@ use crate::instruments::common::*;
 use num_enum::IntoPrimitive;
 use num_enum::TryFromPrimitive;
 
+use super::params;
 use super::CommandPack;
 use super::ParameterGatherer;
 
@@ -137,11 +138,11 @@ impl WavSynth {
     }
 
     pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
-        pg.str("NAME", &self.name);
-        pg.bool("TRANSPOSE", self.transp_eq.transpose);
-        pg.hex("TICS", self.table_tick);
-        pg.hex("EQ", self.transp_eq.eq);
-        pg.str("SHAPE", &format!("{:?}", self.shape));
+        pg.str(params::NAME, &self.name);
+        pg.bool(params::TRANSPOSE, self.transp_eq.transpose);
+        pg.hex(params::TBLTIC, self.table_tick);
+        pg.hex(params::EQ, self.transp_eq.eq);
+        pg.enumeration("SHAPE", self.shape as u8, &format!("{:?}", self.shape));
         pg.hex("SIZE", self.size);
         pg.hex("MULT", self.mult);
         pg.hex("WARP", self.warp);

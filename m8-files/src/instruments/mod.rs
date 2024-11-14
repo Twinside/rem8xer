@@ -34,12 +34,34 @@ pub enum Instrument {
 }
 
 pub trait ParameterGatherer {
-    fn hex(&mut self, name: &'static str, val: u8);
-    fn bool(&mut self, name: &'static str, val: bool);
-    fn float(&mut self, name: &'static str, val: f64);
-    fn str(&mut self, name: &'static str, val: &str);
+    fn hex(&mut self, name: &str, val: u8);
+    fn bool(&mut self, name: &str, val: bool);
+    fn float(&mut self, name: &str, val: f64);
+    fn str(&mut self, name: &str, val: &str);
+    fn enumeration(&mut self, name: &str, hex: u8, val: &str);
 
-    fn nest(&mut self, name: &'static str) -> Self;
+    fn nest(&mut self, name: &str) -> Self;
+}
+
+pub mod params {
+    pub const NAME : &'static str = "NAME";
+    pub const TRANSPOSE : &'static str = "TRANSPOSE";
+    pub const TBLTIC : &'static str = "TBL. TIC";
+    pub const EQ : &'static str = "EQ";
+
+    pub const DEST : &'static str = "DEST";
+    pub const AMOUNT : &'static str = "AMT";
+    pub const ATTACK : &'static str = "ATK";
+    pub const DECAY : &'static str = "DEC";
+    pub const HOLD : &'static str = "HOLD";
+    pub const SUSTAIN : &'static str = "SUS";
+    pub const RELEASE : &'static str = "REL";
+    pub const PEAK : &'static str = "PEAK";
+    pub const BODY : &'static str = "BODY";
+    pub const FREQ : &'static str = "FREQ";
+    pub const TRIGGER : &'static str = "TRIG";
+    pub const LFOSHAPE : &'static str = "OSC";
+    pub const SOURCE : &'static str = "SRC";
 }
 
 /// For every instrument, retrieve the command names

@@ -311,7 +311,7 @@ impl From<JsonGatherer> for js_sys::Array {
 }
 
 impl ParameterGatherer for JsonGatherer {
-    fn hex(&mut self, name: &'static str, val: u8) {
+    fn hex(&mut self, name: &str, val: u8) {
         let obj = js_sys::Object::new();
         let _ = js_sys::Reflect::set(
             &obj,
@@ -326,7 +326,7 @@ impl ParameterGatherer for JsonGatherer {
         self.gather.push(&obj);
     }
 
-    fn bool(&mut self, name: &'static str, val: bool) {
+    fn bool(&mut self, name: &str, val: bool) {
         let obj = js_sys::Object::new();
         let _ = js_sys::Reflect::set(
             &obj,
@@ -341,7 +341,7 @@ impl ParameterGatherer for JsonGatherer {
         self.gather.push(&obj);
     }
 
-    fn float(&mut self, name: &'static str, val: f64) {
+    fn float(&mut self, name: &str, val: f64) {
         let obj = js_sys::Object::new();
         let _ = js_sys::Reflect::set(
             &obj,
@@ -356,7 +356,27 @@ impl ParameterGatherer for JsonGatherer {
         self.gather.push(&obj);
     }
 
-    fn str(&mut self, name: &'static str, val: &str) {
+    fn enumeration(&mut self, name: &str, hex: u8, val: &str) {
+        let obj = js_sys::Object::new();
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"name".into(), 
+            &JsValue::from_str(name));
+
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"str".into(), 
+            &JsValue::from_str(val));
+
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"hex".into(), 
+            &JsValue::from_f64(hex as f64));
+
+        self.gather.push(&obj);
+    }
+
+    fn str(&mut self, name: &str, val: &str) {
         let obj = js_sys::Object::new();
         let _ = js_sys::Reflect::set(
             &obj,
@@ -371,7 +391,7 @@ impl ParameterGatherer for JsonGatherer {
         self.gather.push(&obj);
     }
 
-    fn nest(&mut self, name: &'static str) -> Self {
+    fn nest(&mut self, name: &str) -> Self {
         let obj = js_sys::Object::new();
         let _ = js_sys::Reflect::set(
             &obj,
@@ -388,6 +408,7 @@ impl ParameterGatherer for JsonGatherer {
 
         Self { gather }
     }
+    
 }
 
 #[wasm_bindgen]

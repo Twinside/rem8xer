@@ -32,14 +32,33 @@ impl Mod {
     /// Number of commands associated to each mode
     pub const COMMAND_PER_MOD : usize = 5;
 
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, dests:&'static[&'static str]) {
+    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ix: usize, dests:&'static[&'static str]) {
+        let ix = ix + 1;
         match self {
-            Mod::AHDEnv(ahd)  => ahd.describe(pg, dests),
-            Mod::ADSREnv(adsr) => adsr.describe(pg, dests),
-            Mod::DrumEnv(drum_env) => drum_env.describe(pg, dests),
-            Mod::LFO(lfo) => lfo.describe(pg, dests),
-            Mod::TrigEnv(tenv) => tenv.describe(pg, dests),
-            Mod::TrackingEnv(tenv) => tenv.describe(pg, dests),
+            Mod::AHDEnv(ahd)  => {
+                pg.enumeration(&format!("MOD{ix}"), 0, "AHD ENV");
+                ahd.describe(pg, dests);
+            },
+            Mod::ADSREnv(adsr) => {
+                pg.enumeration(&format!("MOD{ix}"), 1, "ADSR ENV");
+                adsr.describe(pg, dests);
+            },
+            Mod::DrumEnv(drum_env) =>{
+                pg.enumeration(&format!("MOD{ix}"), 1, "DRUM ENV");
+                drum_env.describe(pg, dests)
+            }
+            Mod::LFO(lfo) => {
+                pg.enumeration(&format!("MOD{ix}"), 1, "LFO");
+                lfo.describe(pg, dests)
+            }
+            Mod::TrigEnv(tenv) => {
+                pg.enumeration(&format!("MOD{ix}"), 1, "TRIGENV");
+                tenv.describe(pg, dests);
+            }
+            Mod::TrackingEnv(tenv) => {
+                pg.enumeration(&format!("MOD{ix}"), 1, "TRACKENV");
+                tenv.describe(pg, dests)
+            },
         }
     }
 

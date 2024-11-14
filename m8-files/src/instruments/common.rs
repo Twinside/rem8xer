@@ -99,19 +99,19 @@ impl SynthParams {
     pub const MODULATOR_COUNT : usize = 4;
 
     pub fn describe_modulators<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str]) {
-        self.mods[0].describe(&mut pg.nest("MOD1"), dests);
-        self.mods[1].describe(&mut pg.nest("MOD2"), dests);
-        self.mods[2].describe(&mut pg.nest("MOD3"), dests);
-        self.mods[3].describe(&mut pg.nest("MOD4"), dests);
+        self.mods[0].describe(&mut pg.nest("MOD1"), 0, dests);
+        self.mods[1].describe(&mut pg.nest("MOD2"), 1, dests);
+        self.mods[2].describe(&mut pg.nest("MOD3"), 2, dests);
+        self.mods[3].describe(&mut pg.nest("MOD4"), 3, dests);
     }
 
     pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG) {
         pg.hex("FINE", self.fine_tune);
-        pg.hex("FILTER", self.filter_type);
+        pg.enumeration("FILTER", self.filter_type, &format!("{:?}", self.filter_type));
         pg.hex("CUT", self.filter_cutoff);
         pg.hex("RES", self.filter_res);
         pg.hex("AMP", self.amp);
-        pg.str("LIM", &format!("{:?}", self.limit));
+        pg.enumeration("LIM", self.limit.0, &format!("{:?}", self.limit));
 
         pg.hex("PAN", self.mixer_pan);
         pg.hex("DRY", self.mixer_dry);

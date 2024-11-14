@@ -4,6 +4,7 @@ use crate::instruments::common::*;
 
 use arr_macro::arr;
 
+use super::params;
 use super::CommandPack;
 use super::ParameterGatherer;
 
@@ -85,9 +86,9 @@ impl MIDIOut {
     }
 
     pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
-        pg.str("NAME", &self.name);
-        pg.bool("TRANSPOSE", self.transpose);
-        pg.hex("TICS", self.table_tick);
+        pg.str(params::NAME, &self.name);
+        pg.bool(params::TRANSPOSE, self.transpose);
+        pg.hex(params::TBLTIC, self.table_tick);
 
         pg.hex("PORT", self.port);
         pg.hex("CHANNEL", self.channel);

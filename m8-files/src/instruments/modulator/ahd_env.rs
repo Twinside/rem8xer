@@ -1,4 +1,4 @@
-use crate::{ParameterGatherer, Version};
+use crate::{ParameterGatherer, params, Version};
 
 use super::{M8Result, Mod, Reader, Writer};
 
@@ -28,11 +28,11 @@ impl AHDEnv {
     pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str]) {
         let dest = self.dest as usize;
         let dest_str = if dest < dests.len() { dests[dest] } else { "??" };
-        pg.str("DEST", dest_str);
-        pg.hex("AMOUNT", self.amount);
-        pg.hex("ATTACK", self.attack);
-        pg.hex("HOLD", self.hold);
-        pg.hex("DECAY", self.decay);
+        pg.enumeration(params::DEST, self.dest, dest_str);
+        pg.hex(params::AMOUNT, self.amount);
+        pg.hex(params::ATTACK, self.attack);
+        pg.hex(params::HOLD, self.hold);
+        pg.hex(params::DECAY, self.decay);
     }
 
     pub fn from_reader2(reader: &mut Reader) -> M8Result<Self> {

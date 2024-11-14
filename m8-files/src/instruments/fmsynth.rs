@@ -6,6 +6,7 @@ use num_enum::TryFromPrimitive;
 
 use arr_macro::arr;
 
+use super::params;
 use super::CommandPack;
 use super::ParameterGatherer;
 
@@ -153,11 +154,11 @@ impl FMSynth {
     }
 
     pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
-        pg.str("NAME", &self.name);
-        pg.bool("TRANSPOSE", self.transp_eq.transpose);
-        pg.hex("EQ", self.transp_eq.eq);
-        pg.hex("TICS", self.table_tick);
-        pg.str("ALG", self.algo.str());
+        pg.str(params::NAME, &self.name);
+        pg.bool(params::TRANSPOSE, self.transp_eq.transpose);
+        pg.hex(params::EQ, self.transp_eq.eq);
+        pg.hex(params::TBLTIC, self.table_tick);
+        pg.enumeration("ALG", self.algo.0, self.algo.str());
 
         self.operators[0].describe(&mut pg.nest("A"));
         self.operators[1].describe(&mut pg.nest("B"));

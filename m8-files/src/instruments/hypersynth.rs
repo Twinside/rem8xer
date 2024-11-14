@@ -1,6 +1,7 @@
 use crate::reader::*;
 use super::common::SynthParams;
 use super::common::TranspEq;
+use super::params;
 use super::CommandPack;
 use super::ParameterGatherer;
 use super::Version;
@@ -66,12 +67,12 @@ impl HyperSynth {
     }
 
     pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
-        pg.str("NAME", &self.name);
-        pg.bool("TRANSPOSE", self.transp_eq.transpose);
-        pg.hex("EQ", self.transp_eq.eq);
+        pg.str(params::NAME, &self.name);
+        pg.bool(params::TRANSPOSE, self.transp_eq.transpose);
+        pg.hex(params::EQ, self.transp_eq.eq);
         let dc = &self.default_chord;
         pg.str("CHORD", &format!("{:02X} | {:02X} {:02X} {:02X} {:02X} {:02X} {:02X}", dc[0], dc[1], dc[2], dc[3], dc[4], dc[5], dc[6]));
-        pg.hex("TICS", self.table_tick);
+        pg.hex(params::TBLTIC, self.table_tick);
         pg.hex("SCALE", self.scale);
         pg.hex("SHIFT", self.shift);
         pg.hex("SWARM", self.swarm);
