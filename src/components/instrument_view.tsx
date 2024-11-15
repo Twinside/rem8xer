@@ -29,19 +29,37 @@ function HexGauge(props: { v: number }) {
 }
 
 function HexRender(props: { v: { name: string, hex: number }}) {
-    return <li>{props.v.name}: <HexGauge v={props.v.hex} /> </li>;
+    return <>
+        <td>{props.v.name}</td>
+        <td>{hexStr(props.v.hex)}</td>
+        <td><HexGauge v={props.v.hex} /></td>
+    </>;
 }
 
 function BoolRender(props: { v: { name: string, bool: boolean }}) {
-    return <li>{props.v.name}: {props.v.bool ? "ON" : "OFF"}</li>;
+    return <>
+        <td>{props.v.name}</td>
+        <td colSpan={2}>{props.v.bool ? "ON" : "OFF"}</td>
+    </>;
 }
 
 function FloatRender(props: { v: { name: string, f32: number }}) {
     return <li>{props.v.name}: {props.v.f32}</li>;
 }
 
-function StrRender(props: { v: { name: string, str: string }}) {
-    return <li>{props.v.name}: {props.v.str}</li>;
+function StrRender(props: { v: { name: string, str: string, hex?: number }}) {
+    if ("hex" in props.v) {
+        return <>
+            <td>{props.v.name}</td>
+            <td>{hexStr(props.v.hex)}</td>
+            <td>{props.v.str}</td>
+        </>;
+    }
+
+    return <>
+        <td>{props.v.name}</td>
+        <td colSpan={2}>{props.v.str}</td>
+    </>;
 }
 
 const MODRenderers : { [name: string]: number } = {
@@ -50,6 +68,7 @@ const MODRenderers : { [name: string]: number } = {
     "MOD3": 2,
     "MOD4": 3,
 };
+
 const CCValues =
     {
         "CCA": 0,
@@ -80,9 +99,46 @@ function CCRender(props: { v: NestDescriptor }) {
         return "00" + strN;
     }
 
-    return <li>
-        {props.v.name} CC:VAL {fillNum(cc)}:{hexStr(val)} <HexGauge v={val} />
-    </li>;
+    return <>
+        <td>{props.v.name} CC:VAL</td>
+        <td>{fillNum(cc)}:{hexStr(val)}</td>
+        <td><HexGauge v={val} /></td>
+    </>;
+}
+
+function FmOperatorRender(desc: NestDescriptor, legend: boolean) {
+    const v = desc.nest;
+
+    let osc = "";
+    let ratio = 0.0;
+    let level = 0;
+    let fbk = 0;
+    let moda = 0;
+    let modb = 0;
+
+    for (const desc of v) {
+        if (desc.name === "SHAPE" && "str" in desc) {
+            osc = desc.str;
+        } else if (desc.name === "LEVEL" && "hex" in desc) {
+            level = desc.hex;
+        } else if (desc.name === "FBK" && "hex" in desc) {
+            fbk = desc.hex;
+        } else if (desc.name === "RATIO" && "f32" in desc) {
+            ratio = desc.f32;
+        } else if (desc.name === "MOD_A" && "hex" in desc) {
+            moda = desc.hex;
+        } else if (desc.name === "MOD_B" && "hex" in desc) {
+            modb = desc.hex;
+        }
+    }
+
+    return [
+        <>{legend ? <td/>           : undefined}<td>{desc.name} {osc}</td></>,
+        <>{legend ? <td>RATIO</td>  : undefined}<td>{ratio}</td></>,
+        <>{legend ? <td>LEV/FB</td> : undefined}<td>{hexStr(level)}/{hexStr(fbk)}</td></>,
+        <>{legend ? <td>MOD</td>    : undefined}<td>{hexStr(moda)}</td></>,
+        <>{legend ? <td/>           : undefined}<td>{hexStr(modb)}</td></>
+    ]
 }
 
 function ModRender(props: { v: Descriptor[]}) {
@@ -116,24 +172,150 @@ function DescriptorRender(props: { desc: Descriptor }) {
     if ("bool" in desc) return <BoolRender v={desc} />;
     if ("f32" in desc) return <FloatRender v={desc} />;
     if ("nest" in desc) {
-        const mods : JSX.Element[] = [undefined, undefined, undefined, undefined];
         const descriptors = desc.nest.map(d => {
-            const asMod = MODRenderers[d.name];
-            if (asMod !== undefined && "nest" in d) {
-                mods[asMod] = <ModRender v={d.nest} />;
-                return undefined;
-            }
-
             if (d.name in CCValues && "nest" in d)
                 return <CCRender v={d} />;
 
             return <DescriptorRender desc={d} />
         });
 
-
-        return <div class="instrparam] =">
+        return <div class="instrparam">
             <span>{desc.name}</span>
             <ul>{descriptors}</ul>
+        </div>
+    }
+
+    return undefined;
+}
+
+const InRightColumn : {[name: string]: number } = {
+    "AMP": 1,
+    "LIM": 1,
+    "PAN": 1,
+    "DRY": 1,
+    "CHORUS": 1,
+    "DELAY": 1,
+    "REVERB": 1,
+    "ALG": 2,
+    "SCALE": 2,
+    "CHORD": 2,
+    "SAMPLE": 2,
+    "PORT": 2,
+    "CHANNEL": 2,
+    "BANK": 2,
+    "PROGRAM": 2,
+    "PLAY": 2,
+    "SHAPE": 2,
+    "SLICE": 2
+};
+
+const OperatorName : {[name: string]: number} = {
+    "A": 0, "B": 1, "C": 2, "D": 3
+}
+
+function RootDescriptorRender(props: { desc: Descriptor }) {
+    const { desc } = props;
+
+    if ("str" in desc) return <StrRender v={desc} />;
+    if ("hex" in desc) return <HexRender v={desc} />;
+    if ("bool" in desc) return <BoolRender v={desc} />;
+    if ("f32" in desc) return <FloatRender v={desc} />;
+    if ("nest" in desc) {
+
+        const buckets : JSX.Element[][] = [[], [], []];
+        const operators : JSX.Element[][] = [];
+        const mods : JSX.Element[] = [undefined, undefined, undefined, undefined];
+        let name = "";
+        let transpose = true;
+        let tblTic = 1;
+        let eq = 0xFF;
+
+        for (const d of desc.nest) {
+            if (d.name === "NAME" && "str" in d) {
+                name = d.str;
+                continue;
+            }
+
+            if (d.name === "TRANSPOSE" && "bool" in d) {
+                transpose = d.bool
+                continue;
+            }
+
+            if (d.name === "TBL. TIC" && "hex" in d) {
+                tblTic = d.hex;
+                continue;
+            }
+
+            if (d.name === "EQ" && "hex" in d) {
+                eq = d.hex;
+                continue;
+            }
+
+            if (d.name in OperatorName && "nest" in d) {
+                const ix = OperatorName[d.name];
+                operators[ix] = FmOperatorRender(d, d.name === "A");
+                continue;
+            }
+
+            const asMod = MODRenderers[d.name];
+            if (asMod !== undefined && "nest" in d) {
+                mods[asMod] = <ModRender v={d.nest} />;
+                continue;
+            }
+
+            const ix = d.name in InRightColumn ? InRightColumn[d.name] : 0;
+
+            if (d.name in CCValues && "nest" in d) {
+                buckets[ix].push(<CCRender v={d} />);
+            } else {
+                buckets[ix].push(<DescriptorRender desc={d} />);
+            }
+        }
+
+        const maxi = Math.max(buckets[0].length, buckets[1].length);
+        const lines = [];
+
+        for (let i = 0; i < maxi; i++) {
+            const left = i < buckets[0].length
+                ? buckets[0][i]
+                : <td colSpan={3}/>;
+
+            const right = i < buckets[1].length
+                ? buckets[1][i]
+                : undefined;
+
+            lines.push(<tr>{left}{right}</tr>)
+        }
+
+        const globalLines =
+            buckets[2].map(elems => <tr>{elems}</tr>);
+
+        if (operators.length > 0) {
+            let max = operators[0].length;
+            for (let i = 0; i < max; i++) {
+                globalLines.push(<tr>
+                    {operators[0][i]}
+                    {operators[1][i]}
+                    {operators[2][i]}
+                    {operators[3][i]}
+                </tr>);
+            }
+        }
+
+        return <div class="instrparam">
+            <span>{desc.name}</span>
+            <div>NAME {name}</div>
+            <div>
+                <span>TRANSP. {transpose ? "ON" : "OFF"}</span>&nbsp;&nbsp;
+                <span>TBL TIC. {hexStr(tblTic)}</span>&nbsp;&nbsp;
+                <span>EQ {eq === 0xFF ? "--" : hexStr(eq)}</span>
+            </div>
+            <table>
+                <tbody>{globalLines}</tbody>
+            </table>
+            <table>
+                <tbody>{lines}</tbody>
+            </table>
             <table>
                 <tbody>
                     <tr><td>{mods[0]}</td><td>{mods[2]}</td></tr>
@@ -164,6 +346,6 @@ export function InstrumentViewer(props: { panel: SongPane }) {
   }
 
   return <div class="instrparam">
-    {info.map(d => <DescriptorRender desc={d} />)}
+    {info.map(d => <RootDescriptorRender desc={d} />)}
   </div>;
 }

@@ -1,6 +1,8 @@
 use crate::reader::*;
 use super::common::SynthParams;
 use super::common::TranspEq;
+use super::common::COMMON_FILTER_TYPES;
+use super::dests;
 use super::params;
 use super::CommandPack;
 use super::ParameterGatherer;
@@ -53,7 +55,25 @@ const HYPERSYNTH_COMMAND_NAMES : [&'static str; CommandPack::BASE_INSTRUMENT_COM
       "SNC"
     ];
 
-const DESTINATIONS : [&'static str; 0] = [];
+const DESTINATIONS : [&'static str; 15] =
+    [
+        dests::OFF,
+        dests::VOLUME,
+        dests::PITCH,
+
+        "SHIFT",
+        "SWARM",
+        "WIDTH",
+        "SUBOSC",
+        dests::CUTOFF,
+        dests::RES,
+        dests::AMP,
+        dests::PAN,
+        dests::MOD_AMT,
+        dests::MOD_RATE,
+        dests::MOD_BOTH,
+        dests::MOD_BINV,
+    ];
 
 impl HyperSynth {
     const MOD_OFFSET : usize = 23;
@@ -70,16 +90,16 @@ impl HyperSynth {
         pg.str(params::NAME, &self.name);
         pg.bool(params::TRANSPOSE, self.transp_eq.transpose);
         pg.hex(params::EQ, self.transp_eq.eq);
+        pg.hex(params::SCALE, self.scale);
         let dc = &self.default_chord;
         pg.str("CHORD", &format!("{:02X} | {:02X} {:02X} {:02X} {:02X} {:02X} {:02X}", dc[0], dc[1], dc[2], dc[3], dc[4], dc[5], dc[6]));
         pg.hex(params::TBLTIC, self.table_tick);
-        pg.hex("SCALE", self.scale);
         pg.hex("SHIFT", self.shift);
         pg.hex("SWARM", self.swarm);
         pg.hex("WIDTH", self.width);
         pg.hex("SUBOSC", self.subosc);
 
-        self.synth_params.describe(pg);
+        self.synth_params.describe(pg, &COMMON_FILTER_TYPES);
         self.synth_params.describe_modulators(pg, self.destination_names(ver));
 
         // TODO: other chords

@@ -6,6 +6,7 @@ use num_enum::TryFromPrimitive;
 
 use arr_macro::arr;
 
+use super::dests;
 use super::params;
 use super::CommandPack;
 use super::ParameterGatherer;
@@ -101,7 +102,25 @@ const FM_FX_COMMANDS : [&'static str; CommandPack::BASE_INSTRUMENT_COMMAND_COUNT
     "FMP",
   ];
 
-const DESTINATIONS : [&'static str; 0] = [];
+const DESTINATIONS : [&'static str; 15] =
+    [
+        dests::OFF,
+        dests::VOLUME,
+        dests::PITCH,
+
+        "MOD1",
+        "MOD2",
+        "MOD3",
+        "MOD4",
+        dests::CUTOFF,
+        dests::RES,
+        dests::AMP,
+        dests::PAN,
+        dests::MOD_AMT,
+        dests::MOD_RATE,
+        dests::MOD_BOTH,
+        dests::MOD_BINV,
+    ];
 
 #[derive(PartialEq, Debug, Default, Clone)]
 pub struct Operator {
@@ -165,7 +184,7 @@ impl FMSynth {
         self.operators[2].describe(&mut pg.nest("C"));
         self.operators[3].describe(&mut pg.nest("D"));
 
-        self.synth_params.describe(pg);
+        self.synth_params.describe(pg, &COMMON_FILTER_TYPES);
         self.synth_params.describe_modulators(pg, self.destination_names(ver));
     }
 

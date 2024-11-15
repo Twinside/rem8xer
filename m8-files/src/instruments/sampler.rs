@@ -4,6 +4,7 @@ use crate::instruments::common::*;
 use num_enum::IntoPrimitive;
 use num_enum::TryFromPrimitive;
 
+use super::dests;
 use super::CommandPack;
 use super::ParameterGatherer;
 use super::params;
@@ -68,8 +69,23 @@ const SAMPLER_FX_COMMANDS : [&'static str; CommandPack::BASE_INSTRUMENT_COMMAND_
     "SLI"
   ];
 
-const DESTINATIONS : [&'static str; 0] =
+const DESTINATIONS : [&'static str; 14] =
     [
+        dests::OFF,
+        dests::VOLUME,
+        dests::PITCH,
+
+        "LOOP ST",
+        "LENGTH",
+        dests::DEGRADE,
+        dests::CUTOFF,
+        dests::RES,
+        dests::AMP,
+        dests::PAN,
+        dests::MOD_AMT,
+        dests::MOD_RATE,
+        dests::MOD_BOTH,
+        dests::MOD_BINV,
     ];
 
 impl Sampler {
@@ -97,7 +113,7 @@ impl Sampler {
 
         pg.hex("DEGRADE", self.degrade);
 
-        self.synth_params.describe(pg);
+        self.synth_params.describe(pg, &COMMON_FILTER_TYPES);
         self.synth_params.describe_modulators(pg, self.destination_names(ver));
     }
 

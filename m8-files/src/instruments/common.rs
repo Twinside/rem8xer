@@ -95,6 +95,18 @@ pub struct SynthParams {
     pub mods: [Mod; SynthParams::MODULATOR_COUNT],
 }
 
+pub const COMMON_FILTER_TYPES : [&'static str; 8] =
+    [
+        "OFF",
+        "LOWPASS",
+        "HIGHPAS",
+        "BANDPAS",
+        "BANDSTP",
+        "LP > HP",
+        "ZDF LP",
+        "ZDF HP",
+    ];
+
 impl SynthParams {
     pub const MODULATOR_COUNT : usize = 4;
 
@@ -105,13 +117,20 @@ impl SynthParams {
         self.mods[3].describe(&mut pg.nest("MOD4"), 3, dests);
     }
 
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG) {
+    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, filters: &[&str]) {
         pg.hex("FINE", self.fine_tune);
-        pg.enumeration("FILTER", self.filter_type, &format!("{:?}", self.filter_type));
+
+        match filters.get(self.filter_type as usize) {
+            None =>
+                pg.enumeration("FILTER", self.filter_type, &format!("{:02X}", self.filter_type)),
+            Some(str) => 
+                pg.enumeration("FILTER", self.filter_type, str)
+        };
+
         pg.hex("CUT", self.filter_cutoff);
         pg.hex("RES", self.filter_res);
         pg.hex("AMP", self.amp);
-        pg.enumeration("LIM", self.limit.0, &format!("{:?}", self.limit));
+        pg.enumeration("LIM", self.limit.0, self.limit.str());
 
         pg.hex("PAN", self.mixer_pan);
         pg.hex("DRY", self.mixer_dry);

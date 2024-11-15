@@ -21,9 +21,14 @@ export function SongViewer(props: { side: SongSide, panel: SongPane }) {
     : filename;
 
   if (song === undefined) {
+    // debug helper
+    const debugLoad = false
+      ? <button onClick={() => loadUrl(state, panel, revUrl)}>Reversing</button>
+      : undefined;
+
     return <div class="rootcolumn">
       <button onClick={() => loadUrl(state, panel, emptyUrl)}>Load empty song</button>
-      <button onClick={() => loadUrl(state, panel, revUrl)}>Reversing</button>
+      {debugLoad}
       <div class="filetarget"
            onDragOver={(ev) => ev.preventDefault()}
            onDrop={(evt) => loadDroppedSong(state, evt, props.panel)}>

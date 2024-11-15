@@ -48,6 +48,12 @@ pub mod params {
     pub const TRANSPOSE : &'static str = "TRANSPOSE";
     pub const TBLTIC : &'static str = "TBL. TIC";
     pub const EQ : &'static str = "EQ";
+    pub const SCALE : &'static str = "SCALE";
+
+    pub const CCA : &'static str = "CCA";
+    pub const CCB : &'static str = "CCB";
+    pub const CCC : &'static str = "CCC";
+    pub const CCD : &'static str = "CCD";
 
     pub const DEST : &'static str = "DEST";
     pub const AMOUNT : &'static str = "AMT";
@@ -62,6 +68,21 @@ pub mod params {
     pub const TRIGGER : &'static str = "TRIG";
     pub const LFOSHAPE : &'static str = "OSC";
     pub const SOURCE : &'static str = "SRC";
+}
+
+pub mod dests {
+    pub const OFF : &'static str = "OFF";
+    pub const VOLUME : &'static str = "VOLUME";
+    pub const PITCH : &'static str = "PITCH";
+    pub const CUTOFF : &'static str = "CUTOFF";
+    pub const RES : &'static str = "RES";
+    pub const AMP : &'static str = "AMP";
+    pub const PAN : &'static str = "PAN";
+    pub const DEGRADE : &'static str = "DEGRADE";
+    pub const MOD_AMT : &'static str = "MOD AMT";
+    pub const MOD_RATE : &'static str = "MOD RATE";
+    pub const MOD_BOTH : &'static str = "MOD BOTH";
+    pub const MOD_BINV : &'static str = "MOD BINV";
 }
 
 /// For every instrument, retrieve the command names

@@ -1,7 +1,10 @@
 use crate::reader::*;
 use super::common::SynthParams;
 use super::common::TranspEq;
+use super::common::COMMON_FILTER_TYPES;
+use super::dests;
 use super::midi::ControlChange;
+use super::params;
 use super::CommandPack;
 use super::ParameterGatherer;
 use super::Version;
@@ -52,7 +55,31 @@ const EXTERNAL_INST_COMMANDS : [&'static str; CommandPack::BASE_INSTRUMENT_COMMA
       "CHD"
     ];
 
-const DESTINATIONS : [&'static str; 0] = [];
+const DESTINATIONS : [&'static str; 14] =
+    [
+        dests::OFF,
+        dests::VOLUME,
+        dests::CUTOFF,
+        dests::RES,
+        dests::AMP,
+        dests::PAN,
+        params::CCA,
+        params::CCB,
+        params::CCC,
+        params::CCD,
+        dests::MOD_AMT,
+        dests::MOD_RATE,
+        dests::MOD_BOTH,
+        dests::MOD_BINV,
+    ];
+
+const PORT : [&'static str; 4] =
+    [
+        "NONE",
+        "MIDI+USB",
+        "MIDI",
+        "USB"
+    ];
 
 impl ExternalInst {
     const MOD_OFFSET: usize = 22;
@@ -66,19 +93,22 @@ impl ExternalInst {
     }
 
     pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
-        pg.str("NAME", &self.name);
-        pg.bool("TRANSPOSE", self.transp_eq.transpose);
-        pg.hex("EQ", self.transp_eq.eq);
-        pg.hex("TICS", self.table_tick);
-        pg.hex("PORT", self.port);
+        pg.str(params::NAME, &self.name);
+        pg.bool(params::TRANSPOSE, self.transp_eq.transpose);
+        pg.hex(params::EQ, self.transp_eq.eq);
+        pg.hex(params::TBLTIC, self.table_tick);
+
+        let port_str =
+            PORT.get(self.port as usize).unwrap_or(&"");
+        pg.enumeration("PORT", self.port, port_str);
         pg.hex("CHANNEL", self.channel);
         pg.hex("BANK", self.bank);
         pg.hex("PROGRAM", self.program);
-        self.cca.describe(&mut pg.nest("CCA"));
-        self.ccb.describe(&mut pg.nest("CCB"));
-        self.ccc.describe(&mut pg.nest("CCC"));
-        self.ccd.describe(&mut pg.nest("CCD"));
-        self.synth_params.describe(pg);
+        self.cca.describe(&mut pg.nest(params::CCA));
+        self.ccb.describe(&mut pg.nest(params::CCB));
+        self.ccc.describe(&mut pg.nest(params::CCC));
+        self.ccd.describe(&mut pg.nest(params::CCD));
+        self.synth_params.describe(pg, &COMMON_FILTER_TYPES);
         self.synth_params.describe_modulators(pg, self.destination_names(ver));
     }
 

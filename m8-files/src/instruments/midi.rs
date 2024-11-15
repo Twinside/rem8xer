@@ -4,6 +4,7 @@ use crate::instruments::common::*;
 
 use arr_macro::arr;
 
+use super::dests;
 use super::params;
 use super::CommandPack;
 use super::ParameterGatherer;
@@ -56,7 +57,32 @@ const MIDI_OUT_COMMAND_NAMES : [&'static str; CommandPack::BASE_INSTRUMENT_COMMA
     "CCJ",
   ];
 
-const DESTINATIONS : [&'static str; 0] = [];
+const DESTINATIONS : [&'static str; 15] =
+    [
+        dests::OFF,
+        params::CCA,
+        params::CCB,
+        params::CCC,
+        params::CCD,
+        "CCE",
+        "CCF",
+        "CCG",
+        "CCH",
+        "CCI",
+        "CCJ",
+        dests::MOD_AMT,
+        dests::MOD_RATE,
+        dests::MOD_BOTH,
+        dests::MOD_BINV,
+    ];
+
+const PORTS : [&'static str; 4] =
+    [
+        "MIDI + USB",
+        "MIDI",
+        "USB",
+        "INTERNAL"
+    ];
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct MIDIOut {
@@ -90,7 +116,8 @@ impl MIDIOut {
         pg.bool(params::TRANSPOSE, self.transpose);
         pg.hex(params::TBLTIC, self.table_tick);
 
-        pg.hex("PORT", self.port);
+        let port_str = PORTS.get(self.port as usize).unwrap_or(&"??");
+        pg.enumeration("PORT", self.port, port_str);
         pg.hex("CHANNEL", self.channel);
         pg.hex("BANK", self.bank_select);
         pg.hex("PROGRAM", self.program_change);

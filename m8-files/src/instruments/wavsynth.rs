@@ -4,6 +4,7 @@ use crate::instruments::common::*;
 use num_enum::IntoPrimitive;
 use num_enum::TryFromPrimitive;
 
+use super::dests;
 use super::params;
 use super::CommandPack;
 use super::ParameterGatherer;
@@ -124,7 +125,41 @@ const WAVSYNTH_COMMAND_NAMES : [&'static str; CommandPack::BASE_INSTRUMENT_COMMA
     "SRV",
   ];
 
-const DESTINATIONS : [&'static str; 0] = [];
+const DESTINATIONS : [&'static str; 15] =
+    [
+        dests::OFF,
+        dests::VOLUME,
+        dests::PITCH,
+
+        "SIZE",
+        "MULT",
+        "WARP",
+        "SCAN",
+        dests::CUTOFF,
+        dests::RES,
+        dests::AMP,
+        dests::PAN,
+        dests::MOD_AMT,
+        dests::MOD_RATE,
+        dests::MOD_BOTH,
+        dests::MOD_BINV,
+    ];
+
+const WAVSYNTH_FILTER_TYPES : [&'static str; 12] =
+    [
+        "OFF",
+        "LOWPASS",
+        "HIGHPAS",
+        "BANDPAS",
+        "BANDSTP",
+        "LP > HP",
+        "ZDF LP",
+        "ZDF HP",
+        "WAV LP",
+        "WAV HP",
+        "WAV BP",
+        "WAV BS"
+    ];
 
 impl WavSynth {
     pub const MOD_OFFSET : usize = 30;
@@ -148,7 +183,7 @@ impl WavSynth {
         pg.hex("WARP", self.warp);
         pg.hex("SCAN", self.scan);
 
-        self.synth_params.describe(pg);
+        self.synth_params.describe(pg, &WAVSYNTH_FILTER_TYPES);
         self.synth_params.describe_modulators(pg, self.destination_names(ver));
     }
 

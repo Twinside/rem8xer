@@ -69,8 +69,7 @@ impl LFO {
     }
 
     pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str]) {
-        let dest = self.dest as usize;
-        let dest_str = if dest < dests.len() { dests[dest] } else { "??" };
+        let dest_str = dests.get(self.dest as usize).unwrap_or(&"??");
         pg.enumeration(params::DEST, self.dest, dest_str);
         pg.enumeration(params::LFOSHAPE, self.shape as u8, &format!("{:?}", self.shape));
         pg.hex(params::AMOUNT, self.amount);
