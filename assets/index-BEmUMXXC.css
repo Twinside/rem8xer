@@ -160,6 +160,12 @@ button:focus-visible {
 
 .songchain {
     color: #ddd;
+    max-width: 20px;
+}
+
+.nameedit {
+    color: #ddd;
+    max-width: 60px;
 }
 
 .songchain:hover {
@@ -195,7 +201,14 @@ button:focus-visible {
   border: 6px dashed grey;
   border-radius: 10px;
   margin: 10px;
-  min-height: 300px;
+  height: 300px;
+  font-size: 30px;
+  font-weight: bold;
+
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .phrase:hover {
@@ -205,4 +218,32 @@ button:focus-visible {
 .titlepre {
   display: inline-block;
   font-size: 50px;
+}
+
+.songsection {
+  width: 100%;
+  margin-bottom: 3px;
+}
+
+.songsection summary {
+  padding-left: 5px;
+  border: 1px solid darkslategrey;
+}
+
+.instr_name {
+  width: 90px;
+  min-width: 90px;
+  border: 1px solid lightgray;
+}
+
+.instrparam {
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.hexgauge {
+  display: inline-block;
+  background-color:cornflowerblue;
+  width: calc(calc(var(--hex)) * 0.5px);
+  height: 8px;
 }

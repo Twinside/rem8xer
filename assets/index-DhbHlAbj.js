@@ -36,7 +36,7 @@
       fetch(link.href, fetchOpts);
     }
   })();
-  var n, l$3, u$3, t$2, i$2, o$2, r$1, f$3, e$2, c$2, s$3, h$1 = {}, v$2 = [], p$2 = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, y$1 = Array.isArray;
+  var n, l$3, u$3, t$2, i$2, o$2, r$1, f$3, e$2, c$2, s$3, a$2, h$1 = {}, v$2 = [], p$2 = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, y$1 = Array.isArray;
   function d$3(n2, l2) {
     for (var u2 in l2) n2[u2] = l2[u2];
     return n2;
@@ -75,10 +75,10 @@
   function k$1(n2, l2) {
     this.props = n2, this.context = l2;
   }
-  function x(n2, l2) {
-    if (null == l2) return n2.__ ? x(n2.__, n2.__i + 1) : null;
+  function x$1(n2, l2) {
+    if (null == l2) return n2.__ ? x$1(n2.__, n2.__i + 1) : null;
     for (var u2; l2 < n2.__k.length; l2++) if (null != (u2 = n2.__k[l2]) && null != u2.__e) return u2.__e;
-    return "function" == typeof n2.type ? x(n2) : null;
+    return "function" == typeof n2.type ? x$1(n2) : null;
   }
   function C$1(n2) {
     var l2, u2;
@@ -97,7 +97,7 @@
     var n2, u2, t2, o2, r2, e2, c2, s2;
     for (i$2.sort(f$3); n2 = i$2.shift(); ) n2.__d && (u2 = i$2.length, o2 = void 0, e2 = (r2 = (t2 = n2).__v).__e, c2 = [], s2 = [], t2.__P && ((o2 = d$3({}, r2)).__v = r2.__v + 1, l$3.vnode && l$3.vnode(o2), O(t2.__P, o2, r2, t2.__n, t2.__P.namespaceURI, 32 & r2.__u ? [
       e2
-    ] : null, c2, null == e2 ? x(r2) : e2, !!(32 & r2.__u), s2), o2.__v = r2.__v, o2.__.__k[o2.__i] = o2, j$1(c2, o2, s2), o2.__e != e2 && C$1(o2)), i$2.length > u2 && i$2.sort(f$3));
+    ] : null, c2, null == e2 ? x$1(r2) : e2, !!(32 & r2.__u), s2), o2.__v = r2.__v, o2.__.__k[o2.__i] = o2, j$1(c2, o2, s2), o2.__e != e2 && C$1(o2)), i$2.length > u2 && i$2.sort(f$3));
     M.__r = 0;
   }
   function P(n2, l2, u2, t2, i2, o2, r2, f2, e2, c2, s2) {
@@ -110,7 +110,7 @@
     for (n2.__k = [], t2 = 0; t2 < e2; t2++) null != (i2 = l2[t2]) && "boolean" != typeof i2 && "function" != typeof i2 ? (r2 = t2 + a2, (i2 = n2.__k[t2] = "string" == typeof i2 || "number" == typeof i2 || "bigint" == typeof i2 || i2.constructor == String ? g$1(null, i2, null, null, null) : y$1(i2) ? g$1(b$1, {
       children: i2
     }, null, null, null) : void 0 === i2.constructor && i2.__b > 0 ? g$1(i2.type, i2.props, i2.key, i2.ref ? i2.ref : null, i2.__v) : i2).__ = n2, i2.__b = n2.__b + 1, o2 = null, -1 !== (f2 = i2.__i = L(i2, u2, r2, s2)) && (s2--, (o2 = u2[f2]) && (o2.__u |= 131072)), null == o2 || null === o2.__v ? (-1 == f2 && a2--, "function" != typeof i2.type && (i2.__u |= 65536)) : f2 !== r2 && (f2 == r2 - 1 ? a2-- : f2 == r2 + 1 ? a2++ : (f2 > r2 ? a2-- : a2++, i2.__u |= 65536))) : i2 = n2.__k[t2] = null;
-    if (s2) for (t2 = 0; t2 < c2; t2++) null != (o2 = u2[t2]) && 0 == (131072 & o2.__u) && (o2.__e == n2.__d && (n2.__d = x(o2)), V(o2, o2));
+    if (s2) for (t2 = 0; t2 < c2; t2++) null != (o2 = u2[t2]) && 0 == (131072 & o2.__u) && (o2.__e == n2.__d && (n2.__d = x$1(o2)), V(o2, o2));
   }
   function I(n2, l2, u2) {
     var t2, i2;
@@ -118,7 +118,7 @@
       for (t2 = n2.__k, i2 = 0; t2 && i2 < t2.length; i2++) t2[i2] && (t2[i2].__ = n2, l2 = I(t2[i2], l2, u2));
       return l2;
     }
-    n2.__e != l2 && (l2 && n2.type && !u2.contains(l2) && (l2 = x(n2)), u2.insertBefore(n2.__e, l2 || null), l2 = n2.__e);
+    n2.__e != l2 && (l2 && n2.type && !u2.contains(l2) && (l2 = x$1(n2)), u2.insertBefore(n2.__e, l2 || null), l2 = n2.__e);
     do {
       l2 = l2 && l2.nextSibling;
     } while (null != l2 && 8 === l2.nodeType);
@@ -247,7 +247,7 @@
       if (v2) c2 || p2 && (v2.__html === p2.__html || v2.__html === u2.innerHTML) || (u2.innerHTML = v2.__html), t2.__k = [];
       else if (p2 && (u2.innerHTML = ""), P(u2, y$1(d2) ? d2 : [
         d2
-      ], t2, i2, o2, "foreignObject" === C2 ? "http://www.w3.org/1999/xhtml" : r2, f2, e2, f2 ? f2[0] : i2.__k && x(i2, 0), c2, s2), null != f2) for (a2 = f2.length; a2--; ) w$2(f2[a2]);
+      ], t2, i2, o2, "foreignObject" === C2 ? "http://www.w3.org/1999/xhtml" : r2, f2, e2, f2 ? f2[0] : i2.__k && x$1(i2, 0), c2, s2), null != f2) for (a2 = f2.length; a2--; ) w$2(f2[a2]);
       c2 || (a2 = "value", "progress" === C2 && null == g2 ? u2.removeAttribute("value") : void 0 !== g2 && (g2 !== u2[a2] || "progress" === C2 && !g2 || "option" === C2 && g2 !== b2[a2]) && A(u2, a2, g2, b2[a2], r2), a2 = "checked", void 0 !== m2 && m2 !== u2[a2] && A(u2, a2, m2, b2[a2], r2));
     }
     return u2;
@@ -286,6 +286,34 @@
       i2
     ] : r2 ? null : t2.firstChild ? n.call(t2.childNodes) : null, f2, !o2 && i2 ? i2 : r2 ? r2.__e : t2.firstChild, o2, e2), j$1(f2, u2, e2);
   }
+  function G(n2, l2) {
+    var u2 = {
+      __c: l2 = "__cC" + a$2++,
+      __: n2,
+      Consumer: function(n3, l3) {
+        return n3.children(l3);
+      },
+      Provider: function(n3) {
+        var u3, t2;
+        return this.getChildContext || (u3 = /* @__PURE__ */ new Set(), (t2 = {})[l2] = this, this.getChildContext = function() {
+          return t2;
+        }, this.componentWillUnmount = function() {
+          u3 = null;
+        }, this.shouldComponentUpdate = function(n4) {
+          this.props.value !== n4.value && u3.forEach(function(n5) {
+            n5.__e = true, S(n5);
+          });
+        }, this.sub = function(n4) {
+          u3.add(n4);
+          var l3 = n4.componentWillUnmount;
+          n4.componentWillUnmount = function() {
+            u3 && u3.delete(n4), l3 && l3.call(n4);
+          };
+        }), n3.children;
+      }
+    };
+    return u2.Provider.__ = u2.Consumer.contextType = u2;
+  }
   n = v$2.slice, l$3 = {
     __e: function(n2, l2, u2, t2) {
       for (var i2, o2, r2; l2 = l2.__; ) if ((i2 = l2.__c) && !i2.__) try {
@@ -304,7 +332,7 @@
     this.__v && (this.__e = true, n2 && this.__h.push(n2), S(this));
   }, k$1.prototype.render = b$1, i$2 = [], r$1 = "function" == typeof Promise ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, f$3 = function(n2, l2) {
     return n2.__v.__b - l2.__v.__b;
-  }, M.__r = 0, e$2 = 0, c$2 = F(false), s$3 = F(true);
+  }, M.__r = 0, e$2 = 0, c$2 = F(false), s$3 = F(true), a$2 = 0;
   var f$2 = 0;
   function u$2(e2, t2, n2, o2, i2, u2) {
     t2 || (t2 = {});
@@ -331,7 +359,7 @@
     if ("function" == typeof e2 && (a2 = e2.defaultProps)) for (c2 in a2) void 0 === l2[c2] && (l2[c2] = a2[c2]);
     return l$3.vnode && l$3.vnode(p2), p2;
   }
-  const __vite__wasmUrl = "" + new URL("m8_files_bg-kPn3FQM4.wasm", import.meta.url).href;
+  const __vite__wasmUrl = "" + new URL("m8_files_bg-Ireki0Bu.wasm", import.meta.url).href;
   const __vite__initWasm = async (opts = {}, url) => {
     let result;
     if (url.startsWith("data:")) {
@@ -447,33 +475,17 @@
       wasm$1.__wbindgen_free(deferred1_0, deferred1_1, 1);
     }
   }
-  function renumber_chain$1(song, chain, to_chain) {
-    _assertClass(song, WasmSong);
-    const ret = wasm$1.renumber_chain(song.__wbg_ptr, chain, to_chain);
-    if (ret[2]) {
-      throw takeFromExternrefTable0(ret[1]);
-    }
-    return ret[0] !== 0;
-  }
-  function copy_chain$1(from, to, chain, x2, y2) {
-    let deferred2_0;
-    let deferred2_1;
+  function show_table$1(song, table) {
+    let deferred1_0;
+    let deferred1_1;
     try {
-      _assertClass(from, WasmSong);
-      _assertClass(to, WasmSong);
-      const ret = wasm$1.copy_chain(from.__wbg_ptr, to.__wbg_ptr, chain, x2, y2);
-      var ptr1 = ret[0];
-      var len1 = ret[1];
-      if (ret[3]) {
-        ptr1 = 0;
-        len1 = 0;
-        throw takeFromExternrefTable0(ret[2]);
-      }
-      deferred2_0 = ptr1;
-      deferred2_1 = len1;
-      return getStringFromWasm0(ptr1, len1);
+      _assertClass(song, WasmSong);
+      const ret = wasm$1.show_table(song.__wbg_ptr, table);
+      deferred1_0 = ret[0];
+      deferred1_1 = ret[1];
+      return getStringFromWasm0(ret[0], ret[1]);
     } finally {
-      wasm$1.__wbindgen_free(deferred2_0, deferred2_1, 1);
+      wasm$1.__wbindgen_free(deferred1_0, deferred1_1, 1);
     }
   }
   let WASM_VECTOR_LEN = 0;
@@ -519,6 +531,142 @@
     WASM_VECTOR_LEN = offset;
     return ptr;
   }
+  function rename_instrument$1(song, instrument, new_name) {
+    _assertClass(song, WasmSong);
+    const ptr0 = passStringToWasm0(new_name, wasm$1.__wbindgen_malloc, wasm$1.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm$1.rename_instrument(song.__wbg_ptr, instrument, ptr0, len0);
+    if (ret[2]) {
+      throw takeFromExternrefTable0(ret[1]);
+    }
+    return ret[0] !== 0;
+  }
+  function renumber_table$1(song, table, to_table) {
+    _assertClass(song, WasmSong);
+    const ret = wasm$1.renumber_table(song.__wbg_ptr, table, to_table);
+    if (ret[2]) {
+      throw takeFromExternrefTable0(ret[1]);
+    }
+    return ret[0] !== 0;
+  }
+  function renumber_instrument$1(song, instrument, to_instrument) {
+    _assertClass(song, WasmSong);
+    const ret = wasm$1.renumber_instrument(song.__wbg_ptr, instrument, to_instrument);
+    if (ret[2]) {
+      throw takeFromExternrefTable0(ret[1]);
+    }
+    return ret[0] !== 0;
+  }
+  function renumber_chain$1(song, chain, to_chain) {
+    _assertClass(song, WasmSong);
+    const ret = wasm$1.renumber_chain(song.__wbg_ptr, chain, to_chain);
+    if (ret[2]) {
+      throw takeFromExternrefTable0(ret[1]);
+    }
+    return ret[0] !== 0;
+  }
+  function renumber_phrase$1(song, phrase, to_phrase) {
+    _assertClass(song, WasmSong);
+    const ret = wasm$1.renumber_phrase(song.__wbg_ptr, phrase, to_phrase);
+    if (ret[2]) {
+      throw takeFromExternrefTable0(ret[1]);
+    }
+    return ret[0] !== 0;
+  }
+  function copy_chain$1(from, to, chain, x2, y2) {
+    let deferred2_0;
+    let deferred2_1;
+    try {
+      _assertClass(from, WasmSong);
+      _assertClass(to, WasmSong);
+      const ret = wasm$1.copy_chain(from.__wbg_ptr, to.__wbg_ptr, chain, x2, y2);
+      var ptr1 = ret[0];
+      var len1 = ret[1];
+      if (ret[3]) {
+        ptr1 = 0;
+        len1 = 0;
+        throw takeFromExternrefTable0(ret[2]);
+      }
+      deferred2_0 = ptr1;
+      deferred2_1 = len1;
+      return getStringFromWasm0(ptr1, len1);
+    } finally {
+      wasm$1.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    }
+  }
+  function instrument_name$1(song, instr) {
+    let deferred1_0;
+    let deferred1_1;
+    try {
+      _assertClass(song, WasmSong);
+      const ret = wasm$1.instrument_name(song.__wbg_ptr, instr);
+      deferred1_0 = ret[0];
+      deferred1_1 = ret[1];
+      return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+      wasm$1.__wbindgen_free(deferred1_0, deferred1_1, 1);
+    }
+  }
+  let cachedUint32ArrayMemory0 = null;
+  function getUint32ArrayMemory0() {
+    if (cachedUint32ArrayMemory0 === null || cachedUint32ArrayMemory0.byteLength === 0) {
+      cachedUint32ArrayMemory0 = new Uint32Array(wasm$1.memory.buffer);
+    }
+    return cachedUint32ArrayMemory0;
+  }
+  function getArrayU32FromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return getUint32ArrayMemory0().subarray(ptr / 4, ptr / 4 + len);
+  }
+  function allocated_instrument_list$1(song) {
+    _assertClass(song, WasmSong);
+    const ret = wasm$1.allocated_instrument_list(song.__wbg_ptr);
+    var v1 = getArrayU32FromWasm0(ret[0], ret[1]).slice();
+    wasm$1.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v1;
+  }
+  function allocated_phrase_list$1(song) {
+    _assertClass(song, WasmSong);
+    const ret = wasm$1.allocated_phrase_list(song.__wbg_ptr);
+    var v1 = getArrayU32FromWasm0(ret[0], ret[1]).slice();
+    wasm$1.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v1;
+  }
+  function allocated_chain_list$1(song) {
+    _assertClass(song, WasmSong);
+    const ret = wasm$1.allocated_chain_list(song.__wbg_ptr);
+    var v1 = getArrayU32FromWasm0(ret[0], ret[1]).slice();
+    wasm$1.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v1;
+  }
+  function allocated_table$1(song) {
+    _assertClass(song, WasmSong);
+    const ret = wasm$1.allocated_table(song.__wbg_ptr);
+    var v1 = getArrayU32FromWasm0(ret[0], ret[1]).slice();
+    wasm$1.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v1;
+  }
+  function describe_instrument$1(song, instrument) {
+    _assertClass(song, WasmSong);
+    const ret = wasm$1.describe_instrument(song.__wbg_ptr, instrument);
+    if (ret[2]) {
+      throw takeFromExternrefTable0(ret[1]);
+    }
+    return takeFromExternrefTable0(ret[0]);
+  }
+  function addToExternrefTable0(obj) {
+    const idx = wasm$1.__externref_table_alloc();
+    wasm$1.__wbindgen_export_0.set(idx, obj);
+    return idx;
+  }
+  function handleError(f2, args) {
+    try {
+      return f2.apply(this, args);
+    } catch (e2) {
+      const idx = addToExternrefTable0(e2);
+      wasm$1.__wbindgen_exn_store(idx);
+    }
+  }
   let cachedDataViewMemory0 = null;
   function getDataViewMemory0() {
     if (cachedDataViewMemory0 === null || cachedDataViewMemory0.buffer.detached === true || cachedDataViewMemory0.buffer.detached === void 0 && cachedDataViewMemory0.buffer !== wasm$1.memory.buffer) {
@@ -555,8 +703,21 @@
     const ret = getStringFromWasm0(arg0, arg1);
     return ret;
   }
-  function __wbg_log_bb0a6306184fee1e(arg0, arg1) {
-    console.log(getStringFromWasm0(arg0, arg1));
+  function __wbindgen_number_new(arg0) {
+    const ret = arg0;
+    return ret;
+  }
+  function __wbg_new_034f913e7636e987() {
+    const ret = new Array();
+    return ret;
+  }
+  function __wbg_new_e69b5f66fda8f13c() {
+    const ret = new Object();
+    return ret;
+  }
+  function __wbg_push_36cf4d81d7da33d1(arg0, arg1) {
+    const ret = arg0.push(arg1);
+    return ret;
   }
   function __wbg_buffer_ccaed51a635d8a2d(arg0) {
     const ret = arg0.buffer;
@@ -583,6 +744,12 @@
   }
   function __wbg_setindex_ffcb66ea02efa3aa(arg0, arg1, arg2) {
     arg0[arg1 >>> 0] = arg2;
+  }
+  function __wbg_set_e864d25d9b399c9f() {
+    return handleError(function(arg0, arg1, arg2) {
+      const ret = Reflect.set(arg0, arg1, arg2);
+      return ret;
+    }, arguments);
   }
   function __wbg_new_abda76e883ba8a5f() {
     const ret = new Error();
@@ -626,7 +793,10 @@
   const __vite__wasmModule = await __vite__initWasm({
     "./m8_files_bg.js": {
       __wbindgen_string_new,
-      __wbg_log_bb0a6306184fee1e,
+      __wbindgen_number_new,
+      __wbg_new_034f913e7636e987,
+      __wbg_new_e69b5f66fda8f13c,
+      __wbg_push_36cf4d81d7da33d1,
       __wbg_buffer_ccaed51a635d8a2d,
       __wbg_newwithbyteoffsetandlength_7e3eb787208af730,
       __wbg_new_fec2611eb9180f95,
@@ -634,6 +804,7 @@
       __wbg_length_9254c4bd3b9f23c4,
       __wbg_newwithlength_76462a666eca145f,
       __wbg_setindex_ffcb66ea02efa3aa,
+      __wbg_set_e864d25d9b399c9f,
       __wbg_new_abda76e883ba8a5f,
       __wbg_stack_658279fe44541cf6,
       __wbg_error_f851667af71bcfc6,
@@ -651,31 +822,57 @@
   const get_song_steps = __vite__wasmModule.get_song_steps;
   const get_chain_steps = __vite__wasmModule.get_chain_steps;
   const show_phrase = __vite__wasmModule.show_phrase;
+  const show_table = __vite__wasmModule.show_table;
+  const rename_instrument = __vite__wasmModule.rename_instrument;
+  const renumber_table = __vite__wasmModule.renumber_table;
+  const renumber_instrument = __vite__wasmModule.renumber_instrument;
   const renumber_chain = __vite__wasmModule.renumber_chain;
+  const renumber_phrase = __vite__wasmModule.renumber_phrase;
   const copy_chain = __vite__wasmModule.copy_chain;
+  const instrument_name = __vite__wasmModule.instrument_name;
+  const allocated_instrument_list = __vite__wasmModule.allocated_instrument_list;
+  const allocated_phrase_list = __vite__wasmModule.allocated_phrase_list;
+  const allocated_chain_list = __vite__wasmModule.allocated_chain_list;
+  const allocated_table = __vite__wasmModule.allocated_table;
+  const describe_instrument = __vite__wasmModule.describe_instrument;
   const __wbindgen_export_0 = __vite__wasmModule.__wbindgen_export_0;
   const __wbindgen_free = __vite__wasmModule.__wbindgen_free;
   const __externref_table_dealloc = __vite__wasmModule.__externref_table_dealloc;
   const __wbindgen_malloc = __vite__wasmModule.__wbindgen_malloc;
   const __wbindgen_realloc = __vite__wasmModule.__wbindgen_realloc;
+  const __wbindgen_exn_store = __vite__wasmModule.__wbindgen_exn_store;
+  const __externref_table_alloc = __vite__wasmModule.__externref_table_alloc;
   const __wbindgen_start = __vite__wasmModule.__wbindgen_start;
   const wasm = Object.freeze(Object.defineProperty({
     __proto__: null,
+    __externref_table_alloc,
     __externref_table_dealloc,
     __wbg_wasmsong_free,
+    __wbindgen_exn_store,
     __wbindgen_export_0,
     __wbindgen_free,
     __wbindgen_malloc,
     __wbindgen_realloc,
     __wbindgen_start,
+    allocated_chain_list,
+    allocated_instrument_list,
+    allocated_phrase_list,
+    allocated_table,
     copy_chain,
+    describe_instrument,
     get_chain_steps,
     get_song_steps,
     init,
+    instrument_name,
     load_song,
     memory,
+    rename_instrument,
     renumber_chain,
+    renumber_instrument,
+    renumber_phrase,
+    renumber_table,
     show_phrase,
+    show_table,
     song_name,
     write_song
   }, Symbol.toStringTag, {
@@ -695,6 +892,10 @@
   function T(n2, r2) {
     var u2 = d$2(t$1++, 7);
     return C(u2.__H, r2) && (u2.__ = n2(), u2.__H = r2, u2.__h = n2), u2.__;
+  }
+  function x(n2) {
+    var u2 = r.context[n2.__c], i2 = d$2(t$1++, 9);
+    return i2.c = n2, u2 ? (null == i2.__ && (i2.__ = true, u2.sub(r)), u2.props.value) : n2.__;
   }
   function j() {
     for (var n2; n2 = f$1.shift(); ) if (n2.__P && n2.__H) try {
@@ -1290,10 +1491,22 @@
       y: -1
     }
   };
-  const EmptyEdition = {
+  const EmptyChainEdition = {
     x: -1,
     y: -1,
     base_chain: -1,
+    current_value: -1
+  };
+  const EmptyPhraseEdition = {
+    base_phrase: -1,
+    current_value: -1
+  };
+  const EmptyInstrumentNameEdition = {
+    instrument_id: -1,
+    name: ""
+  };
+  const EmptyInstrumentNumberEidition = {
+    base_instrument: -1,
     current_value: -1
   };
   function initPane() {
@@ -1302,10 +1515,16 @@
       song: d$1(void 0),
       bumper: d$1(0),
       edited_chain: d$1(void 0),
+      edited_phrase: d$1(void 0),
+      edited_instrument: d$1(void 0),
+      edited_instrument_name: d$1(void 0),
+      edited_table: d$1(void 0),
       raw_song: d$1(new Uint8Array(0)),
       selected_chain: d$1(void 0),
       selected_phrase: d$1(void 0),
-      selection_range: d$1(void 0)
+      selection_range: d$1(void 0),
+      selected_table: d$1(void 0),
+      selected_instrument: d$1(void 0)
     };
   }
   function clearPanel(panel) {
@@ -1320,8 +1539,200 @@
     return {
       message_banner: d$1(void 0),
       left: initPane(),
-      right: initPane()
+      right: initPane(),
+      remap_log: d$1([])
     };
+  }
+  const GlobalState = G(void 0);
+  function hexStr(n2) {
+    const hexStr2 = n2.toString(16).toUpperCase();
+    return hexStr2.length <= 1 ? "0" + hexStr2 : hexStr2;
+  }
+  function isDraggedChain(o2) {
+    return o2 !== null && typeof o2 === "object" && "chain" in o2 && "from_song" in o2 && typeof o2.chain === "number" && typeof o2.from_song === "string";
+  }
+  function HexNumberEditor(props) {
+    const onDown = (evt) => {
+      if (evt.key === "Enter") {
+        const strVal = evt.currentTarget.value;
+        const asNum = Number.parseInt(strVal, 16);
+        props.onValidate(asNum);
+      } else if (evt.key === "Escape") {
+        props.onCancel();
+      }
+    };
+    const onChange = (evt) => {
+      const strVal = evt.currentTarget.value;
+      const asNum = Number.parseInt(strVal, 16);
+      props.onChange(asNum);
+    };
+    return u$2("input", {
+      autoFocus: true,
+      class: "songchain scselect",
+      type: "text",
+      maxlength: 2,
+      pattern: "[a-fA-F0-9]{2}",
+      value: hexStr(props.value),
+      onChange: (evt) => onChange(evt),
+      onKeyDown: (evt) => onDown(evt)
+    });
+  }
+  function NameEditor(props) {
+    const onDown = (evt) => {
+      if (evt.key === "Enter") {
+        const strVal = evt.currentTarget.value;
+        props.onValidate(strVal);
+      } else if (evt.key === "Escape") {
+        props.onCancel();
+      }
+    };
+    const onChange = (evt) => {
+      const strVal = evt.currentTarget.value;
+      props.onChange(strVal);
+    };
+    return u$2("input", {
+      autoFocus: true,
+      class: "nameedit scselect",
+      type: "text",
+      maxlength: props.max,
+      value: props.value,
+      onChange: (evt) => onChange(evt),
+      onKeyDown: (evt) => onDown(evt)
+    });
+  }
+  function InstrumentList(props) {
+    const instruments = allocated_instrument_list$1(props.song);
+    const elems = [];
+    const state2 = x(GlobalState);
+    const current_edit_name = props.edited_instrument_name.value;
+    const edited_name = current_edit_name || EmptyInstrumentNameEdition;
+    const current_edit = props.edited_instrument.value;
+    const edited_instr = current_edit || EmptyInstrumentNumberEidition;
+    const allow_new_edit = current_edit_name === void 0 && current_edit === void 0;
+    const bump = props.bump.value;
+    for (const vix of instruments) {
+      const real_name = instrument_name$1(props.song, vix);
+      let name = real_name === "" ? "\xA0\xA0\xA0\xA0" : real_name;
+      const toggle_instr = () => props.edited_instrument.value = {
+        base_instrument: vix,
+        current_value: vix
+      };
+      const toggle_name = () => props.edited_instrument_name.value = {
+        instrument_id: vix,
+        name: real_name
+      };
+      const id_change = (v2) => props.edited_instrument.value = {
+        ...edited_instr,
+        current_value: v2
+      };
+      const id_validate = (v2) => {
+        props.edited_instrument.value = void 0;
+        try {
+          renumber_instrument$1(props.song, edited_instr.base_instrument, v2);
+          props.bump.value = bump + 1;
+        } catch (err) {
+          state2.message_banner.value = err.toString();
+        }
+      };
+      const name_change = (name2) => {
+        props.edited_instrument_name.value = {
+          ...edited_name,
+          name: name2
+        };
+      };
+      const name_validate = (name2) => {
+        props.edited_instrument_name.value = void 0;
+        try {
+          rename_instrument$1(props.song, edited_name.instrument_id, name2);
+          props.bump.value = bump + 1;
+        } catch (err) {
+          state2.message_banner.value = err.toString();
+        }
+      };
+      elems.push(u$2("div", {
+        class: "instr",
+        children: [
+          edited_instr.base_instrument === vix ? u$2(HexNumberEditor, {
+            onChange: id_change,
+            onValidate: id_validate,
+            onCancel: () => props.edited_instrument.value = void 0,
+            value: edited_instr.current_value
+          }) : u$2("span", {
+            onDblClick: allow_new_edit ? toggle_instr : void 0,
+            onClick: () => props.selected_instrument.value = vix,
+            title: "Double click to renumber",
+            children: [
+              hexStr(vix),
+              " : "
+            ]
+          }),
+          edited_name.instrument_id === vix ? u$2(NameEditor, {
+            onValidate: name_validate,
+            onChange: name_change,
+            onCancel: () => {
+              props.edited_instrument_name.value = void 0;
+              props.bump.value = bump + 1;
+            },
+            value: edited_name.name,
+            max: 12
+          }) : u$2("span", {
+            onDblClick: allow_new_edit ? toggle_name : void 0,
+            onClick: () => props.selected_instrument.value = vix,
+            class: "instr_name",
+            title: "Double click to rename",
+            children: name
+          })
+        ]
+      }));
+    }
+    return u$2("pre", {
+      children: elems
+    });
+  }
+  function ChainViewer(props) {
+    const song = props.panel.song.value;
+    props.panel.bumper.value;
+    if (song === void 0) return u$2("div", {
+      class: "rootcolumn"
+    });
+    const chain = props.panel.selected_chain.value;
+    if (chain === void 0) {
+      return u$2("div", {
+        class: "rootcolumn",
+        children: u$2("p", {
+          children: "Select a chain to view"
+        })
+      });
+    }
+    const chainSteps = get_chain_steps$1(song, chain);
+    const elems = [];
+    const phraseSet = (i2) => {
+      props.panel.selected_phrase.value = i2;
+    };
+    for (let i2 = 0; i2 < 32; i2 += 2) {
+      elems.push(`${(i2 / 2).toString(16)} : `);
+      const phrase = chainSteps[i2];
+      if (phrase === 255) {
+        elems.push("--\n");
+      } else {
+        elems.push(u$2("span", {
+          class: "phrase",
+          onClick: (_2) => phraseSet(phrase),
+          children: [
+            hexStr(phrase),
+            " ",
+            hexStr(chainSteps[i2 + 1])
+          ]
+        }));
+        elems.push("\n");
+      }
+    }
+    return u$2("div", {
+      class: "chain_viewer",
+      children: u$2("pre", {
+        children: elems
+      })
+    });
   }
   function downloadBlob(data, fileName) {
     const blob = new Blob([
@@ -1377,50 +1788,8 @@
     const loaded = fetch(url).then((resp) => resp.arrayBuffer());
     await loadFile(state2, pane, loaded);
   }
-  init$1();
-  const state = initState();
-  function hexStr(n2) {
-    const hexStr2 = n2.toString(16);
-    return hexStr2.length <= 1 ? "0" + hexStr2 : hexStr2;
-  }
-  function isDraggedChain(o2) {
-    return o2 !== null && typeof o2 === "object" && "chain" in o2 && "from_song" in o2 && typeof o2.chain === "number" && typeof o2.from_song === "string";
-  }
-  function ChainNumberEditor(props) {
-    const chn = props.chain.value;
-    const onDown = (evt) => {
-      if (evt.key === "Enter") {
-        props.chain.value = void 0;
-        const strVal = evt.currentTarget.value;
-        const asNum = Number.parseInt(strVal, 16);
-        try {
-          renumber_chain$1(props.song, chn.base_chain, asNum);
-        } catch (err) {
-          state.message_banner.value = err.toString();
-        }
-        props.bump.value = props.bump.value + 1;
-      }
-    };
-    const onChange = (evt) => {
-      const strVal = evt.currentTarget.value;
-      const asNum = Number.parseInt(strVal, 16);
-      props.chain.value = {
-        ...chn,
-        current_value: asNum
-      };
-    };
-    return u$2("input", {
-      autoFocus: true,
-      class: "songchain scselect",
-      type: "text",
-      maxlength: 2,
-      pattern: "[a-fA-F0-9]{2}",
-      value: hexStr(chn.current_value),
-      onChange: (evt) => onChange(evt),
-      onKeyDown: (evt) => onDown(evt)
-    });
-  }
   function StepsRender(props) {
+    const state2 = x(GlobalState);
     const elems = [];
     const pane = props.pane;
     const steps = props.steps;
@@ -1444,20 +1813,20 @@
         const asJson = JSON.parse(strPayload);
         if (!isDraggedChain(asJson)) return;
         if (asJson.from_song === props.side) {
-          state.message_banner.value = "We avoid copying a chain into the same song";
+          state2.message_banner.value = "We avoid copying a chain into the same song";
         } else if (asJson.from_song === "left") {
-          copy_chain$1(state.left.song.value, state.right.song.value, asJson.chain, col, line);
+          copy_chain$1(state2.left.song.value, state2.right.song.value, asJson.chain, col, line);
         } else {
-          copy_chain$1(state.right.song.value, state.left.song.value, asJson.chain, col, line);
+          copy_chain$1(state2.right.song.value, state2.left.song.value, asJson.chain, col, line);
         }
         pane.bumper.value = pane.bumper.value + 1;
       } catch (err) {
-        state.message_banner.value = `Chain copy error: ${err}`;
+        state2.message_banner.value = `Chain copy error: ${err}`;
       }
     };
     const selection = pane.selection_range.value || EmptySelection;
     const isSelected = (line, column) => selection.start.x <= column && column <= selection.end.x && selection.end.y <= line && line <= selection.end.y;
-    const edition = pane.edited_chain.value || EmptyEdition;
+    const edition = pane.edited_chain.value || EmptyChainEdition;
     for (let line = 0; line < 256; line++) {
       elems.push(u$2("span", {
         class: "spanline",
@@ -1480,10 +1849,29 @@
           });
           elems.push(elem);
         } else if (edition.x === col && edition.y === line) {
-          elems.push(u$2(ChainNumberEditor, {
-            song: pane.song.value,
-            bump: pane.bumper,
-            chain: pane.edited_chain
+          const onChange = (value) => {
+            pane.edited_chain.value = {
+              ...edition,
+              current_value: value
+            };
+          };
+          const onValidate = (value) => {
+            pane.edited_chain.value = void 0;
+            try {
+              renumber_chain$1(pane.song.value, edition.base_chain, value);
+            } catch (err) {
+              state2.message_banner.value = err.toString();
+            }
+            pane.bumper.value = pane.bumper.value + 1;
+          };
+          elems.push(u$2(HexNumberEditor, {
+            value: edition.current_value,
+            onChange,
+            onValidate,
+            onCancel: () => {
+              pane.edited_chain.value = void 0;
+              pane.bumper.value = pane.bumper.value + 1;
+            }
           }));
         } else {
           const elem = u$2("span", {
@@ -1491,6 +1879,7 @@
             "data-line": line,
             "data-col": col,
             draggable: true,
+            title: "Double click to renumber",
             onDragStart: (evt) => dragStart(evt, chain),
             onDragOver: (evt) => dragOver(evt),
             onDrop: (evt) => dragEnd(evt, line, col),
@@ -1517,24 +1906,29 @@
     });
   }
   function SongViewer(props) {
+    const state2 = x(GlobalState);
     const panel = props.panel;
     const filename = panel.loaded_name.value;
     const song = panel.song.value;
     panel.bumper.value;
     const songName = song !== void 0 ? song_name$1(song) : filename;
     if (song === void 0) {
+      const debugLoad = void 0;
       return u$2("div", {
         class: "rootcolumn",
         children: [
           u$2("button", {
-            onClick: () => loadUrl(state, panel, emptyUrl),
+            onClick: () => loadUrl(state2, panel, emptyUrl),
             children: "Load empty song"
           }),
+          debugLoad,
           u$2("div", {
             class: "filetarget",
             onDragOver: (ev) => ev.preventDefault(),
-            onDrop: (evt) => loadDroppedSong(state, evt, props.panel),
-            children: "Drag M8 song file here"
+            onDrop: (evt) => loadDroppedSong(state2, evt, props.panel),
+            children: u$2("span", {
+              children: "Drag M8 song file here"
+            })
           })
         ]
       });
@@ -1550,7 +1944,7 @@
         panel.raw_song.value = new_song;
         downloadBlob(new_song, songName + ".m8s");
       } catch (err) {
-        state.message_banner.value = err.toString();
+        state2.message_banner.value = err.toString();
       }
     };
     const clear = () => {
@@ -1585,6 +1979,721 @@
       ]
     });
   }
+  function PhraseList(props) {
+    const phrases = allocated_phrase_list$1(props.song);
+    const elems = [];
+    const state2 = x(GlobalState);
+    const current_edit = props.edited_phrase.value;
+    const edited_phrase = current_edit || EmptyPhraseEdition;
+    const allow_new_edit = current_edit === void 0;
+    const bump = props.bump.value;
+    let bucket = [];
+    let prevPhrase = phrases.length > 0 ? phrases[0] : 0;
+    for (const vix of phrases) {
+      const toggle_phrase = () => props.edited_phrase.value = {
+        base_phrase: vix,
+        current_value: vix
+      };
+      const id_change = (v2) => props.edited_phrase.value = {
+        ...current_edit,
+        current_value: v2
+      };
+      const id_validate = (v2) => {
+        props.edited_phrase.value = void 0;
+        try {
+          renumber_phrase$1(props.song, edited_phrase.base_phrase, v2);
+          props.bump.value = bump + 1;
+        } catch (err) {
+          state2.message_banner.value = err.toString();
+        }
+      };
+      if ((prevPhrase / 16 | 0) !== (vix / 16 | 0)) {
+        elems.push(u$2("div", {
+          class: "instr",
+          children: bucket
+        }));
+        bucket = [];
+      }
+      prevPhrase = vix;
+      bucket.push(edited_phrase.base_phrase === vix ? u$2(HexNumberEditor, {
+        onChange: id_change,
+        onValidate: id_validate,
+        onCancel: () => props.edited_phrase.value = void 0,
+        value: edited_phrase.current_value
+      }) : u$2("span", {
+        onDblClick: allow_new_edit ? toggle_phrase : void 0,
+        onClick: () => props.selected_phrase.value = vix,
+        title: "Double click to renumber phrase",
+        children: [
+          hexStr(vix),
+          " "
+        ]
+      }));
+    }
+    if (bucket.length !== 0) {
+      elems.push(u$2("div", {
+        class: "instr",
+        children: bucket
+      }));
+    }
+    return u$2("pre", {
+      children: elems
+    });
+  }
+  function PhraseViewer(props) {
+    const song = props.panel.song.value;
+    props.panel.bumper.value;
+    if (song === void 0) return void 0;
+    const phrase_idx = props.panel.selected_phrase.value;
+    return phrase_idx !== void 0 ? u$2("pre", {
+      children: show_phrase$1(song, phrase_idx)
+    }) : void 0;
+  }
+  function TableViewer(props) {
+    const song = props.panel.song.value;
+    props.panel.bumper.value;
+    if (song === void 0) return void 0;
+    const table_idx = props.panel.selected_table.value;
+    return table_idx !== void 0 ? u$2("pre", {
+      children: show_table$1(song, table_idx)
+    }) : void 0;
+  }
+  function ChainList(props) {
+    const phrases = allocated_chain_list$1(props.song);
+    const elems = [];
+    const state2 = x(GlobalState);
+    const current_edit = props.edited_chain.value;
+    const edited_chain = current_edit || EmptyChainEdition;
+    const allow_new_edit = current_edit === void 0;
+    const bump = props.bump.value;
+    let bucket = [];
+    let prevPhrase = phrases.length > 0 ? phrases[0] : 0;
+    for (const vix of phrases) {
+      const toggle_phrase = () => props.edited_chain.value = {
+        x: -1,
+        y: -1,
+        base_chain: vix,
+        current_value: vix
+      };
+      const id_change = (v2) => props.edited_chain.value = {
+        ...current_edit,
+        current_value: v2
+      };
+      const id_validate = (v2) => {
+        props.edited_chain.value = void 0;
+        try {
+          renumber_chain$1(props.song, edited_chain.base_chain, v2);
+          props.bump.value = bump + 1;
+        } catch (err) {
+          state2.message_banner.value = err.toString();
+        }
+      };
+      if ((prevPhrase / 16 | 0) !== (vix / 16 | 0)) {
+        elems.push(u$2("div", {
+          class: "instr",
+          children: bucket
+        }));
+        bucket = [];
+      }
+      prevPhrase = vix;
+      bucket.push(edited_chain.base_chain === vix ? u$2(HexNumberEditor, {
+        onChange: id_change,
+        onValidate: id_validate,
+        onCancel: () => props.edited_chain.value = void 0,
+        value: edited_chain.current_value
+      }) : u$2("span", {
+        onDblClick: allow_new_edit ? toggle_phrase : void 0,
+        onClick: () => props.selected_chain.value = vix,
+        title: "Double click to renumber chain",
+        children: [
+          hexStr(vix),
+          " "
+        ]
+      }));
+    }
+    if (bucket.length !== 0) {
+      elems.push(u$2("div", {
+        class: "instr",
+        children: bucket
+      }));
+    }
+    return u$2("pre", {
+      children: elems
+    });
+  }
+  function TableList(props) {
+    const phrases = allocated_table$1(props.song);
+    const elems = [];
+    const state2 = x(GlobalState);
+    const current_edit = props.edited_table.value;
+    const edited_phrase = current_edit || EmptyPhraseEdition;
+    const allow_new_edit = current_edit === void 0;
+    const bump = props.bump.value;
+    let bucket = [];
+    let prevPhrase = phrases.length > 0 ? phrases[0] : 0;
+    for (const vix of phrases) {
+      const toggle_table = () => props.edited_table.value = {
+        base_phrase: vix,
+        current_value: vix
+      };
+      const id_change = (v2) => props.edited_table.value = {
+        ...current_edit,
+        current_value: v2
+      };
+      const id_validate = (v2) => {
+        props.edited_table.value = void 0;
+        try {
+          renumber_table$1(props.song, edited_phrase.base_phrase, v2);
+          props.bump.value = bump + 1;
+        } catch (err) {
+          state2.message_banner.value = err.toString();
+        }
+      };
+      if ((prevPhrase / 16 | 0) !== (vix / 16 | 0)) {
+        elems.push(u$2("div", {
+          class: "instr",
+          children: bucket
+        }));
+        bucket = [];
+      }
+      prevPhrase = vix;
+      bucket.push(edited_phrase.base_phrase === vix ? u$2(HexNumberEditor, {
+        onChange: id_change,
+        onValidate: id_validate,
+        onCancel: () => props.edited_table.value = void 0,
+        value: edited_phrase.current_value
+      }) : u$2("span", {
+        onDblClick: allow_new_edit ? toggle_table : void 0,
+        onClick: () => props.selected_table.value = vix,
+        title: "Double click to renumber table",
+        children: [
+          hexStr(vix),
+          " "
+        ]
+      }));
+    }
+    if (bucket.length !== 0) {
+      elems.push(u$2("div", {
+        class: "instr",
+        children: bucket
+      }));
+    }
+    return u$2("pre", {
+      children: elems
+    });
+  }
+  function HexGauge(props) {
+    return u$2("div", {
+      class: "hexgauge",
+      style: "--hex: " + props.v
+    });
+  }
+  function HexRender(props) {
+    return u$2(b$1, {
+      children: [
+        u$2("td", {
+          children: props.v.name
+        }),
+        u$2("td", {
+          children: hexStr(props.v.hex)
+        }),
+        u$2("td", {
+          children: u$2(HexGauge, {
+            v: props.v.hex
+          })
+        })
+      ]
+    });
+  }
+  function BoolRender(props) {
+    return u$2(b$1, {
+      children: [
+        u$2("td", {
+          children: props.v.name
+        }),
+        u$2("td", {
+          colSpan: 2,
+          children: props.v.bool ? "ON" : "OFF"
+        })
+      ]
+    });
+  }
+  function FloatRender(props) {
+    return u$2("li", {
+      children: [
+        props.v.name,
+        ": ",
+        props.v.f32
+      ]
+    });
+  }
+  function StrRender(props) {
+    if ("hex" in props.v) {
+      return u$2(b$1, {
+        children: [
+          u$2("td", {
+            children: props.v.name
+          }),
+          u$2("td", {
+            children: hexStr(props.v.hex)
+          }),
+          u$2("td", {
+            children: props.v.str
+          })
+        ]
+      });
+    }
+    return u$2(b$1, {
+      children: [
+        u$2("td", {
+          children: props.v.name
+        }),
+        u$2("td", {
+          colSpan: 2,
+          children: props.v.str
+        })
+      ]
+    });
+  }
+  const MODRenderers = {
+    "MOD1": 0,
+    "MOD2": 1,
+    "MOD3": 2,
+    "MOD4": 3
+  };
+  const CCValues = {
+    "CCA": 0,
+    "CCB": 1,
+    "CCC": 2,
+    "CCD": 3,
+    "CCE": 4,
+    "CCF": 5,
+    "CCG": 6,
+    "CCH": 7,
+    "CCI": 8,
+    "CCJ": 9
+  };
+  function CCRender(props) {
+    let cc = 0;
+    let val = 1;
+    for (const v2 of props.v.nest) {
+      if (v2.name === "CC" && "hex" in v2) cc = v2.hex;
+      if (v2.name === "VAL" && "hex" in v2) val = v2.hex;
+    }
+    const fillNum = (n2) => {
+      const strN = n2.toString(10);
+      if (n2 >= 100) return strN;
+      if (n2 >= 10) return "0" + strN;
+      return "00" + strN;
+    };
+    return u$2(b$1, {
+      children: [
+        u$2("td", {
+          children: [
+            props.v.name,
+            " CC:VAL"
+          ]
+        }),
+        u$2("td", {
+          children: [
+            fillNum(cc),
+            ":",
+            hexStr(val)
+          ]
+        }),
+        u$2("td", {
+          children: u$2(HexGauge, {
+            v: val
+          })
+        })
+      ]
+    });
+  }
+  function FmOperatorRender(desc, legend) {
+    const v2 = desc.nest;
+    let osc = "";
+    let ratio = 0;
+    let level = 0;
+    let fbk = 0;
+    let moda = 0;
+    let modb = 0;
+    for (const desc2 of v2) {
+      if (desc2.name === "SHAPE" && "str" in desc2) {
+        osc = desc2.str;
+      } else if (desc2.name === "LEVEL" && "hex" in desc2) {
+        level = desc2.hex;
+      } else if (desc2.name === "FBK" && "hex" in desc2) {
+        fbk = desc2.hex;
+      } else if (desc2.name === "RATIO" && "f32" in desc2) {
+        ratio = desc2.f32;
+      } else if (desc2.name === "MOD_A" && "hex" in desc2) {
+        moda = desc2.hex;
+      } else if (desc2.name === "MOD_B" && "hex" in desc2) {
+        modb = desc2.hex;
+      }
+    }
+    return [
+      u$2(b$1, {
+        children: [
+          legend ? u$2("td", {}) : void 0,
+          u$2("td", {
+            children: [
+              desc.name,
+              " ",
+              osc
+            ]
+          })
+        ]
+      }),
+      u$2(b$1, {
+        children: [
+          legend ? u$2("td", {
+            children: "RATIO"
+          }) : void 0,
+          u$2("td", {
+            children: ratio
+          })
+        ]
+      }),
+      u$2(b$1, {
+        children: [
+          legend ? u$2("td", {
+            children: "LEV/FB"
+          }) : void 0,
+          u$2("td", {
+            children: [
+              hexStr(level),
+              "/",
+              hexStr(fbk)
+            ]
+          })
+        ]
+      }),
+      u$2(b$1, {
+        children: [
+          legend ? u$2("td", {
+            children: "MOD"
+          }) : void 0,
+          u$2("td", {
+            children: hexStr(moda)
+          })
+        ]
+      }),
+      u$2(b$1, {
+        children: [
+          legend ? u$2("td", {}) : void 0,
+          u$2("td", {
+            children: hexStr(modb)
+          })
+        ]
+      })
+    ];
+  }
+  function ModRender(props) {
+    const lines = props.v.map((desc) => {
+      if (!("hex" in desc)) return void 0;
+      if (desc.name in MODRenderers) {
+        return u$2("tr", {
+          children: [
+            u$2("th", {
+              children: desc.name
+            }),
+            u$2("td", {
+              children: hexStr(desc.hex)
+            }),
+            u$2("th", {
+              children: "str" in desc ? desc.str : u$2(HexGauge, {
+                v: desc.hex
+              })
+            })
+          ]
+        });
+      }
+      return u$2("tr", {
+        children: [
+          u$2("td", {
+            children: desc.name
+          }),
+          u$2("td", {
+            children: hexStr(desc.hex)
+          }),
+          u$2("td", {
+            children: "str" in desc ? desc.str : u$2(HexGauge, {
+              v: desc.hex
+            })
+          })
+        ]
+      });
+    });
+    return u$2("table", {
+      children: u$2("tbody", {
+        children: lines
+      })
+    });
+  }
+  function DescriptorRender(props) {
+    const { desc } = props;
+    if ("str" in desc) return u$2(StrRender, {
+      v: desc
+    });
+    if ("hex" in desc) return u$2(HexRender, {
+      v: desc
+    });
+    if ("bool" in desc) return u$2(BoolRender, {
+      v: desc
+    });
+    if ("f32" in desc) return u$2(FloatRender, {
+      v: desc
+    });
+    if ("nest" in desc) {
+      const descriptors = desc.nest.map((d2) => {
+        if (d2.name in CCValues && "nest" in d2) return u$2(CCRender, {
+          v: d2
+        });
+        return u$2(DescriptorRender, {
+          desc: d2
+        });
+      });
+      return u$2("div", {
+        class: "instrparam",
+        children: [
+          u$2("span", {
+            children: desc.name
+          }),
+          u$2("ul", {
+            children: descriptors
+          })
+        ]
+      });
+    }
+    return void 0;
+  }
+  const InRightColumn = {
+    "AMP": 1,
+    "LIM": 1,
+    "PAN": 1,
+    "DRY": 1,
+    "CHORUS": 1,
+    "DELAY": 1,
+    "REVERB": 1,
+    "ALG": 2,
+    "SCALE": 2,
+    "CHORD": 2,
+    "SAMPLE": 2,
+    "PORT": 2,
+    "CHANNEL": 2,
+    "BANK": 2,
+    "PROGRAM": 2,
+    "PLAY": 2,
+    "SHAPE": 2,
+    "SLICE": 2
+  };
+  const OperatorName = {
+    "A": 0,
+    "B": 1,
+    "C": 2,
+    "D": 3
+  };
+  function RootDescriptorRender(props) {
+    const { desc } = props;
+    if ("str" in desc) return u$2(StrRender, {
+      v: desc
+    });
+    if ("hex" in desc) return u$2(HexRender, {
+      v: desc
+    });
+    if ("bool" in desc) return u$2(BoolRender, {
+      v: desc
+    });
+    if ("f32" in desc) return u$2(FloatRender, {
+      v: desc
+    });
+    if ("nest" in desc) {
+      const buckets = [
+        [],
+        [],
+        []
+      ];
+      const operators = [];
+      const mods = [
+        void 0,
+        void 0,
+        void 0,
+        void 0
+      ];
+      let name = "";
+      let transpose = true;
+      let tblTic = 1;
+      let eq = 255;
+      for (const d2 of desc.nest) {
+        if (d2.name === "NAME" && "str" in d2) {
+          name = d2.str;
+          continue;
+        }
+        if (d2.name === "TRANSPOSE" && "bool" in d2) {
+          transpose = d2.bool;
+          continue;
+        }
+        if (d2.name === "TBL. TIC" && "hex" in d2) {
+          tblTic = d2.hex;
+          continue;
+        }
+        if (d2.name === "EQ" && "hex" in d2) {
+          eq = d2.hex;
+          continue;
+        }
+        if (d2.name in OperatorName && "nest" in d2) {
+          const ix2 = OperatorName[d2.name];
+          operators[ix2] = FmOperatorRender(d2, d2.name === "A");
+          continue;
+        }
+        const asMod = MODRenderers[d2.name];
+        if (asMod !== void 0 && "nest" in d2) {
+          mods[asMod] = u$2(ModRender, {
+            v: d2.nest
+          });
+          continue;
+        }
+        const ix = d2.name in InRightColumn ? InRightColumn[d2.name] : 0;
+        if (d2.name in CCValues && "nest" in d2) {
+          buckets[ix].push(u$2(CCRender, {
+            v: d2
+          }));
+        } else {
+          buckets[ix].push(u$2(DescriptorRender, {
+            desc: d2
+          }));
+        }
+      }
+      const maxi = Math.max(buckets[0].length, buckets[1].length);
+      const lines = [];
+      for (let i2 = 0; i2 < maxi; i2++) {
+        const left = i2 < buckets[0].length ? buckets[0][i2] : u$2("td", {
+          colSpan: 3
+        });
+        const right = i2 < buckets[1].length ? buckets[1][i2] : void 0;
+        lines.push(u$2("tr", {
+          children: [
+            left,
+            right
+          ]
+        }));
+      }
+      const globalLines = buckets[2].map((elems) => u$2("tr", {
+        children: elems
+      }));
+      if (operators.length > 0) {
+        let max = operators[0].length;
+        for (let i2 = 0; i2 < max; i2++) {
+          globalLines.push(u$2("tr", {
+            children: [
+              operators[0][i2],
+              operators[1][i2],
+              operators[2][i2],
+              operators[3][i2]
+            ]
+          }));
+        }
+      }
+      return u$2("div", {
+        class: "instrparam",
+        children: [
+          u$2("span", {
+            children: desc.name
+          }),
+          u$2("div", {
+            children: [
+              "NAME ",
+              name
+            ]
+          }),
+          u$2("div", {
+            children: [
+              u$2("span", {
+                children: [
+                  "TRANSP. ",
+                  transpose ? "ON" : "OFF"
+                ]
+              }),
+              "\xA0\xA0",
+              u$2("span", {
+                children: [
+                  "TBL TIC. ",
+                  hexStr(tblTic)
+                ]
+              }),
+              "\xA0\xA0",
+              u$2("span", {
+                children: [
+                  "EQ ",
+                  eq === 255 ? "--" : hexStr(eq)
+                ]
+              })
+            ]
+          }),
+          u$2("table", {
+            children: u$2("tbody", {
+              children: globalLines
+            })
+          }),
+          u$2("table", {
+            children: u$2("tbody", {
+              children: lines
+            })
+          }),
+          u$2("table", {
+            children: u$2("tbody", {
+              children: [
+                u$2("tr", {
+                  children: [
+                    u$2("td", {
+                      children: mods[0]
+                    }),
+                    u$2("td", {
+                      children: mods[2]
+                    })
+                  ]
+                }),
+                u$2("tr", {
+                  children: [
+                    u$2("td", {
+                      children: mods[1]
+                    }),
+                    u$2("td", {
+                      children: mods[3]
+                    })
+                  ]
+                })
+              ]
+            })
+          })
+        ]
+      });
+    }
+    return void 0;
+  }
+  function InstrumentViewer(props) {
+    const song = props.panel.song.value;
+    props.panel.bumper.value;
+    const selected = props.panel.selected_instrument.value;
+    const state2 = x(GlobalState);
+    if (song === void 0 || selected === void 0) return void 0;
+    let info = [];
+    try {
+      info = describe_instrument$1(song, selected);
+    } catch (err) {
+      state2.message_banner.value = err.toString();
+      return void 0;
+    }
+    return u$2("div", {
+      class: "instrparam",
+      children: info.map((d2) => u$2(RootDescriptorRender, {
+        desc: d2
+      }))
+    });
+  }
+  init$1();
+  const state = initState();
   function MessageBanner() {
     const msg = state.message_banner.value;
     if (msg === void 0) return u$2(b$1, {});
@@ -1592,72 +2701,133 @@
       children: msg
     });
   }
-  function ChainViewer(props) {
-    const song = props.panel.song.value;
-    if (song === void 0) return u$2("div", {
-      class: "rootcolumn"
-    });
-    const chain = props.panel.selected_chain.value;
-    if (chain === void 0) {
-      return u$2("div", {
-        class: "rootcolumn",
-        children: [
-          u$2("h4", {
-            children: "Chain viewer"
-          }),
-          u$2("p", {
-            children: "Click a chain to view"
-          })
-        ]
-      });
-    }
-    const chainSteps = get_chain_steps$1(song, chain);
-    const elems = [];
-    const phraseSet = (i2) => {
-      props.panel.selected_phrase.value = i2;
-    };
-    for (let i2 = 0; i2 < 32; i2 += 2) {
-      elems.push(`${(i2 / 2).toString(16)} : `);
-      const phrase2 = chainSteps[i2];
-      if (phrase2 === 255) {
-        elems.push("--\n");
-      } else {
-        elems.push(u$2("span", {
-          class: "phrase",
-          onClick: (_2) => phraseSet(phrase2),
-          children: [
-            hexStr(phrase2),
-            " ",
-            hexStr(chainSteps[i2 + 1])
-          ]
-        }));
-        elems.push("\n");
-      }
-    }
-    const phrase_idx = props.panel.selected_phrase.value;
-    const phrase = phrase_idx !== void 0 ? u$2(b$1, {
-      children: [
-        u$2("h4", {
-          children: [
-            "Phrase ",
-            phrase_idx
-          ]
-        }),
-        u$2("pre", {
-          children: show_phrase$1(song, phrase_idx)
-        })
-      ]
-    }) : void 0;
+  function SongExplorer(props) {
+    const song = props.pane.song.value;
+    if (song === void 0) return u$2(b$1, {});
+    const selectedPhrase = props.pane.selected_phrase.value;
+    const displayedPhrase = selectedPhrase === void 0 ? "" : " " + hexStr(selectedPhrase);
+    const selectedChain = props.pane.selected_chain.value;
+    const displayedChain = selectedChain === void 0 ? "" : " " + hexStr(selectedChain);
+    const selectedTable = props.pane.selected_table.value;
+    const displayedTable = selectedTable === void 0 ? "" : " " + hexStr(selectedTable);
+    const selectedInstrument = props.pane.selected_instrument.value;
+    const displayedInstrument = selectedInstrument === void 0 ? "" : " " + hexStr(selectedInstrument);
     return u$2("div", {
-      class: "chain_viewer",
+      class: "rootcolumn",
       children: [
-        u$2("h4", {
-          children: "Chain viewer"
+        u$2("details", {
+          class: "songsection",
+          children: [
+            u$2("summary", {
+              children: "Chains"
+            }),
+            u$2(ChainList, {
+              bump: props.pane.bumper,
+              song,
+              selected_chain: props.pane.selected_chain,
+              edited_chain: props.pane.edited_chain
+            })
+          ]
         }),
-        u$2("pre", {
-          children: elems
+        u$2("details", {
+          class: "songsection",
+          children: [
+            u$2("summary", {
+              children: "Phrases list"
+            }),
+            u$2(PhraseList, {
+              bump: props.pane.bumper,
+              song,
+              selected_phrase: props.pane.selected_phrase,
+              edited_phrase: props.pane.edited_phrase
+            })
+          ]
         }),
-        phrase
+        u$2("details", {
+          class: "songsection",
+          children: [
+            u$2("summary", {
+              children: "Intruments"
+            }),
+            u$2(InstrumentList, {
+              bump: props.pane.bumper,
+              song,
+              selected_instrument: props.pane.selected_instrument,
+              edited_instrument: props.pane.edited_instrument,
+              edited_instrument_name: props.pane.edited_instrument_name
+            })
+          ]
+        }),
+        u$2("details", {
+          class: "songsection",
+          children: [
+            u$2("summary", {
+              children: "Tables"
+            }),
+            u$2(TableList, {
+              bump: props.pane.bumper,
+              song,
+              selected_table: props.pane.selected_table,
+              edited_table: props.pane.edited_table
+            })
+          ]
+        }),
+        u$2("details", {
+          class: "songsection",
+          children: [
+            u$2("summary", {
+              children: [
+                "Chain",
+                displayedChain
+              ]
+            }),
+            u$2(ChainViewer, {
+              panel: props.pane
+            })
+          ]
+        }),
+        u$2("details", {
+          class: "songsection",
+          children: [
+            u$2("summary", {
+              children: [
+                "Phrase",
+                displayedPhrase
+              ]
+            }),
+            u$2(PhraseViewer, {
+              panel: props.pane
+            })
+          ]
+        }),
+        u$2("details", {
+          class: "songsection",
+          children: [
+            u$2("summary", {
+              children: [
+                "Instrument",
+                displayedInstrument
+              ]
+            }),
+            u$2(InstrumentViewer, {
+              panel: props.pane
+            })
+          ]
+        }),
+        u$2("details", {
+          class: "songsection",
+          children: [
+            u$2("summary", {
+              children: [
+                "Table",
+                displayedTable
+              ]
+            }),
+            u$2(TableViewer, {
+              panel: props.pane
+            })
+          ]
+        })
       ]
     });
   }
@@ -1680,7 +2850,7 @@
               ]
             }),
             u$2("span", {
-              children: "v0.2"
+              children: "v0.3"
             })
           ]
         }),
@@ -1688,11 +2858,8 @@
         u$2("div", {
           class: "rootcontainer",
           children: [
-            u$2("div", {
-              class: "rootcolumn",
-              children: u$2(ChainViewer, {
-                panel: state.left
-              })
+            u$2(SongExplorer, {
+              pane: state.left
             }),
             u$2(SongViewer, {
               side: "left",
@@ -1702,16 +2869,16 @@
               side: "right",
               panel: state.right
             }),
-            u$2("div", {
-              class: "rootcolumn",
-              children: u$2(ChainViewer, {
-                panel: state.right
-              })
+            u$2(SongExplorer, {
+              pane: state.right
             })
           ]
         })
       ]
     });
   }
-  B$1(u$2(App, {}), document.body);
+  B$1(u$2(GlobalState.Provider, {
+    value: state,
+    children: u$2(App, {})
+  }), document.body);
 })();
