@@ -11,6 +11,8 @@ import { hexStr } from "./components/common";
 import { ChainList } from "./components/chain_list";
 import { TableList } from "./components/table_list";
 import { InstrumentViewer } from "./components/instrument_view";
+import { EqList } from "./components/eq_list";
+import { EqViewer } from "./components/eq_viewer";
 
 W.init();
 const state = initState();
@@ -36,6 +38,9 @@ function SongExplorer(props: { pane: SongPane }) {
 
   const selectedInstrument = props.pane.selected_instrument.value;
   const displayedInstrument = selectedInstrument === undefined ? '' : ' ' + hexStr(selectedInstrument );
+
+  const selectedEq = props.pane.selected_eq.value;
+  const displayedEq = selectedEq === undefined ? '' : ' ' + hexStr(selectedEq);
 
   return <div class="rootcolumn">
     <details class="songsection">
@@ -72,6 +77,13 @@ function SongExplorer(props: { pane: SongPane }) {
         edited_table={props.pane.edited_table} />
     </details>
     <details class="songsection">
+      <summary>Eqs</summary>
+      <EqList
+        bump={props.pane.bumper}
+        song={song}
+        selected_eq={props.pane.selected_eq} />
+    </details>
+    <details class="songsection">
       <summary>Chain{displayedChain}</summary>
       <ChainViewer panel={props.pane} />
     </details>
@@ -86,6 +98,10 @@ function SongExplorer(props: { pane: SongPane }) {
     <details class="songsection">
       <summary>Table{displayedTable}</summary>
       <TableViewer panel={props.pane} />
+    </details>
+    <details class="songsection">
+      <summary>Eq{displayedEq}</summary>
+      <EqViewer panel={props.pane} />
     </details>
   </div>;
 }

@@ -22,7 +22,7 @@ export function SongViewer(props: { side: SongSide, panel: SongPane }) {
 
   if (song === undefined) {
     // debug helper
-    const debugLoad = false
+    const debugLoad = true
       ? <button onClick={() => loadUrl(state, panel, revUrl)}>Reversing</button>
       : undefined;
 

@@ -112,6 +112,9 @@ export type SongPane =
         /** Currently selected phrase within the selected chain */
         selected_phrase: Signal<number | undefined>,
 
+        /** Currently selected eq */
+        selected_eq: Signal<number | undefined>,
+
         /** Currently edited chain number */
         edited_chain: Signal<ChainNumberEdition | undefined>,
 
@@ -142,6 +145,7 @@ function initPane() : SongPane {
         edited_instrument_name: signal(undefined),
         edited_table: signal(undefined),
         raw_song: signal(new Uint8Array(0)),
+        selected_eq: signal(undefined),
         selected_chain: signal(undefined),
         selected_phrase: signal(undefined),
         selection_range: signal(undefined),

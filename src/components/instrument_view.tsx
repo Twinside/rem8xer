@@ -3,6 +3,7 @@ import * as W from '../../m8-files/pkg/m8_files';
 import { GlobalState, SongPane } from "../state";
 import { hexStr } from './common';
 import { JSX } from 'preact/jsx-runtime';
+import { BoolRender, Descriptor, FloatRender, HexGauge, HexRender, NestDescriptor, StrRender } from './descriptor';
 
 export function PhraseViewer(props: { panel: SongPane }) {
   const song = props.panel.song.value;
@@ -14,52 +15,6 @@ export function PhraseViewer(props: { panel: SongPane }) {
   return (phrase_idx !== undefined)
     ? <pre>{W.show_phrase(song, phrase_idx)}</pre>
     : undefined
-}
-
-type NestDescriptor = { name: string, nest: Descriptor[] };
-type Descriptor =
-    | { name: string, hex: number }
-    | { name: string, bool: boolean }
-    | { name: string, f32: number }
-    | { name: string, str: string, hex?: number }
-    | NestDescriptor
-
-function HexGauge(props: { v: number }) {
-    return <div class="hexgauge" style={"--hex: " + props.v} />;
-}
-
-function HexRender(props: { v: { name: string, hex: number }}) {
-    return <>
-        <td>{props.v.name}</td>
-        <td>{hexStr(props.v.hex)}</td>
-        <td><HexGauge v={props.v.hex} /></td>
-    </>;
-}
-
-function BoolRender(props: { v: { name: string, bool: boolean }}) {
-    return <>
-        <td>{props.v.name}</td>
-        <td colSpan={2}>{props.v.bool ? "ON" : "OFF"}</td>
-    </>;
-}
-
-function FloatRender(props: { v: { name: string, f32: number }}) {
-    return <li>{props.v.name}: {props.v.f32}</li>;
-}
-
-function StrRender(props: { v: { name: string, str: string, hex?: number }}) {
-    if ("hex" in props.v) {
-        return <>
-            <td>{props.v.name}</td>
-            <td>{hexStr(props.v.hex)}</td>
-            <td>{props.v.str}</td>
-        </>;
-    }
-
-    return <>
-        <td>{props.v.name}</td>
-        <td colSpan={2}>{props.v.str}</td>
-    </>;
 }
 
 const MODRenderers : { [name: string]: number } = {

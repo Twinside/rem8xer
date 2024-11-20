@@ -422,3 +422,15 @@ pub fn describe_instrument(song: &WasmSong, instrument: usize) -> Result<js_sys:
 
     Ok(pg.into())
 }
+
+#[wasm_bindgen]
+pub fn describe_eq(song: &WasmSong, eq_idx: usize) -> Result<js_sys::Array, String> {
+    if eq_idx >= Song::N_EQS {
+        return Err(format!("Error invalid eq number {eq_idx:02X}"));
+    }
+
+    let mut pg = JsonGatherer::new();
+    song.song.eqs[eq_idx].describe(&mut pg, song.song.version);
+
+    Ok(pg.into())
+}
