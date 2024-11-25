@@ -10,21 +10,22 @@ const EQ_TYPE_STR : [&'static str; 6] =
         "HI.CUT"
     ];
 
-const EQ_MODE_STR : [&'static str; 5] =
+const EQ_MODE_STR : [&'static str; 6] =
     [
         "STEREO",
-        "MID",
-        "SIDE",
         "LEFT",
-        "RIGHT"
+        "MID",
+        "RIGHT",
+        "SIDE",
+        "LEFT"
     ];
 
 #[derive(PartialEq, Eq, Clone, Debug, Copy, Default)]
 pub struct EqModeType(pub u8);
 
 impl EqModeType {
-    pub fn eq_mode(&self) -> u8 { self.0 & 0xF }
-    pub fn eq_type(&self) -> u8 { (self.0 >> 4) & 0xF }
+    pub fn eq_mode(&self) -> u8 { (self.0 >> 4)& 0x7 }
+    pub fn eq_type(&self) -> u8 { self.0 & 0x7 }
 
     pub fn mode_str(&self) -> &'static str {
         let index = self.eq_mode() as usize;
@@ -40,11 +41,12 @@ impl EqModeType {
 #[derive(PartialEq, Clone, Debug, Default)]
 pub struct EqBand {
     pub mode      : EqModeType,
-    pub freq      : u8,
-    pub freq_fin  : u8,
 
-    pub level     : u8,
+    pub freq_fin  : u8,
+    pub freq      : u8,
+
     pub level_fin : u8,
+    pub level     : u8,
 
     pub q         : u8
 }
@@ -54,11 +56,18 @@ impl EqBand {
         self.level == 0 && self.level_fin == 0
     }
 
+    pub fn gain(&self) -> f64 {
+        let int_gain = ((self.level as i16) << 8) | (self.level_fin as i16);
+        (int_gain as f64) / 100.0
+    }
+
+    pub fn frequency(&self) -> usize {
+        ((self.freq as usize) << 8) | self.freq_fin as usize
+    }
+
     pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, _ver: Version) {
-        let gain = self.level as f64 + self.level_fin as f64 / 100.0;
-        pg.float("GAIN", gain);
-        let freq = ((self.freq as usize) << 8) + self.freq_fin as usize;
-        pg.float("FREQ", freq as f64);
+        pg.float("GAIN", self.gain());
+        pg.float("FREQ", self.frequency() as f64);
         pg.hex("Q", self.q);
         pg.enumeration("TYPE", self.mode.eq_type(), self.mode.type_str());
         pg.enumeration("MODE", self.mode.eq_mode(), self.mode.mode_str());
@@ -66,19 +75,19 @@ impl EqBand {
 
     pub fn write(&self, w: &mut Writer) {
         w.write(self.mode.0);
-        w.write(self.freq);
         w.write(self.freq_fin);
-        w.write(self.level);
+        w.write(self.freq);
         w.write(self.level_fin);
+        w.write(self.level);
         w.write(self.q);
     }
 
     pub fn from_reader(reader: &mut Reader) -> EqBand {
         let mode = EqModeType(reader.read());
-        let freq = reader.read();
         let freq_fin = reader.read();
-        let level = reader.read();
+        let freq = reader.read();
         let level_fin = reader.read();
+        let level = reader.read();
         let q = reader.read();
 
         Self { level, level_fin, freq, freq_fin, mode, q }

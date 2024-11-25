@@ -9,11 +9,12 @@ export function EqList(props: {
 } ) {
   const phrases = W.allocated_table(props.song);
   const elems = [];
+  const eqPerRow = 8;
   let bucket = [];
   let prevEq = phrases.length > 0 ? phrases[0] : 0;
 
   for (let vix = 0; vix < 32 + 3; vix++) {
-    if ((prevEq / 10 | 0 ) !== (vix / 16 | 0)) {
+    if ((prevEq / eqPerRow | 0 ) !== (vix / eqPerRow | 0)) {
         elems.push(<div class="instr">{bucket}</div>);
         bucket = [];
     }

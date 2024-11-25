@@ -123,9 +123,9 @@ impl Song {
     pub const N_GROOVES: usize = 32;
     pub const N_SCALES: usize = 16;
 
-    /// 32 general EQ + 3 for effects
+    /// 32 general EQ + 3 for effects + 1 global
     pub const N_INSTRUMENT_EQS: usize = 32;
-    pub const N_EQS: usize = Song::N_INSTRUMENT_EQS + 3;
+    pub const N_EQS: usize = Song::N_INSTRUMENT_EQS + 4;
     pub const N_MIDI_MAPPINGS: usize = 128;
 
     pub fn phrase_view(&self, ix: usize) -> PhraseView {
@@ -260,7 +260,7 @@ impl Song {
         };
 
         let eqs = if version.at_least(4, 0) {
-            reader.set_pos(0x1AD5A + 3);
+            reader.set_pos(0x1AD5A + 4);
             (0..Self::N_EQS)
                 .map(|_i| Equ::from_reader(reader))
                 .collect::<Vec<Equ>>()
