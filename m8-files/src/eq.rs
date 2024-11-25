@@ -1,4 +1,20 @@
+use num_enum::{IntoPrimitive, TryFromPrimitive};
+use num_complex::Complex;
+
 use crate::{reader::*, ParameterGatherer, Version};
+
+#[repr(u8)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+#[derive(PartialEq, Copy, Clone, Default, Debug)]
+pub enum EqType {
+    #[default]
+    LowCut,
+    LowShelf,
+    Bell,
+    BandPass,
+    HiShelf,
+    HiCut
+}
 
 const EQ_TYPE_STR : [&'static str; 6] =
     [
@@ -24,7 +40,15 @@ const EQ_MODE_STR : [&'static str; 6] =
 pub struct EqModeType(pub u8);
 
 impl EqModeType {
-    pub fn eq_mode(&self) -> u8 { (self.0 >> 4)& 0x7 }
+    pub fn eq_mode_hex(&self) -> u8 {
+        (self.0 >> 4)& 0x7
+    }
+
+    pub fn eq_mode(&self) -> EqType {
+        EqType::try_from(self.eq_mode_hex())
+            .unwrap_or(EqType::Bell)
+    }
+
     pub fn eq_type(&self) -> u8 { self.0 & 0x7 }
 
     pub fn mode_str(&self) -> &'static str {
@@ -56,6 +80,59 @@ impl EqBand {
         self.level == 0 && self.level_fin == 0
     }
 
+    /// Accumulate band in bode plote
+    /// 
+    /// See https://www.w3.org/TR/audio-eq-cookbook/
+    pub fn accumulate(
+        &self,
+        freqs: &[f64],
+        gains: &mut[f64]) {
+
+        match self.mode.eq_mode() {
+            EqType::LowCut => {
+                let cut_off = self.frequency();
+                let gain = self.gain();
+                let q = self.q as f64;
+
+                for (i, freq) in freqs.iter().enumerate() {
+                    // normalized frequency
+                    let s = Complex::new(0.0, freq / (cut_off as f64));
+                    gains[i] += (1.0 / (s * s + s / q + 1.0)).norm() + gain
+                }
+            }
+            EqType::LowShelf => {
+                let cut_off = self.frequency();
+                let gain = self.gain();
+                let q = self.q as f64;
+
+                for (i, freq) in freqs.iter().enumerate() {
+                    // normalized frequency
+                    let s = Complex::new(0.0, freq / (cut_off as f64));
+                    gains[i] += (1.0 / (s * s + s / q + 1.0)).norm()
+                }
+            },
+            EqType::Bell => {
+
+            },
+            EqType::BandPass => {
+
+            },
+            EqType::HiShelf => {
+            },
+            EqType::HiCut => {
+                let cut_off = self.frequency();
+                let gain = self.gain();
+                let q = self.q as f64;
+
+                for (i, freq) in freqs.iter().enumerate() {
+                    // normalized frequency
+                    let s = Complex::new(0.0, freq / (cut_off as f64));
+                    gains[i] += ((s * s) / (s * s + s / q + 1.0)).norm() + gain
+                }
+            }
+        }
+    }
+
     pub fn gain(&self) -> f64 {
         let int_gain = ((self.level as i16) << 8) | (self.level_fin as i16);
         (int_gain as f64) / 100.0
@@ -70,7 +147,7 @@ impl EqBand {
         pg.float("FREQ", self.frequency() as f64);
         pg.hex("Q", self.q);
         pg.enumeration("TYPE", self.mode.eq_type(), self.mode.type_str());
-        pg.enumeration("MODE", self.mode.eq_mode(), self.mode.mode_str());
+        pg.enumeration("MODE", self.mode.eq_mode_hex(), self.mode.mode_str());
     }
 
     pub fn write(&self, w: &mut Writer) {
