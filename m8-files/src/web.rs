@@ -434,3 +434,25 @@ pub fn describe_eq(song: &WasmSong, eq_idx: usize) -> Result<js_sys::Array, Stri
 
     Ok(pg.into())
 }
+
+#[wasm_bindgen]
+pub fn plot_eq(song: &WasmSong, eq_idx: usize) -> Result<js_sys::Float64Array, String>{
+    if eq_idx >= Song::N_EQS {
+        return Err(format!("Error invalid eq number {eq_idx:02X}"));
+    }
+
+    let point_count = 200;
+    let max = 15000_f64.log10();
+    let log_step = max / point_count as f64;
+
+    let frequencies : Vec<_> = (0 .. point_count)
+        .map(|i| 10_f64.powf((i as f64) * log_step))
+        .collect();
+
+    let mut gains : Vec<f64> = (0 .. point_count).map(|_| 0.0).collect();
+    song.song.eqs[eq_idx].accumulate(&frequencies, &mut gains);
+
+    let as_slice : &[f64] = &gains;
+    Ok(as_slice.into())
+
+}

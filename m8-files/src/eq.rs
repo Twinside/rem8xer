@@ -83,16 +83,13 @@ impl EqBand {
     /// Accumulate band in bode plote
     /// 
     /// See https://www.w3.org/TR/audio-eq-cookbook/
-    pub fn accumulate(
-        &self,
-        freqs: &[f64],
-        gains: &mut[f64]) {
+    pub fn accumulate(&self, freqs: &[f64], gains: &mut[f64]) {
+        let cut_off = self.frequency();
+        let q = self.q as f64;
 
         match self.mode.eq_mode() {
             EqType::LowCut => {
-                let cut_off = self.frequency();
                 let gain = self.gain();
-                let q = self.q as f64;
 
                 for (i, freq) in freqs.iter().enumerate() {
                     // normalized frequency
@@ -101,28 +98,51 @@ impl EqBand {
                 }
             }
             EqType::LowShelf => {
-                let cut_off = self.frequency();
-                let gain = self.gain();
-                let q = self.q as f64;
+                let a = 10.0_f64.powf(self.gain() / 40.0);
 
                 for (i, freq) in freqs.iter().enumerate() {
                     // normalized frequency
                     let s = Complex::new(0.0, freq / (cut_off as f64));
-                    gains[i] += (1.0 / (s * s + s / q + 1.0)).norm()
+
+                    let ss = s * s;
+                    let sqra = a.sqrt() / q * s;
+                    gains[i] += (a * (ss + sqra + a) / (a * ss + sqra + 1.0)).norm()
                 }
             },
             EqType::Bell => {
+                let a = 10.0_f64.powf(self.gain() / 40.0);
 
+                for (i, freq) in freqs.iter().enumerate() {
+                    // normalized frequency
+                    let s = Complex::new(0.0, freq / (cut_off as f64));
+
+                    let ss = s * s;
+                    gains[i] += ( (ss + s * a / q + 1.0) /
+                                  (ss + s / (a * q) + 1.0)).norm()
+                }
             },
             EqType::BandPass => {
-
+                for (i, freq) in freqs.iter().enumerate() {
+                    // normalized frequency
+                    let s = Complex::new(0.0, freq / (cut_off as f64));
+                    let ss = s * s;
+                    gains[i] += ( (s) / (ss + s / q + 1.0)).norm()
+                }
             },
             EqType::HiShelf => {
+                let a = 10.0_f64.powf(self.gain() / 40.0);
+
+                for (i, freq) in freqs.iter().enumerate() {
+                    // normalized frequency
+                    let s = Complex::new(0.0, freq / (cut_off as f64));
+
+                    let ss = s * s;
+                    let sqra = a.sqrt() / q * s;
+                    gains[i] += (a * (a * ss + sqra + 1.0) / (ss + sqra + a)).norm()
+                }
             },
             EqType::HiCut => {
-                let cut_off = self.frequency();
                 let gain = self.gain();
-                let q = self.q as f64;
 
                 for (i, freq) in freqs.iter().enumerate() {
                     // normalized frequency
@@ -179,6 +199,12 @@ pub struct Equ {
 }
 
 impl Equ {
+    pub fn accumulate(&self, freqs: &[f64], gains: &mut[f64]) {
+        self.low.accumulate(freqs, gains);
+        self.mid.accumulate(freqs, gains);
+        self.high.accumulate(freqs, gains);
+    }
+
     pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
         self.low.describe(&mut pg.nest("LOW"), ver);
         self.mid.describe(&mut pg.nest("MID"), ver);
