@@ -1,9 +1,10 @@
-import { useContext } from 'preact/hooks';
+import { useContext, useEffect, useRef } from 'preact/hooks';
 import * as W from '../../m8-files/pkg/m8_files';
 import { GlobalState, SongPane } from "../state";
 import { hexStr } from './common';
 import { JSX } from 'preact/jsx-runtime';
 import { Descriptor, NestDescriptor } from './descriptor';
+import { Signal } from '@preact/signals';
 
 function BandViewer(desc: NestDescriptor) : JSX.Element[] {
     let gain = 0;
@@ -32,7 +33,39 @@ function BandViewer(desc: NestDescriptor) : JSX.Element[] {
 const NAMES : ReadonlyArray<string> =
     [ "GAIN", "FREQ", "Q", "TYPE", "MODE" ];
 
-export function EqViewer(props: { panel: SongPane }) {
+function EqPlot(props: { song: W.WasmSong, eq: number, banner: Signal<string | undefined> }) {
+  let ys = new Float64Array(0);
+  try {
+    ys = W.plot_eq(props.song, props.eq);
+  } catch (err) {
+    props.banner.value = err;
+  }
+
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+		const current = canvasRef.current;
+		if (current === null) return;
+
+        const context = current.getContext('2d');
+		if (context === null) return;
+
+
+		const width = context.canvas.clientWidth;
+		const height = context.canvas.clientHeight;
+
+    context.clearRect(0, 0, width, height);
+
+    context.fillStyle = '#ddd';
+
+    for (let x = 0; x < ys.length; x++) {
+      const y = ys[x];
+      context.fillRect(x, 50 + y, 1, 1);
+    }
+  });
+  return <canvas ref={canvasRef} width={200} height={150} />;
+}
+
+export function EqViewer(props: { panel: SongPane, banner: Signal<string | undefined> }) {
   const song = props.panel.song.value;
   const bump = props.panel.bumper.value;
   const selected = props.panel.selected_eq.value;
@@ -71,6 +104,7 @@ export function EqViewer(props: { panel: SongPane }) {
   }
 
   return <div class="instrparam">
+    <EqPlot song={song} eq={selected} banner={props.banner} />
     <table>
         <thead>
             <th></th>

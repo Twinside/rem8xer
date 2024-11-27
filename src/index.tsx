@@ -13,6 +13,7 @@ import { TableList } from "./components/table_list";
 import { InstrumentViewer } from "./components/instrument_view";
 import { EqList } from "./components/eq_list";
 import { EqViewer } from "./components/eq_viewer";
+import { Signal } from "@preact/signals";
 
 W.init();
 const state = initState();
@@ -23,7 +24,7 @@ function MessageBanner() {
   return <div>{msg}</div>;
 }
 
-function SongExplorer(props: { pane: SongPane }) {
+function SongExplorer(props: { pane: SongPane, banner: Signal<string | undefined> }) {
   const song = props.pane.song.value;
   if (song === undefined) return <></>;
 
@@ -101,7 +102,7 @@ function SongExplorer(props: { pane: SongPane }) {
     </details>
     <details class="songsection">
       <summary>Eq{displayedEq}</summary>
-      <EqViewer panel={props.pane} />
+      <EqViewer panel={props.pane} banner={props.banner} />
     </details>
   </div>;
 }
@@ -112,10 +113,10 @@ function App() {
       <div><h1>Re<pre class="titlepre">M8</pre>xer</h1><span>v0.3</span></div>
       <MessageBanner />
       <div class="rootcontainer">
-        <SongExplorer pane={state.left} />
+        <SongExplorer pane={state.left} banner={state.message_banner} />
         <SongViewer side="left" panel={state.left} />
         <SongViewer side="right" panel={state.right} />
-        <SongExplorer pane={state.right}/>
+        <SongExplorer pane={state.right} banner={state.message_banner} />
       </div>
   </>;
 }
