@@ -1,19 +1,21 @@
+use std::f64::consts::PI;
+
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use num_complex::Complex;
 
-use crate::{reader::*, ParameterGatherer, Version};
+use crate::{reader::*, web, ParameterGatherer, Version};
 
 #[repr(u8)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
 #[derive(PartialEq, Copy, Clone, Default, Debug)]
 pub enum EqType {
     #[default]
-    LowCut,
-    LowShelf,
-    Bell,
-    BandPass,
-    HiShelf,
-    HiCut
+    LowCut = 0,
+    LowShelf = 1,
+    Bell = 2,
+    BandPass = 3,
+    HiShelf = 4,
+    HiCut = 5
 }
 
 const EQ_TYPE_STR : [&'static str; 6] =
@@ -45,7 +47,7 @@ impl EqModeType {
     }
 
     pub fn eq_mode(&self) -> EqType {
-        EqType::try_from(self.eq_mode_hex())
+        EqType::try_from(self.eq_type())
             .unwrap_or(EqType::Bell)
     }
 
@@ -75,79 +77,155 @@ pub struct EqBand {
     pub q         : u8
 }
 
+/// See https://www.w3.org/TR/audio-eq-cookbook/
+pub struct BiQuadCoeffs {
+    pub a0: f64,
+    pub a1: f64,
+    pub a2: f64,
+
+    pub b0: f64,
+    pub b1: f64,
+    pub b2: f64
+}
+
+pub struct BiQuadFreqResponseCoeff {
+    pub cst_num: f64,
+    pub cstp_num : f64,
+    pub coeff_num: f64,
+
+    pub cst_denom: f64,
+    pub cstp_denom : f64,
+    pub coeff_denom: f64
+}
+
+impl BiQuadFreqResponseCoeff {
+    pub fn response(&self, p : f64) -> f64 {
+        let num = self.cst_num + p * (self.coeff_num * (1.0 - p) + self.cstp_num);
+        let denom = self.cst_denom + p * (self.coeff_denom * (1.0 - p) + self.cstp_denom);
+        (num / denom).sqrt()
+    }
+}
+
+impl BiQuadCoeffs {
+    pub fn freq_response_coeff(&self) -> BiQuadFreqResponseCoeff {
+        BiQuadFreqResponseCoeff {
+            cst_num: ((self.b0 + self.b1 + self.b2) / 2.0).powi(2),
+            cstp_num : (self.b1 * (self.b0 + self.b2)),
+            coeff_num: 4.0 * self.b0 * self.b2,
+
+            cst_denom: ((self.a0 + self.a1 + self.a2) / 2.0).powi(2),
+            cstp_denom : (self.b1 * (self.b0 + self.b2)),
+            coeff_denom: 4.0 * self.a0 * self.a2
+        }
+    }
+}
+
 impl EqBand {
     pub fn is_empty(&self) -> bool {
         self.level == 0 && self.level_fin == 0
     }
 
-    /// Accumulate band in bode plote
-    /// 
     /// See https://www.w3.org/TR/audio-eq-cookbook/
-    pub fn accumulate(&self, freqs: &[f64], gains: &mut[f64]) {
-        let cut_off = self.frequency();
-        let q = self.q as f64;
+    pub fn coeffs(&self, sample_rate: usize) -> BiQuadCoeffs {
+        let sample_rate = sample_rate as f64;
+        let a = (10.0 as f64).powf(self.gain()/40.0);
+        let w0 = 2.0 * PI * (self.frequency() as f64) / sample_rate;
+        let alpha = w0.sin() / (2.0 * (self.q as f64));
 
+/*
+
+notch:      H(s) = (s^2 + 1) / (s^2 + s/Q + 1)
+
+            b0 =   1
+            b1 =  -2*cos(w0)
+            b2 =   1
+            a0 =   1 + alpha
+            a1 =  -2*cos(w0)
+            a2 =   1 - alpha
+
+
+
+APF:        H(s) = (s^2 - s/Q + 1) / (s^2 + s/Q + 1)
+
+            b0 =   1 - alpha
+            b1 =  -2*cos(w0)
+            b2 =   1 + alpha
+            a0 =   1 + alpha
+            a1 =  -2*cos(w0)
+            a2 =   1 - alpha
+
+
+
+ */
+        let cw0 = w0.cos();
         match self.mode.eq_mode() {
             EqType::LowCut => {
-                let gain = self.gain();
-
-                for (i, freq) in freqs.iter().enumerate() {
-                    // normalized frequency
-                    let s = Complex::new(0.0, freq / (cut_off as f64));
-                    gains[i] += (1.0 / (s * s + s / q + 1.0)).norm() + gain
+                // HPF:        H(s) = s^2 / (s^2 + s/Q + 1)
+                BiQuadCoeffs {
+                    b0:  (1.0 + cw0)/2.0,
+                    b1: -(1.0 + cw0),
+                    b2:  (1.0 + cw0)/2.0,
+                    a0:   1.0 + alpha,
+                    a1:  -2.0*cw0,
+                    a2:   1.0 - alpha
                 }
             }
             EqType::LowShelf => {
-                let a = 10.0_f64.powf(self.gain() / 40.0);
+                // lowShelf: H(s) = A * (s^2 + (sqrt(A)/Q)*s + A)/(A*s^2 + (sqrt(A)/Q)*s + 1)
 
-                for (i, freq) in freqs.iter().enumerate() {
-                    // normalized frequency
-                    let s = Complex::new(0.0, freq / (cut_off as f64));
-
-                    let ss = s * s;
-                    let sqra = a.sqrt() / q * s;
-                    gains[i] += (a * (ss + sqra + a) / (a * ss + sqra + 1.0)).norm()
+                let sqra = a.sqrt();
+                BiQuadCoeffs {
+                    b0:      a*( (a+1.0) - (a-1.0)*cw0 + 2.0 * sqra * alpha ),
+                    b1:  2.0*a*( (a-1.0) - (a+1.0)*cw0                   ),
+                    b2:      a*( (a+1.0) - (a-1.0)*cw0 - 2.0 * sqra*alpha ),
+                    a0:        (a+1.0) + (a-1.0)*cw0 + 2.0 * sqra*alpha,
+                    a1:   -2.0*( (a-1.0) + (a+1.0)*cw0                   ),
+                    a2:        (a+1.0) + (a-1.0)*cw0 - 2.0 *sqra*alpha
                 }
             },
             EqType::Bell => {
-                let a = 10.0_f64.powf(self.gain() / 40.0);
-
-                for (i, freq) in freqs.iter().enumerate() {
-                    // normalized frequency
-                    let s = Complex::new(0.0, freq / (cut_off as f64));
-
-                    let ss = s * s;
-                    gains[i] += ( (ss + s * a / q + 1.0) /
-                                  (ss + s / (a * q) + 1.0)).norm()
+                // peakingEQ:  H(s) = (s^2 + s*(A/Q) + 1) / (s^2 + s/(A*Q) + 1)
+                BiQuadCoeffs {
+                    b0: 1.0 + alpha * a,
+                    b1: -2.0 * cw0,
+                    b2: 1.0 - alpha * a,
+                    a0: 1.0 + alpha / a,
+                    a1: -2.0 * cw0,
+                    a2: 1.0 - alpha / a
                 }
             },
             EqType::BandPass => {
-                for (i, freq) in freqs.iter().enumerate() {
-                    // normalized frequency
-                    let s = Complex::new(0.0, freq / (cut_off as f64));
-                    let ss = s * s;
-                    gains[i] += ( (s) / (ss + s / q + 1.0)).norm()
+                // BPF:        H(s) = (s/Q) / (s^2 + s/Q + 1)      (constant 0 dB peak gain)
+                BiQuadCoeffs {
+                    b0:   alpha,
+                    b1:   0.0,
+                    b2:  -alpha,
+                    a0:   1.0 + alpha,
+                    a1:  -2.0*cw0,
+                    a2:   1.0 - alpha,
                 }
             },
             EqType::HiShelf => {
-                let a = 10.0_f64.powf(self.gain() / 40.0);
-
-                for (i, freq) in freqs.iter().enumerate() {
-                    // normalized frequency
-                    let s = Complex::new(0.0, freq / (cut_off as f64));
-
-                    let ss = s * s;
-                    let sqra = a.sqrt() / q * s;
-                    gains[i] += (a * (a * ss + sqra + 1.0) / (ss + sqra + a)).norm()
+                // highShelf: H(s) = A * (A*s^2 + (sqrt(A)/Q)*s + 1)/(s^2 + (sqrt(A)/Q)*s + A)
+                let sqrta = a.sqrt();
+                BiQuadCoeffs {
+                    b0:      a*( (a+1.0) + (a-1.0)*cw0 + 2.0*sqrta*alpha ),
+                    b1: -2.0*a*( (a-1.0) + (a+1.0)*cw0                   ),
+                    b2:      a*( (a+1.0) + (a-1.0)*cw0 - 2.0*sqrta*alpha ),
+                    a0:        (a+1.0) - (a-1.0)*cw0 + 2.0*sqrta*alpha,
+                    a1:    2.0*( (a-1.0) - (a+1.0)*cw0                   ),
+                    a2:        (a+1.0) - (a-1.0)*cw0 - 2.0*sqrta*alpha
                 }
             },
             EqType::HiCut => {
-                let gain = self.gain();
-
-                for (i, freq) in freqs.iter().enumerate() {
-                    // normalized frequency
-                    let s = Complex::new(0.0, freq / (cut_off as f64));
-                    gains[i] += ((s * s) / (s * s + s / q + 1.0)).norm() + gain
+                // LPF:        H(s) = 1 / (s^2 + s/Q + 1)
+                BiQuadCoeffs {
+                    b0:  (1.0 - cw0)/2.0,
+                    b1:   1.0 - cw0,
+                    b2:  (1.0 - cw0)/2.0,
+                    a0:   1.0 + alpha,
+                    a1:  -2.0*cw0,
+                    a2:   1.0 - alpha
                 }
             }
         }
@@ -200,9 +278,17 @@ pub struct Equ {
 
 impl Equ {
     pub fn accumulate(&self, freqs: &[f64], gains: &mut[f64]) {
-        self.low.accumulate(freqs, gains);
-        self.mid.accumulate(freqs, gains);
-        self.high.accumulate(freqs, gains);
+        let sample_rate = 44100;
+        let c0 = self.low.coeffs(sample_rate).freq_response_coeff();
+        let c1 = self.mid.coeffs(sample_rate).freq_response_coeff();
+        let c2 = self.high.coeffs(sample_rate).freq_response_coeff();
+
+        for i in 0 .. gains.len() {
+            let mut p = ((PI * freqs[i]) / (sample_rate as f64)).sin();
+            p = p * p;
+
+            gains[i] = (c0.response(p) * c1.response(p) * c2.response(p)).log(10.0)
+        }
     }
 
     pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {

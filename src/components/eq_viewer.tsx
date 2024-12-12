@@ -41,6 +41,7 @@ function EqPlot(props: { song: W.WasmSong, eq: number, banner: Signal<string | u
     props.banner.value = err;
   }
 
+  console.log(ys);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   useEffect(() => {
 		const current = canvasRef.current;
