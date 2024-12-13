@@ -100,8 +100,8 @@ pub struct BiQuadFreqResponseCoeff {
 
 impl BiQuadFreqResponseCoeff {
     pub fn response(&self, p : f64) -> f64 {
-        let num = self.cst_num + p * (self.coeff_num * (1.0 - p) + self.cstp_num);
-        let denom = self.cst_denom + p * (self.coeff_denom * (1.0 - p) + self.cstp_denom);
+        let num = self.cst_num - p * (self.coeff_num * (1.0 - p) + self.cstp_num);
+        let denom = self.cst_denom - p * (self.coeff_denom * (1.0 - p) + self.cstp_denom);
         (num / denom).sqrt()
     }
 }
@@ -114,9 +114,25 @@ impl BiQuadCoeffs {
             coeff_num: 4.0 * self.b0 * self.b2,
 
             cst_denom: ((self.a0 + self.a1 + self.a2) / 2.0).powi(2),
-            cstp_denom : (self.b1 * (self.b0 + self.b2)),
+            cstp_denom : (self.a1 * (self.a0 + self.a2)),
             coeff_denom: 4.0 * self.a0 * self.a2
         }
+    }
+
+    pub fn normalized(&self) -> Self {
+        let a0 = self.a0;
+        Self {
+            a0: 1.0,
+            a1: self.a1 / a0,
+            a2: self.a2 / a0,
+            b0: self.b0 / a0,
+            b1: self.b1 / a0,
+            b2: self.b2 / a0
+        }
+    }
+
+    pub fn low_cut() -> Self {
+        todo!()
     }
 }
 
@@ -129,7 +145,7 @@ impl EqBand {
     pub fn coeffs(&self, sample_rate: usize) -> BiQuadCoeffs {
         let sample_rate = sample_rate as f64;
         let a = (10.0 as f64).powf(self.gain()/40.0);
-        let w0 = 2.0 * PI * (self.frequency() as f64) / sample_rate;
+        let w0 = PI * (self.frequency() as f64) / sample_rate;
         let alpha = w0.sin() / (2.0 * (self.q as f64));
 
 /*
@@ -279,9 +295,12 @@ pub struct Equ {
 impl Equ {
     pub fn accumulate(&self, freqs: &[f64], gains: &mut[f64]) {
         let sample_rate = 44100;
-        let c0 = self.low.coeffs(sample_rate).freq_response_coeff();
-        let c1 = self.mid.coeffs(sample_rate).freq_response_coeff();
-        let c2 = self.high.coeffs(sample_rate).freq_response_coeff();
+        let c0 =
+            self.low.coeffs(sample_rate).normalized().freq_response_coeff();
+        let c1 =
+            self.mid.coeffs(sample_rate).normalized().freq_response_coeff();
+        let c2 =
+            self.high.coeffs(sample_rate).normalized().freq_response_coeff();
 
         for i in 0 .. gains.len() {
             let mut p = ((PI * freqs[i]) / (sample_rate as f64)).sin();

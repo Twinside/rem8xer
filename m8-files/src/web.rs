@@ -446,7 +446,7 @@ pub fn plot_eq(song: &WasmSong, eq_idx: usize) -> Result<js_sys::Float64Array, S
     let log_step = max / point_count as f64;
 
     let frequencies : Vec<_> = (0 .. point_count)
-        .map(|i| 10_f64.powf((i as f64 + 1.0) * log_step))
+        .map(|i| 10_f64.powf(i as f64 * log_step) + 30.0)
         .collect();
 
     let mut gains : Vec<f64> = (0 .. point_count).map(|_| 1.0).collect();
