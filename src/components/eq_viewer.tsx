@@ -60,7 +60,7 @@ function EqPlot(props: { song: W.WasmSong, eq: number, banner: Signal<string | u
 
     for (let x = 0; x < ys.length; x++) {
       const y = ys[x];
-      context.fillRect(x, 50 + y, 2, 2);
+      context.fillRect(x, height - y - 50, 2, 2);
     }
   });
   return <canvas ref={canvasRef} width={200} height={150} />;
