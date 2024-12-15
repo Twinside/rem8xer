@@ -46,20 +46,20 @@ impl EqModeType {
         (self.0 >> 4)& 0x7
     }
 
-    pub fn eq_mode(&self) -> EqType {
-        EqType::try_from(self.eq_type())
+    pub fn eq_type(&self) -> EqType {
+        EqType::try_from(self.eq_type_hex())
             .unwrap_or(EqType::Bell)
     }
 
-    pub fn eq_type(&self) -> u8 { self.0 & 0x7 }
+    pub fn eq_type_hex(&self) -> u8 { self.0 & 0x7 }
 
     pub fn mode_str(&self) -> &'static str {
-        let index = self.eq_mode() as usize;
+        let index = self.eq_type() as usize;
         EQ_MODE_STR.get(index).unwrap_or(&"")
     }
 
     pub fn type_str(&self) -> &'static str {
-        let index = self.eq_type() as usize;
+        let index = self.eq_type_hex() as usize;
         EQ_TYPE_STR.get(index).unwrap_or(&"")
     }
 }
@@ -78,6 +78,7 @@ pub struct EqBand {
 }
 
 /// See https://www.w3.org/TR/audio-eq-cookbook/
+#[derive(Debug)]
 pub struct BiQuadCoeffs {
     pub a0: f64,
     pub a1: f64,
@@ -144,9 +145,10 @@ impl EqBand {
     /// See https://www.w3.org/TR/audio-eq-cookbook/
     pub fn coeffs(&self, sample_rate: usize) -> BiQuadCoeffs {
         let sample_rate = sample_rate as f64;
+        let q = (self.q as f64) / 100.0;
         let a = (10.0 as f64).powf(self.gain()/40.0);
-        let w0 = PI * (self.frequency() as f64) / sample_rate;
-        let alpha = w0.sin() / (2.0 * (self.q as f64));
+        let w0 = 2.0 * PI * (self.frequency() as f64) / sample_rate;
+        let alpha = w0.sin() / (2.0 * q);
 
 /*
 
@@ -174,7 +176,7 @@ APF:        H(s) = (s^2 - s/Q + 1) / (s^2 + s/Q + 1)
 
  */
         let cw0 = w0.cos();
-        match self.mode.eq_mode() {
+        match self.mode.eq_type() {
             EqType::LowCut => {
                 // HPF:        H(s) = s^2 / (s^2 + s/Q + 1)
                 BiQuadCoeffs {
@@ -260,7 +262,7 @@ APF:        H(s) = (s^2 - s/Q + 1) / (s^2 + s/Q + 1)
         pg.float("GAIN", self.gain());
         pg.float("FREQ", self.frequency() as f64);
         pg.hex("Q", self.q);
-        pg.enumeration("TYPE", self.mode.eq_type(), self.mode.type_str());
+        pg.enumeration("TYPE", self.mode.eq_type_hex(), self.mode.type_str());
         pg.enumeration("MODE", self.mode.eq_mode_hex(), self.mode.mode_str());
     }
 
@@ -306,7 +308,7 @@ impl Equ {
             let mut p = ((PI * freqs[i]) / (sample_rate as f64)).sin();
             p = p * p;
 
-            gains[i] = (c0.response(p) * c1.response(p) * c2.response(p)).log(10.0)
+            gains[i] = (c0.response(p) * c1.response(p) * c2.response(p)).log(10.0);
         }
     }
 
