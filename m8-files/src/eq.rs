@@ -145,8 +145,14 @@ impl EqBand {
     /// See https://www.w3.org/TR/audio-eq-cookbook/
     pub fn coeffs(&self, sample_rate: usize) -> BiQuadCoeffs {
         let sample_rate = sample_rate as f64;
-        let q = (self.q as f64) / 100.0;
         let a = (10.0 as f64).powf(self.gain()/40.0);
+        let q = 
+            if self.mode.eq_type() == EqType::Bell {
+                (self.q as f64) / 100.0 * a
+            } else {
+                (self.q as f64) / 100.0
+            };
+
         let w0 = 2.0 * PI * (self.frequency() as f64) / sample_rate;
         let alpha = w0.sin() / (2.0 * q);
 
@@ -295,7 +301,7 @@ pub struct Equ {
 }
 
 impl Equ {
-    pub fn accumulate(&self, freqs: &[f64], gains: &mut[f64]) {
+    pub fn accumulate(&self, freqs: &[f64]) -> Vec<f64> {
         let sample_rate = 44100;
         let c0 =
             self.low.coeffs(sample_rate).normalized().freq_response_coeff();
@@ -304,12 +310,14 @@ impl Equ {
         let c2 =
             self.high.coeffs(sample_rate).normalized().freq_response_coeff();
 
-        for i in 0 .. gains.len() {
-            let mut p = ((PI * freqs[i]) / (sample_rate as f64)).sin();
-            p = p * p;
-
-            gains[i] = (c0.response(p) * c1.response(p) * c2.response(p)).log(10.0);
-        }
+        freqs
+          .iter()
+          .map(|freq| {
+              let mut p = ((PI * freq) / (sample_rate as f64)).sin();
+              p = p * p;
+         
+              (c0.response(p) * c1.response(p) * c2.response(p)).log(10.0)
+          }).collect()
     }
 
     pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {

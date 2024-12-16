@@ -41,6 +41,8 @@ function EqPlot(props: { song: W.WasmSong, eq: number, banner: Signal<string | u
     props.banner.value = err;
   }
 
+  let freqs = W.eq_frequencies();
+
   console.log(ys);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   useEffect(() => {
@@ -50,20 +52,36 @@ function EqPlot(props: { song: W.WasmSong, eq: number, banner: Signal<string | u
         const context = current.getContext('2d');
 		if (context === null) return;
 
-
 		const width = context.canvas.clientWidth;
 		const height = context.canvas.clientHeight;
 
     context.clearRect(0, 0, width, height);
 
+    // draw bar at 10/100/1000/10000 Hz
+    let target = 10.0;
+    let previous = 0.0;
+    context.fillStyle = '#555';
+    for (let i = 0; i < freqs.length; i++) {
+      const f = freqs[i];
+      if (f >= target && previous < target) {
+        context.fillRect(i, 0, 1, height);
+        target *= 10;
+      }
+
+      previous = f;
+    }
+
+    const db0 = 0;
+    context.fillRect(0, height - db0 - 70, width, 1);
+
     context.fillStyle = '#ddd';
 
     for (let x = 0; x < ys.length; x++) {
-      const y = ys[x];
-      context.fillRect(x, height - y - 50, 2, 2);
+      const y = ys[x] * 100;
+      context.fillRect(x, height - y - 70, 2, 2);
     }
   });
-  return <canvas ref={canvasRef} width={200} height={150} />;
+  return <canvas ref={canvasRef} width={300} height={150} />;
 }
 
 export function EqViewer(props: { panel: SongPane, banner: Signal<string | undefined> }) {
