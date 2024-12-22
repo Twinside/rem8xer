@@ -1,9 +1,8 @@
 use std::f64::consts::PI;
 
 use num_enum::{IntoPrimitive, TryFromPrimitive};
-use num_complex::Complex;
 
-use crate::{reader::*, web::{self, log}, ParameterGatherer, Version};
+use crate::{reader::*, ParameterGatherer, Version};
 
 #[repr(u8)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
@@ -34,21 +33,19 @@ const EQ_TYPE_STR : [&'static str; 6] =
 pub enum EqMode {
     #[default]
     Stereo = 0,
-    Left = 1,
-    Mid = 2,
-    Right = 3,
-    Side = 4,
-    Left2 = 5
+    Mid = 1,
+    Side = 2,
+    Left = 3,
+    Right = 4
 }
 
-const EQ_MODE_STR : [&'static str; 6] =
+const EQ_MODE_STR : [&'static str; 5] =
     [
         "STEREO",
-        "LEFT",
         "MID",
-        "RIGHT",
         "SIDE",
-        "LEFT"
+        "LEFT",
+        "RIGHT"
     ];
 
 #[derive(PartialEq, Eq, Clone, Debug, Copy, Default)]
@@ -56,7 +53,7 @@ pub struct EqModeType(pub u8);
 
 impl EqModeType {
     pub fn eq_mode_hex(&self) -> u8 {
-        (self.0 >> 4)& 0x7
+        (self.0 >> 5)& 0x7
     }
 
     pub fn eq_type(&self) -> EqType {
@@ -337,14 +334,6 @@ impl Equ {
             let c2 = self.high.coeffs(sample_rate).normalized().freq_response_coeff();
             coeffs.push(c2);
         }
-
-        log(&format!("low:{:?}/{:?} mid:{:?}/{:?} high:{:?}/{:?}",
-            self.low.mode.eq_mode_hex(),
-            self.low.mode.eq_mode(),
-            self.mid.mode.eq_mode_hex(),
-            self.mid.mode.eq_mode(),
-            self.high.mode.eq_mode_hex(),
-            self.high.mode.eq_mode()));
 
         freqs
           .iter()

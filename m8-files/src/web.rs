@@ -441,7 +441,7 @@ const MIN_EQ_PLOT_FREQUENCY : usize = 30;
 const MAX_EQ_PLOT_FREQUENCY : usize = 22000;
 const EQ_PLOT_POINT_COUNT : usize = 300;
 
-fn frequencies(mini: usize, maxi: usize, point_count: usize) -> Vec<f64> {
+fn frequencies(_mini: usize, maxi: usize, point_count: usize) -> Vec<f64> {
     let max = (maxi as f64).log(LOG_BASE);
     let mini = 0.0; // (mini as f64).log(LOG_BASE);
     let log_step = (max - mini) / point_count as f64;
