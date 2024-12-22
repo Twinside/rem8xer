@@ -52,6 +52,10 @@ const EQ_MODE_STR : [&'static str; 5] =
 pub struct EqModeType(pub u8);
 
 impl EqModeType {
+    pub fn new(ty: EqType, mode : EqMode) -> EqModeType {
+        EqModeType(ty as u8 | ((mode as u8) << 5))
+    }
+
     pub fn eq_mode_hex(&self) -> u8 {
         (self.0 >> 5)& 0x7
     }
@@ -146,13 +150,52 @@ impl BiQuadCoeffs {
             b2: self.b2 / a0
         }
     }
-
-    pub fn low_cut() -> Self {
-        todo!()
-    }
 }
 
 impl EqBand {
+    pub fn default_low() -> EqBand {
+        let freq = 100 as usize;
+        EqBand {
+            mode: EqModeType::new(EqType::LowShelf, EqMode::Stereo),
+            freq: (freq >> 8) as u8,
+            freq_fin: (freq & 0xFF) as u8,
+
+            level_fin: 0,
+            level: 0,
+
+            q: 50
+        }
+    }
+
+    pub fn default_mid() -> EqBand {
+        let freq = 1000 as usize;
+        EqBand {
+            mode: EqModeType::new(EqType::Bell, EqMode::Stereo),
+            freq: (freq >> 8) as u8,
+            freq_fin: (freq & 0xFF) as u8,
+
+            level_fin: 0,
+            level: 0,
+
+            q: 50
+        }
+    }
+
+    pub fn default_high() -> EqBand {
+        let freq = 5000 as usize;
+        EqBand {
+            mode: EqModeType::new(EqType::HiShelf, EqMode::Stereo),
+            freq: (freq >> 8) as u8,
+            freq_fin: (freq & 0xFF) as u8,
+
+            level_fin: 0,
+            level: 0,
+
+            q: 50
+        }
+    }
+
+
     pub fn is_empty(&self) -> bool {
         self.level == 0 && self.level_fin == 0
     }
@@ -316,6 +359,16 @@ pub struct Equ {
 }
 
 impl Equ {
+    pub fn is_empty(&self) -> bool {
+        self.low.is_empty() && self.mid.is_empty() && self.high.is_empty()
+    }
+
+    pub fn clear(&mut self) {
+        self.low = EqBand::default_low();
+        self.mid = EqBand::default_mid();
+        self.high = EqBand::default_high();
+    }
+
     pub fn accumulate(&self, freqs: &[f64], mode: EqMode) -> Vec<f64> {
         let sample_rate = 44100;
         let mut coeffs = vec![];

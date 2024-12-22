@@ -1,3 +1,7 @@
+# 0.4
+
+ - Eq viewing and plotting.
+
 # 0.3
  
  - Song explorer view

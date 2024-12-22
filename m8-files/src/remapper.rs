@@ -476,6 +476,7 @@ impl Remapper {
     for equ in self.eq_mapping.to_move.iter() {
         let equ = *equ as usize;
         let to_index = self.eq_mapping.mapping[equ];
+        song.eqs[equ].clear();
         song.eqs[to_index as usize] = song.eqs[equ].clone();
     }
 

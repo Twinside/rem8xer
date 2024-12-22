@@ -68,6 +68,18 @@ export const EmptyPhraseEdition : PhraseNumberEdition =
         current_value: -1
     }
 
+export type EqNumberEdition =
+    {
+        base_eq: number,
+        current_value: number
+    }
+
+export const EmptyEqEdition : EqNumberEdition =
+    {
+        base_eq: -1,
+        current_value: -1
+    }
+
 export type InstrumentNameEditor =
     {
         instrument_id: number
@@ -86,8 +98,12 @@ export type InstrumentNumberEdition =
 export const EmptyInstrumentNumberEidition : InstrumentNumberEdition =
     { base_instrument: -1, current_value: -1 }
 
+export type PanelSide = "left" | "right"
+
 export type SongPane =
     {
+        side: PanelSide,
+
         /** Currently loaded song, fully parsed  */
         song: Signal<WasmSong | undefined>,
 
@@ -127,6 +143,9 @@ export type SongPane =
         /** Currently edited phrase number */
         edited_instrument: Signal<InstrumentNumberEdition | undefined>,
 
+        /** Currently edited Eq number */
+        edited_eq: Signal<EqNumberEdition | undefined>,
+
         /** Instrument currently being renamed */
         edited_instrument_name: Signal<InstrumentNameEditor | undefined>,
 
@@ -134,8 +153,9 @@ export type SongPane =
         selection_range: Signal<ChainSelection | undefined>
     }
 
-function initPane() : SongPane {
+function initPane(side: PanelSide) : SongPane {
     return {
+        side,
         loaded_name: signal(undefined),
         song: signal(undefined),
         bumper: signal(0),
@@ -144,6 +164,7 @@ function initPane() : SongPane {
         edited_instrument: signal(undefined),
         edited_instrument_name: signal(undefined),
         edited_table: signal(undefined),
+        edited_eq: signal(undefined),
         raw_song: signal(new Uint8Array(0)),
         selected_eq: signal(undefined),
         selected_chain: signal(undefined),
@@ -180,8 +201,8 @@ export type State =
 export function initState() : State {
     return {
         message_banner: signal(undefined),
-        left: initPane(),
-        right: initPane(),
+        left: initPane("left"),
+        right: initPane("right"),
         remap_log: signal([])
     }
 }

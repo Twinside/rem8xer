@@ -33,13 +33,27 @@ pub enum Instrument {
     None
 }
 
+/// Interface to gather and display parameters in a semi
+/// automated manner
 pub trait ParameterGatherer {
+    /// Display a hex value for the instrument
     fn hex(&mut self, name: &str, val: u8);
+
+    /// Display a boolean value for the described element
     fn bool(&mut self, name: &str, val: bool);
+
+    /// Display a floating point value.
     fn float(&mut self, name: &str, val: f64);
+
+    /// Display a string
     fn str(&mut self, name: &str, val: &str);
+
+    /// Write an enumeration, with an hex code and a string representation
+    /// alongside it.
     fn enumeration(&mut self, name: &str, hex: u8, val: &str);
 
+    /// Enter a sub scope, the returned object represent the subscope
+    /// where you can write new parameters.
     fn nest(&mut self, name: &str) -> Self;
 }
 

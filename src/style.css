@@ -188,6 +188,14 @@ button:focus-visible {
   color: magenta;
 }
 
+.modButton {
+  width: 20px;
+  height: 20px;
+  font-size: 13px;
+  border-radius: 4px;
+  padding: 0px;
+}
+
 .selection-rect {
   position: absolute;
   top: 0;

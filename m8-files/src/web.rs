@@ -122,6 +122,11 @@ pub fn rename_instrument(song: &mut WasmSong, instrument: usize, new_name: Strin
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+/////  Renumbering
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
 #[wasm_bindgen]
 pub fn renumber_table(song: &mut WasmSong, table: usize, to_table: usize) -> Result<bool, String> {
     if table >= Song::N_TABLES {
@@ -146,6 +151,29 @@ pub fn renumber_table(song: &mut WasmSong, table: usize, to_table: usize) -> Res
 
     let mut remapper = Remapper::default();
     remapper.table_mapping.remap_table(table as u8, to_table as u8);
+    remapper.renumber(&mut song.song);
+
+    Ok(true)
+}
+
+#[wasm_bindgen]
+pub fn renumber_eq(song: &mut WasmSong, eq: usize, to_eq: usize) -> Result<bool, String> {
+    if eq >= Song::N_INSTRUMENT_EQS {
+        return Err(format!("Error invalid source eq number {eq:02X}"));
+    }
+
+    if to_eq >= Song::N_INSTRUMENT_EQS {
+        return Err(format!("Error invalid source destination number {to_eq:02X}"));
+    }
+
+    /*
+    if ! song.song.eqs[to_eq].is_empty() {
+        return Err(format!("Destination instrument {to_instrument:02X} is not empty"));
+    } */
+
+    let mut remapper = Remapper::default();
+    remapper.eq_mapping.mapping[eq] = to_eq as u8;
+    remapper.eq_mapping.to_move.push(eq as u8);
     remapper.renumber(&mut song.song);
 
     Ok(true)
@@ -216,6 +244,11 @@ pub fn renumber_phrase(song: &mut WasmSong, phrase: usize, to_phrase: usize) -> 
     Ok(true)
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+/////  Moving stuff
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
 #[wasm_bindgen]
 pub fn copy_chain(
     from: &WasmSong,
@@ -242,10 +275,127 @@ pub fn copy_chain(
 }
 
 #[wasm_bindgen]
+pub fn copy_instrument(
+    from: &WasmSong,
+    to: &mut WasmSong,
+    instrument: usize,
+    to_instrument: usize) -> Result<String, String> {
+
+    if instrument >= Song::N_INSTRUMENTS {
+        return Err(format!("Invalid instrument source number"))
+    }
+
+    if to_instrument >= Song::N_INSTRUMENTS {
+        return Err(format!("Invalid instrument destination number"))
+    }
+
+    let from_song = &from.song;
+    let to_song = &mut to.song;
+
+    let mut mapping =
+        Remapper::create(from_song, to_song, iter::empty())?;
+
+    mapping.instrument_mapping.to_move.push(instrument as u8);
+    mapping.instrument_mapping.mapping[instrument] = to_instrument as u8;
+    mapping.apply(from_song, to_song);
+
+    Ok(mapping.print())
+}
+
+#[wasm_bindgen]
+pub fn copy_phrase(
+    from: &WasmSong,
+    to: &mut WasmSong,
+    phrase: usize,
+    to_phrase: usize) -> Result<String, String> {
+
+    if phrase >= Song::N_PHRASES {
+        return Err(format!("Invalid phrase source number"))
+    }
+
+    if to_phrase >= Song::N_PHRASES {
+        return Err(format!("Invalid phrase destination number"))
+    }
+
+    let from_song = &from.song;
+    let to_song = &mut to.song;
+
+    let mut mapping =
+        Remapper::create(from_song, to_song, iter::empty())?;
+
+    mapping.phrase_mapping.to_move.push(phrase as u8);
+    mapping.phrase_mapping.mapping[phrase] = to_phrase as u8;
+    mapping.apply(from_song, to_song);
+
+    Ok(mapping.print())
+}
+
+#[wasm_bindgen]
+pub fn copy_eq(
+    from: &WasmSong,
+    to: &mut WasmSong,
+    eq: usize,
+    to_eq: usize) -> Result<String, String> {
+
+    if eq >= Song::N_INSTRUMENT_EQS {
+        return Err(format!("Invalid phrase source number"))
+    }
+
+    if to_eq >= Song::N_INSTRUMENT_EQS {
+        return Err(format!("Invalid phrase destination number"))
+    }
+
+    let from_song = &from.song;
+    let to_song = &mut to.song;
+
+    let mut mapping =
+        Remapper::create(from_song, to_song, iter::empty())?;
+
+    mapping.eq_mapping.to_move.push(eq as u8);
+    mapping.eq_mapping.mapping[eq] = to_eq as u8;
+    mapping.apply(from_song, to_song);
+
+    Ok(mapping.print())
+}
+
+#[wasm_bindgen]
+pub fn copy_table(
+    from: &WasmSong,
+    to: &mut WasmSong,
+    table: usize,
+    to_table: usize) -> Result<String, String> {
+
+    if table >= Song::N_TABLES {
+        return Err(format!("Invalid table source number"))
+    }
+
+    if to_table >= Song::N_TABLES {
+        return Err(format!("Invalid table destination number"))
+    }
+
+    let from_song = &from.song;
+    let to_song = &mut to.song;
+
+    let mut mapping =
+        Remapper::create(from_song, to_song, iter::empty())?;
+
+    mapping.table_mapping.to_move.push(table as u8);
+    mapping.table_mapping.mapping[table] = to_table as u8;
+    mapping.apply(from_song, to_song);
+
+    Ok(mapping.print())
+}
+
+#[wasm_bindgen]
 pub fn instrument_name(song: &WasmSong, instr: u8) -> String {
     String::from(song.song.instruments[instr as usize].name().unwrap_or(&""))
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+/////  List elements
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
 #[wasm_bindgen]
 pub fn allocated_instrument_list(song: &WasmSong) -> Vec<usize> {
     song.song.instruments
@@ -296,6 +446,11 @@ pub fn allocated_table(song: &WasmSong) -> Vec<usize> {
         .collect()
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+/////  Parameter listing
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
 struct JsonGatherer {
     gather: js_sys::Array
 }
@@ -411,6 +566,7 @@ impl ParameterGatherer for JsonGatherer {
     
 }
 
+/// Instrument parameters description.
 #[wasm_bindgen]
 pub fn describe_instrument(song: &WasmSong, instrument: usize) -> Result<js_sys::Array, String> {
     if instrument >= Song::N_INSTRUMENTS {
@@ -423,6 +579,7 @@ pub fn describe_instrument(song: &WasmSong, instrument: usize) -> Result<js_sys:
     Ok(pg.into())
 }
 
+/// Eq parameter description.
 #[wasm_bindgen]
 pub fn describe_eq(song: &WasmSong, eq_idx: usize) -> Result<js_sys::Array, String> {
     if eq_idx >= Song::N_EQS {
@@ -435,6 +592,11 @@ pub fn describe_eq(song: &WasmSong, eq_idx: usize) -> Result<js_sys::Array, Stri
     Ok(pg.into())
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+/////  Eq rendering
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
 const LOG_BASE : f64 = 10.0;
 
 const MIN_EQ_PLOT_FREQUENCY : usize = 30;
@@ -453,6 +615,7 @@ fn frequencies(_mini: usize, maxi: usize, point_count: usize) -> Vec<f64> {
     frequencies
 }
 
+/// Retrieve an array of log scaled frequencies used in EQ plotting.
 #[wasm_bindgen]
 pub fn eq_frequencies() -> js_sys::Float64Array {
     frequencies(MIN_EQ_PLOT_FREQUENCY,
@@ -462,6 +625,7 @@ pub fn eq_frequencies() -> js_sys::Float64Array {
         .into()
 }
 
+/// Plot a an eq just plotting a specific mode.
 #[wasm_bindgen]
 pub fn plot_eq(song: &WasmSong, eq_idx: usize, mode: usize) -> Result<js_sys::Float64Array, String>{
     if eq_idx >= Song::N_EQS {
