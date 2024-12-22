@@ -48,9 +48,8 @@ function DrawEq(context: CanvasRenderingContext2D, ys : Float64Array, color: str
 
     const yy = ys[0] * 100;
     py = height - yy - 70;
-    context.fillRect(0, py, 2, 2);
-
     px = 0;
+
     for (let x = 1; x < ys.length; x++) {
       const y = ys[x] * 100;
       context.beginPath();
@@ -72,6 +71,7 @@ function DrawEqFrequencyBars(context: CanvasRenderingContext2D, freqs: Float64Ar
     let previous = 0.0;
     context.fillStyle = '#555';
     context.font = "monospace";
+
     for (let i = 0; i < freqs.length; i++) {
       const f = freqs[i];
       if (f >= target && previous < target) {
