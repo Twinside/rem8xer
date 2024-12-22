@@ -41,7 +41,7 @@ function DrawEq(context: CanvasRenderingContext2D, ys : Float64Array, color: str
 		const height = context.canvas.clientHeight;
     context.fillStyle = color;
     context.strokeStyle = color;
-    context.lineWidth = 2;
+    context.lineWidth = 1;
 
     let px = 0;
     let py = 0;
@@ -71,10 +71,12 @@ function DrawEqFrequencyBars(context: CanvasRenderingContext2D, freqs: Float64Ar
     let target = 10.0;
     let previous = 0.0;
     context.fillStyle = '#555';
+    context.font = "monospace";
     for (let i = 0; i < freqs.length; i++) {
       const f = freqs[i];
       if (f >= target && previous < target) {
         context.fillRect(i, 0, 1, height);
+        context.fillText(target.toString(10), i - 10, 8);
         target *= 10;
       }
 
@@ -174,10 +176,12 @@ export function EqViewer(props: { panel: SongPane, banner: Signal<string | undef
     <EqPlot song={song} eq={selected} banner={props.banner} eq_modes={Array.from(modes)} />
     <table>
         <thead>
-            <th></th>
-            <th>LOW</th>
-            <th>MID</th>
-            <th>HIGH</th>
+            <tr>
+              <th></th>
+              <th>LOW</th>
+              <th>MID</th>
+              <th>HIGH</th>
+            </tr>
         </thead>
         <tbody>
             {final}
