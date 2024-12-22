@@ -3,7 +3,7 @@ use std::f64::consts::PI;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use num_complex::Complex;
 
-use crate::{reader::*, web, ParameterGatherer, Version};
+use crate::{reader::*, web::{self, log}, ParameterGatherer, Version};
 
 #[repr(u8)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
@@ -27,6 +27,19 @@ const EQ_TYPE_STR : [&'static str; 6] =
         "HI.SHELF",
         "HI.CUT"
     ];
+
+#[repr(u8)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+#[derive(PartialEq, Copy, Clone, Default, Debug)]
+pub enum EqMode {
+    #[default]
+    Stereo = 0,
+    Left = 1,
+    Mid = 2,
+    Right = 3,
+    Side = 4,
+    Left2 = 5
+}
 
 const EQ_MODE_STR : [&'static str; 6] =
     [
@@ -53,8 +66,13 @@ impl EqModeType {
 
     pub fn eq_type_hex(&self) -> u8 { self.0 & 0x7 }
 
+    pub fn eq_mode(&self) -> EqMode {
+        EqMode::try_from(self.eq_mode_hex())
+            .unwrap_or(EqMode::Stereo)
+    }
+
     pub fn mode_str(&self) -> &'static str {
-        let index = self.eq_type() as usize;
+        let index = self.eq_mode_hex() as usize;
         EQ_MODE_STR.get(index).unwrap_or(&"")
     }
 
@@ -148,7 +166,7 @@ impl EqBand {
         let a = (10.0 as f64).powf(self.gain()/40.0);
         let q = 
             if self.mode.eq_type() == EqType::Bell {
-                (self.q as f64) / 100.0 * a
+                (self.q as f64) * a
             } else {
                 (self.q as f64) / 100.0
             };
@@ -301,14 +319,32 @@ pub struct Equ {
 }
 
 impl Equ {
-    pub fn accumulate(&self, freqs: &[f64]) -> Vec<f64> {
+    pub fn accumulate(&self, freqs: &[f64], mode: EqMode) -> Vec<f64> {
         let sample_rate = 44100;
-        let c0 =
-            self.low.coeffs(sample_rate).normalized().freq_response_coeff();
-        let c1 =
-            self.mid.coeffs(sample_rate).normalized().freq_response_coeff();
-        let c2 =
-            self.high.coeffs(sample_rate).normalized().freq_response_coeff();
+        let mut coeffs = vec![];
+
+        if self.low.mode.eq_mode() == mode {
+            let c0 = self.low.coeffs(sample_rate).normalized().freq_response_coeff();
+            coeffs.push(c0);
+        }
+
+        if self.mid.mode.eq_mode() == mode {
+            let c1 = self.mid.coeffs(sample_rate).normalized().freq_response_coeff();
+            coeffs.push(c1);
+        }
+
+        if self.high.mode.eq_mode() == mode {
+            let c2 = self.high.coeffs(sample_rate).normalized().freq_response_coeff();
+            coeffs.push(c2);
+        }
+
+        log(&format!("low:{:?}/{:?} mid:{:?}/{:?} high:{:?}/{:?}",
+            self.low.mode.eq_mode_hex(),
+            self.low.mode.eq_mode(),
+            self.mid.mode.eq_mode_hex(),
+            self.mid.mode.eq_mode(),
+            self.high.mode.eq_mode_hex(),
+            self.high.mode.eq_mode()));
 
         freqs
           .iter()
@@ -316,7 +352,13 @@ impl Equ {
               let mut p = ((PI * freq) / (sample_rate as f64)).sin();
               p = p * p;
          
-              (c0.response(p) * c1.response(p) * c2.response(p)).log(10.0)
+              let mut v = 1.0;
+
+              for c in &coeffs {
+                v *= c.response(p)
+              }
+
+              v.log10()
           }).collect()
     }
 

@@ -2,7 +2,7 @@ use std::iter;
 
 use wasm_bindgen::prelude::*;
 
-use crate::{reader::{Reader, Writer}, remapper::Remapper, song::{Song, SongSteps, V4_OFFSETS}, ParameterGatherer};
+use crate::{eq::EqMode, reader::{Reader, Writer}, remapper::Remapper, song::{Song, SongSteps, V4_OFFSETS}, ParameterGatherer};
 
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the
@@ -463,14 +463,20 @@ pub fn eq_frequencies() -> js_sys::Float64Array {
 }
 
 #[wasm_bindgen]
-pub fn plot_eq(song: &WasmSong, eq_idx: usize) -> Result<js_sys::Float64Array, String>{
+pub fn plot_eq(song: &WasmSong, eq_idx: usize, mode: usize) -> Result<js_sys::Float64Array, String>{
     if eq_idx >= Song::N_EQS {
         return Err(format!("Error invalid eq number {eq_idx:02X}"));
     }
 
+    let mode =
+        match EqMode::try_from(mode as u8) {
+            Err(_) => return Err(format!("Error invalid eq mode {mode:02X}")),
+            Ok(m) => m
+        };
+
     let frequencies =
         frequencies(MIN_EQ_PLOT_FREQUENCY, MAX_EQ_PLOT_FREQUENCY, EQ_PLOT_POINT_COUNT);
-    let gains : Vec<f64> = song.song.eqs[eq_idx].accumulate(&frequencies);
+    let gains : Vec<f64> = song.song.eqs[eq_idx].accumulate(&frequencies, mode);
 
     Ok(gains.as_slice().into())
 }

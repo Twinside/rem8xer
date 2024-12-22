@@ -6,7 +6,7 @@ import { JSX } from 'preact/jsx-runtime';
 import { Descriptor, NestDescriptor } from './descriptor';
 import { Signal } from '@preact/signals';
 
-function BandViewer(desc: NestDescriptor) : JSX.Element[] {
+function BandViewer(desc: NestDescriptor, onMode : (mode: number) => void) : JSX.Element[] {
     let gain = 0;
     let freq = 0;
     let q = 0;
@@ -18,7 +18,11 @@ function BandViewer(desc: NestDescriptor) : JSX.Element[] {
         if (d.name === "FREQ" && "f32" in d) freq = d.f32;
         if (d.name === "Q" && "hex" in d) q = d.hex;
         if (d.name === "TYPE" && "str" in d) type = d.str;
-        if (d.name === "MODE" && "str" in d) mode = d.str;
+        if (d.name === "MODE" && "str" in d) {
+          mode = d.str;
+
+          if ("hex" in d) { onMode(d.hex); }
+        }
     }
 
     return [
@@ -33,29 +37,35 @@ function BandViewer(desc: NestDescriptor) : JSX.Element[] {
 const NAMES : ReadonlyArray<string> =
     [ "GAIN", "FREQ", "Q", "TYPE", "MODE" ];
 
-function EqPlot(props: { song: W.WasmSong, eq: number, banner: Signal<string | undefined> }) {
-  let ys = new Float64Array(0);
-  try {
-    ys = W.plot_eq(props.song, props.eq);
-  } catch (err) {
-    props.banner.value = err;
-  }
+function DrawEq(context: CanvasRenderingContext2D, ys : Float64Array, color: string) {
+		const height = context.canvas.clientHeight;
+    context.fillStyle = color;
+    context.strokeStyle = color;
+    context.lineWidth = 2;
 
-  let freqs = W.eq_frequencies();
+    let px = 0;
+    let py = 0;
 
-  console.log(ys);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  useEffect(() => {
-		const current = canvasRef.current;
-		if (current === null) return;
+    const yy = ys[0] * 100;
+    py = height - yy - 70;
+    context.fillRect(0, py, 2, 2);
 
-        const context = current.getContext('2d');
-		if (context === null) return;
+    px = 0;
+    for (let x = 1; x < ys.length; x++) {
+      const y = ys[x] * 100;
+      context.beginPath();
+      context.moveTo(px, py);
+      px = x;
+      py = height - y - 70;
+      context.lineTo(x, py);
 
+      context.stroke();
+    }
+}
+
+function DrawEqFrequencyBars(context: CanvasRenderingContext2D, freqs: Float64Array) {
 		const width = context.canvas.clientWidth;
 		const height = context.canvas.clientHeight;
-
-    context.clearRect(0, 0, width, height);
 
     // draw bar at 10/100/1000/10000 Hz
     let target = 10.0;
@@ -73,12 +83,42 @@ function EqPlot(props: { song: W.WasmSong, eq: number, banner: Signal<string | u
 
     const db0 = 0;
     context.fillRect(0, height - db0 - 70, width, 1);
+}
 
-    context.fillStyle = '#ddd';
+const COLOR_MODE : readonly string[] =
+  [
+    '#ddd',
+    '#d0d',
+    '#dd0',
+    '#0dd',
+    '#0d0'
+  ];
 
-    for (let x = 0; x < ys.length; x++) {
-      const y = ys[x] * 100;
-      context.fillRect(x, height - y - 70, 2, 2);
+function EqPlot(props: { song: W.WasmSong, eq: number, banner: Signal<string | undefined>, eq_modes: number[] }) {
+  let ys = new Float64Array(0);
+  let freqs = W.eq_frequencies();
+
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+		const current = canvasRef.current;
+		if (current === null) return;
+
+    const context = current.getContext('2d');
+		if (context === null) return;
+
+		const width = context.canvas.clientWidth;
+		const height = context.canvas.clientHeight;
+
+    context.clearRect(0, 0, width, height);
+    DrawEqFrequencyBars(context, freqs);
+
+    for (const mode of props.eq_modes) {
+      try {
+        ys = W.plot_eq(props.song, props.eq, mode);
+      } catch (err) {
+        props.banner.value = err;
+      }
+      DrawEq(context, ys, COLOR_MODE[mode])
     }
   });
   return <canvas ref={canvasRef} width={300} height={150} />;
@@ -105,10 +145,18 @@ export function EqViewer(props: { panel: SongPane, banner: Signal<string | undef
   let mid : JSX.Element[] = [];
   let high : JSX.Element[] = [];
 
+  let modes : Set<number> = new Set();
+
   for (const nfo of info) {
-    if (nfo.name === "LOW" && "nest" in nfo) low = BandViewer(nfo);
-    if (nfo.name === "MID" && "nest" in nfo) mid = BandViewer(nfo);
-    if (nfo.name === "HIGH" && "nest" in nfo) high = BandViewer(nfo);
+    if (nfo.name === "LOW" && "nest" in nfo) {
+      low = BandViewer(nfo, m => modes = modes.add(m));
+    }
+    if (nfo.name === "MID" && "nest" in nfo) {
+      mid = BandViewer(nfo, m => modes = modes.add(m));
+    }
+    if (nfo.name === "HIGH" && "nest" in nfo) {
+      high = BandViewer(nfo, m => modes = modes.add(m));
+    }
   }
 
   const final = [];
@@ -123,7 +171,7 @@ export function EqViewer(props: { panel: SongPane, banner: Signal<string | undef
   }
 
   return <div class="instrparam">
-    <EqPlot song={song} eq={selected} banner={props.banner} />
+    <EqPlot song={song} eq={selected} banner={props.banner} eq_modes={Array.from(modes)} />
     <table>
         <thead>
             <th></th>
