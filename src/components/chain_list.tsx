@@ -26,7 +26,7 @@ export function ChainList(props: {
       props.edited_chain.value = {
         x: -1,
         y: -1,
-        base_chain: vix,
+        base_value: vix,
         current_value: vix
       };
 
@@ -36,7 +36,7 @@ export function ChainList(props: {
     const id_validate = (v : number) => {
       props.edited_chain.value = undefined;
       try {
-        W.renumber_chain(props.song, edited_chain.base_chain, v)
+        W.renumber_chain(props.song, edited_chain.base_value, v)
         props.bump.value = bump + 1;
       }
       catch (err) {
@@ -52,7 +52,7 @@ export function ChainList(props: {
     prevPhrase = vix;
 
     bucket.push(
-        edited_chain.base_chain === vix
+        edited_chain.base_value === vix
             ? <HexNumberEditor
                 onChange={id_change}
                 onValidate={id_validate}

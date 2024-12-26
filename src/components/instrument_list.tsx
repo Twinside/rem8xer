@@ -1,5 +1,5 @@
 import * as W from '../../m8-files/pkg/m8_files';
-import { EmptyInstrumentNameEdition, EmptyInstrumentNumberEidition, GlobalState, InstrumentNameEditor, InstrumentNumberEdition } from "../state";
+import { EmptyInstrumentNameEdition, EmptyNumberEdition, GlobalState, InstrumentNameEditor, NumberEdition } from "../state";
 import { Signal } from "@preact/signals";
 import { hexStr } from "./common";
 import { HexNumberEditor, NameEditor } from "./hexnumbereditor";
@@ -9,7 +9,7 @@ export function InstrumentList(props: {
   song: W.WasmSong,
   bump: Signal<number>,
   selected_instrument: Signal<number | undefined>,
-  edited_instrument: Signal<InstrumentNumberEdition | undefined>,
+  edited_instrument: Signal<NumberEdition | undefined>,
   edited_instrument_name: Signal<InstrumentNameEditor | undefined>,
 } ) {
   const instruments = W.allocated_instrument_list(props.song);
@@ -18,7 +18,7 @@ export function InstrumentList(props: {
   const current_edit_name = props.edited_instrument_name.value;
   const edited_name = current_edit_name  || EmptyInstrumentNameEdition;
   const current_edit = props.edited_instrument.value
-  const edited_instr = current_edit  || EmptyInstrumentNumberEidition;
+  const edited_instr = current_edit  || EmptyNumberEdition;
   const allow_new_edit = current_edit_name  === undefined && current_edit === undefined;
   const bump = props.bump.value;
 
@@ -29,7 +29,7 @@ export function InstrumentList(props: {
 
     const toggle_instr = () =>
       props.edited_instrument.value = {
-        base_instrument: vix,
+        base_value: vix,
         current_value: vix
       };
 
@@ -45,7 +45,7 @@ export function InstrumentList(props: {
     const id_validate = (v : number) => {
       props.edited_instrument.value = undefined;
       try {
-        W.renumber_instrument(props.song, edited_instr.base_instrument, v)
+        W.renumber_instrument(props.song, edited_instr.base_value, v)
         props.bump.value = bump + 1;
       }
       catch (err) {
@@ -71,7 +71,7 @@ export function InstrumentList(props: {
     elems.push(
       <div class="instr">
         {
-          edited_instr.base_instrument === vix
+          edited_instr.base_value === vix
             ? <HexNumberEditor
                 onChange={id_change}
                 onValidate={id_validate}

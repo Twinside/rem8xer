@@ -80,7 +80,7 @@ export function StepsRender(props: {
         const onValidate = (value: number) => {
           pane.edited_chain.value = undefined;
           try {
-            W.renumber_chain(pane.song.value, edition.base_chain, value);
+            W.renumber_chain(pane.song.value, edition.base_value, value);
           } catch (err) {
             state.message_banner.value = err.toString();
           }
@@ -106,7 +106,7 @@ export function StepsRender(props: {
                 onDragStart={evt => dragStart(evt, chain)}
                 onDragOver={evt => dragOver(evt)}
                 onDrop={evt => dragEnd(evt, line, col)}
-                onDblClick={() => pane.edited_chain.value = { x: col, y: line, current_value: chain, base_chain: chain }}
+                onDblClick={() => pane.edited_chain.value = { x: col, y: line, current_value: chain, base_value: chain }}
                 onClick={() => pane.selected_chain.value = chain}>{hexStr(chain)} </span>; 
 
         elems.push(elem);

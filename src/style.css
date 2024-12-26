@@ -255,3 +255,17 @@ button:focus-visible {
   width: calc(calc(var(--hex)) * 0.5px);
   height: 8px;
 }
+
+.summary-root {
+  display: inline-flex;
+  width: 95%;
+}
+
+.summary-title {
+  display: block;
+}
+
+.edit-controls {
+  display: block;
+  margin-left: auto;
+}

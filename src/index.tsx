@@ -1,7 +1,7 @@
-import { render } from "preact";
+import { JSX, render } from "preact";
 import "./style.css";
 import * as W from '../m8-files/pkg/m8_files';
-import { EmptyInstrumentNumberEidition, GlobalState, initState, SongPane } from "./state";
+import { GlobalState, initState, NumberEdition, PanelSide, SongPane } from "./state";
 import { InstrumentList } from "./components/instrument_list";
 import { ChainViewer } from "./components/chain_viewer";
 import { SongViewer } from "./components/song_viwer";
@@ -25,175 +25,169 @@ function MessageBanner() {
   return <div>{msg}</div>;
 }
 
-function EditControls(name: string, number: Signal<number>) {
+/** Renumbering and copy button dependent on current selected/edited. */
+function EditControls(props: {
+    name: string,
+    side: PanelSide,
+    selected: Signal<number | undefined>,
+    edited_number: Signal<NumberEdition | undefined>,
+    canRenumber?: (value : number) => boolean,
+    onRenumber: (base_value, value: number) => void,
+    onCopy?: (selected: number) => void}) : JSX.Element {
 
+  const { name, side, selected, edited_number } = props;
+  const selectedElement = selected.value;
+  const edited  = edited_number.value;
+  const renumbering =
+    (props.canRenumber !== undefined && !props.canRenumber(selectedElement)) ? undefined :
+    edited === undefined
+      ? <RenumberButton
+          name={name}
+          onClick={() => edited_number.value = { base_value: selectedElement, current_value: selectedElement } } />
+     
+      : <HexNumberEditor
+          value={edited.current_value}
+          onChange={v => edited_number.value = { ...edited, current_value: v }}
+          onCancel={() => edited_number.value = undefined}
+          onValidate={v =>{
+            edited_number.value = undefined;
+            props.onRenumber(edited.base_value, v);
+          }}/>;
+
+  const control = selectedElement === undefined
+    ? undefined
+    : <span class="edit-controls">
+        {renumbering}
+        {props.onCopy === undefined
+          ? undefined
+          : <CopyElement name={name} from_side={side} onClick={() => props.onCopy(selectedElement)} />}
+        
+      </span>;
+
+    return control
 }
+
+function HexRep(sig : Signal<number | undefined>) : JSX.Element {
+  var value = sig.value;
+  return value === undefined
+    ? <></>
+    : <span style="font-family: monospace;">{hexStr(value)}</span>;
+}
+
 function SongExplorer(props: { pane: SongPane, other_pane: SongPane, banner: Signal<string | undefined> }) {
   const song = props.pane.song.value;
   if (song === undefined) return <></>;
 
   const bump = props.pane.bumper.value;
-  const selectedPhrase = props.pane.selected_phrase.value;
-  const displayedPhrase = selectedPhrase === undefined ? '' : ' ' + hexStr(selectedPhrase);
-  const edited_phrase  = props.pane.edited_phrase.value;
-  const phrase_renumbering = edited_phrase === undefined
-    ? <RenumberButton name="Phrase" onClick={() => props.pane.edited_phrase.value = { base_phrase: selectedPhrase, current_value: selectedPhrase } } />
-    : <HexNumberEditor
-        value={edited_phrase.current_value}
-        onChange={v => props.pane.edited_phrase.value = { ...edited_phrase, current_value: v }}
-        onCancel={() => props.pane.edited_phrase.value = undefined}
-        onValidate={v =>{
-          props.pane.edited_phrase.value = undefined;
+  const phraseControl =
+        <EditControls
+          name="phrase"
+          side={props.pane.side}
+          selected={props.pane.selected_phrase}
+          edited_number={props.pane.edited_phrase}
+          onRenumber={(base_phrase, new_phrase) => {
+            try {
+              W.renumber_phrase(song, base_phrase, new_phrase)
+              props.pane.selected_phrase.value = new_phrase;
+              props.pane.bumper.value = bump + 1;
+            }
+            catch (err) {
+              state.message_banner.value = err.toString();
+            }
+          }}
+          onCopy={(phrase) => {
+            const other = props.other_pane.song.value
+            if (other === undefined) return;
+            W.copy_phrase(song, other, phrase, phrase);
+            props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
+          }} />
+
+  const chainControl = 
+    <EditControls
+      name="chain"
+      side={props.pane.side}
+      selected={props.pane.selected_chain}
+      edited_number={props.pane.edited_chain}
+      onRenumber={(base_chain, new_chain) => {
           try {
-            W.renumber_phrase(song, edited_phrase.base_phrase, v)
-            props.pane.selected_phrase.value = v;
+            W.renumber_chain(song, base_chain, new_chain)
+            props.pane.selected_chain.value = new_chain;
             props.pane.bumper.value = bump + 1;
           }
           catch (err) {
             state.message_banner.value = err.toString();
           }
-        }}/>;
+      }}/>;
 
-  const phraseControl = selectedPhrase === undefined
-    ? undefined
-    : <>
-        {phrase_renumbering}
-        <CopyElement name="Phrase" from_side={props.pane.side} onClick={() => {
+  const tableControl =
+    <EditControls
+        name="Table"
+        side={props.pane.side}
+        selected={props.pane.selected_table}
+        edited_number={props.pane.edited_table}
+        canRenumber={tbl => tbl > 0x7F}
+        onRenumber={(base_table, new_table) => {
+          try {
+            W.renumber_table(song, base_table, new_table)
+            props.pane.selected_table.value = new_table;
+            props.pane.bumper.value = bump + 1;
+          }
+          catch (err) {
+            state.message_banner.value = err.toString();
+          }
+        }}
+        onCopy={(tbl) => {
           const other = props.other_pane.song.value
           if (other === undefined) return;
-          W.copy_phrase(song, other, selectedPhrase, selectedPhrase);
+          W.copy_table(song, other, tbl, tbl);
           props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
-        }} />
-      </>;
+        }} />;
 
-  const selectedChain = props.pane.selected_chain.value;
-  const displayedChain = selectedChain === undefined ? '' : ' ' + hexStr(selectedChain);
-  const edited_chain  = props.pane.edited_chain.value;
-  const chain_renumbering = edited_chain === undefined
-    ? <RenumberButton name="Chain" onClick={() =>
-        props.pane.edited_chain.value = { base_chain: selectedChain, current_value: selectedChain, x: -1, y: -1 } } />
-    : <HexNumberEditor
-        value={edited_chain.current_value}
-        onChange={v => props.pane.edited_chain.value = { ...edited_chain, current_value: v }}
-        onCancel={() => props.pane.edited_chain.value = undefined}
-        onValidate={v =>{
-          props.pane.edited_chain.value = undefined;
-          try {
-            W.renumber_chain(song, edited_chain.base_chain, v)
-            props.pane.selected_chain.value = v;
-            props.pane.bumper.value = bump + 1;
-          }
-          catch (err) {
-            state.message_banner.value = err.toString();
-          }
-        }}/>;
-
-  const chainControl = selectedChain === undefined
-    ? undefined
-    : chain_renumbering;
-
-  const selectedTable = props.pane.selected_table.value;
-  const displayedTable = selectedTable === undefined ? '' : ' ' + hexStr(selectedTable);
-  const edited_table  = props.pane.edited_table.value;
-  const table_renumbering = edited_table === undefined
-    ? <RenumberButton name="Table" onClick={() => props.pane.edited_table.value = { base_phrase: selectedPhrase, current_value: selectedPhrase } } />
-    : <HexNumberEditor
-        value={edited_table.current_value}
-        onChange={v => props.pane.edited_table.value = { ...edited_table, current_value: v }}
-        onCancel={() => props.pane.edited_table.value = undefined}
-        onValidate={v =>{
-          props.pane.edited_table.value = undefined;
-          try {
-            W.renumber_table(song, edited_table.base_phrase, v)
-            props.pane.selected_table.value = v;
-            props.pane.bumper.value = bump + 1;
-          }
-          catch (err) {
-            state.message_banner.value = err.toString();
-          }
-        }}/>;
-
-  const tableControl = selectedTable === undefined
-    ? undefined
-    : <>
-        {table_renumbering}
-        <CopyElement name="Table" from_side={props.pane.side} onClick={() => {
+  const instrumentControl =
+    <EditControls
+      name="Instrument"
+      side={props.pane.side}
+      selected={props.pane.selected_instrument}
+      edited_number={props.pane.edited_instrument}
+      onRenumber={(base_instrument, new_instrument) => {
+        try {
+          W.renumber_instrument(song, base_instrument, new_instrument)
+          props.pane.selected_instrument.value = new_instrument;
+          props.pane.bumper.value = bump + 1;
+        }
+        catch (err) {
+          state.message_banner.value = err.toString();
+        }
+      }}
+      onCopy={(instr) => {
           const other = props.other_pane.song.value
           if (other === undefined) return;
-          W.copy_table(song, other, selectedTable, selectedTable);
+          W.copy_instrument(song, other, instr, instr);
           props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
-        }} />
-      </>;
+      }} />
 
-  const selectedInstrument = props.pane.selected_instrument.value;
-  const edited_instrument = props.pane.edited_instrument.value;
-  const current_edit = props.pane.edited_instrument.value
-  const edited_instr = current_edit  || EmptyInstrumentNumberEidition;
-  const displayedInstrument = selectedInstrument === undefined ? '' : ' ' + hexStr(selectedInstrument );
-  const instrumentRenumbering = edited_instrument === undefined
-    ? <RenumberButton
-        name="Instrument"
-        onClick={() => props.pane.edited_instrument.value = { base_instrument: selectedInstrument, current_value: selectedInstrument }} />
-    : <HexNumberEditor
-        value={edited_instr.current_value}
-        onChange={v => props.pane.edited_instrument.value = { ...edited_instr, current_value: v }}
-        onCancel={() => props.pane.edited_instrument.value = undefined}
-        onValidate={v =>{
-          props.pane.edited_instrument.value = undefined;
+  const eqControls =
+    <EditControls
+      name="Eq"
+      side={props.pane.side}
+      selected={props.pane.selected_eq}
+      edited_number={props.pane.edited_eq}
+      onRenumber={(base_eq, new_eq) => {
           try {
-            W.renumber_instrument(song, edited_instr.base_instrument, v)
-            props.pane.selected_instrument.value = v;
+            W.renumber_eq(song, base_eq, new_eq)
+            props.pane.selected_eq.value = new_eq;
             props.pane.bumper.value = bump + 1;
           }
           catch (err) {
             state.message_banner.value = err.toString();
           }
-        }}/>;
-
-  const instrumentControl = selectedInstrument === undefined
-    ? undefined
-    : <>
-        {instrumentRenumbering}
-        <CopyElement name="Instrument" from_side={props.pane.side} onClick={() => {
+      }}
+      onCopy={(eq) => {
           const other = props.other_pane.song.value
           if (other === undefined) return;
-          W.copy_instrument(song, other, selectedInstrument, selectedInstrument);
+          W.copy_eq(song, other, eq, eq);
           props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
-        }} />
-      </>;
-
-  const selectedEq = props.pane.selected_eq.value;
-  const displayedEq = selectedEq === undefined ? '' : ' ' + hexStr(selectedEq);
-  const edited_eq  = props.pane.edited_eq.value;
-  const eqRenumbering = edited_eq === undefined
-    ? <RenumberButton name="EQ" onClick={() => props.pane.edited_eq.value = { base_eq: selectedEq, current_value: selectedEq } } />
-    : <HexNumberEditor
-        value={edited_instr.current_value}
-        onChange={v => props.pane.edited_eq.value = { ...edited_eq, current_value: v }}
-        onCancel={() => props.pane.edited_eq.value = undefined}
-        onValidate={v =>{
-          props.pane.edited_eq.value = undefined;
-          try {
-            W.renumber_eq(song, edited_eq.base_eq, v)
-            props.pane.selected_eq.value = v;
-            props.pane.bumper.value = bump + 1;
-          }
-          catch (err) {
-            state.message_banner.value = err.toString();
-          }
-        }}/>;
-
-  const eqControls = selectedEq === undefined
-    ? undefined
-    : <>
-        {eqRenumbering}
-        <CopyElement name="EQ" from_side={props.pane.side} onClick={() => {
-          const other = props.other_pane.song.value
-          if (other === undefined) return;
-          W.copy_eq(song, other, selectedEq, selectedEq);
-          props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
-        }} />
-      </>;
+      }}/>;
 
   return <div class="rootcolumn">
     <details class="songsection">
@@ -237,23 +231,23 @@ function SongExplorer(props: { pane: SongPane, other_pane: SongPane, banner: Sig
         selected_eq={props.pane.selected_eq} />
     </details>
     <details class="songsection">
-      <summary>Chain{displayedChain} {chainControl}</summary>
+      <summary><div class="summary-root"><span class="summary-title">Chain {HexRep(props.pane.selected_chain)}</span> {chainControl}</div></summary>
       <ChainViewer panel={props.pane} />
     </details>
     <details class="songsection">
-      <summary>Phrase{displayedPhrase} {phraseControl}</summary>
+      <summary><div class="summary-root"><span class="summary-title">Phrase {HexRep(props.pane.selected_phrase)}</span> {phraseControl}</div></summary>
       <PhraseViewer panel={props.pane} />
     </details>
     <details class="songsection">
-      <summary>Instrument{displayedInstrument} {instrumentControl}</summary>
+      <summary><div class="summary-root"><span class="summary-title">Instrument {HexRep(props.pane.selected_instrument)}</span> {instrumentControl}</div></summary>
       <InstrumentViewer panel={props.pane} />
     </details>
     <details class="songsection">
-      <summary>Table{displayedTable} {tableControl}</summary>
+      <summary><div class="summary-root"><span class="summary-title">Table {HexRep(props.pane.selected_table)}</span> {tableControl}</div></summary>
       <TableViewer panel={props.pane} />
     </details>
     <details class="songsection">
-      <summary>Eq{displayedEq} {eqControls}</summary>
+      <summary><div class="summary-root"><span class="summary-title">Eq {HexRep(props.pane.selected_eq)}</span> {eqControls}</div></summary>
       <EqViewer panel={props.pane} banner={props.banner} />
     </details>
   </div>;

@@ -39,46 +39,24 @@ export function ExtendSelection(cs : ChainSelection, x: number, y: number) : Cha
     }
 }
 
-export type ChainNumberEdition =
+export type NumberEdition =
     {
-        x: number,
-        y: number,
-        base_chain: number,
+        base_value: number,
         current_value: number
     }
+
+export const EmptyNumberEdition : NumberEdition =
+    {
+        base_value: -1,
+        current_value: -1
+    }
+
+export type ChainNumberEdition = NumberEdition & Position
 
 export const EmptyChainEdition : ChainNumberEdition =
     {
-        x: -1, y: -1, base_chain: -1, current_value: -1
+        x: -1, y: -1, base_value: -1, current_value: -1
     };
-
-export type PhraseNumberEdition =
-    {
-        // chain_source: number,
-        // chain_offset: number,
-        base_phrase: number,
-        current_value: number
-    }
-
-export const EmptyPhraseEdition : PhraseNumberEdition =
-    {
-        // chain_source: -1,
-        // chain_offset: -1,
-        base_phrase: -1,
-        current_value: -1
-    }
-
-export type EqNumberEdition =
-    {
-        base_eq: number,
-        current_value: number
-    }
-
-export const EmptyEqEdition : EqNumberEdition =
-    {
-        base_eq: -1,
-        current_value: -1
-    }
 
 export type InstrumentNameEditor =
     {
@@ -88,15 +66,6 @@ export type InstrumentNameEditor =
 
 export const EmptyInstrumentNameEdition =
     { instrument_id: -1, name: '' }
-
-export type InstrumentNumberEdition =
-    {
-        base_instrument: number,
-        current_value: number
-    }
-
-export const EmptyInstrumentNumberEidition : InstrumentNumberEdition =
-    { base_instrument: -1, current_value: -1 }
 
 export type PanelSide = "left" | "right"
 
@@ -135,16 +104,16 @@ export type SongPane =
         edited_chain: Signal<ChainNumberEdition | undefined>,
 
         /** Currently edited phrase number */
-        edited_phrase: Signal<PhraseNumberEdition | undefined>,
+        edited_phrase: Signal<NumberEdition | undefined>,
 
         /** Currently edited table number */
-        edited_table: Signal<PhraseNumberEdition | undefined>,
+        edited_table: Signal<NumberEdition | undefined>,
 
         /** Currently edited phrase number */
-        edited_instrument: Signal<InstrumentNumberEdition | undefined>,
+        edited_instrument: Signal<NumberEdition | undefined>,
 
         /** Currently edited Eq number */
-        edited_eq: Signal<EqNumberEdition | undefined>,
+        edited_eq: Signal<NumberEdition | undefined>,
 
         /** Instrument currently being renamed */
         edited_instrument_name: Signal<InstrumentNameEditor | undefined>,
