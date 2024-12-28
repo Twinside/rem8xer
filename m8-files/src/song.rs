@@ -354,6 +354,8 @@ pub struct Chain {
 }
 
 impl Chain {
+    pub const V4_SIZE : usize = ChainStep::V4_SIZE * 16;
+
     pub fn is_empty(&self) -> bool {
         self.steps.iter().all(|s| s.is_empty())
     }
@@ -388,7 +390,7 @@ impl Chain {
         }
     }
 
-    fn from_reader(reader: &mut Reader) -> M8Result<Self> {
+    pub fn from_reader(reader: &mut Reader) -> M8Result<Self> {
         Ok(Self { steps: arr![ChainStep::from_reader(reader)?; 16] })
     }
 }
@@ -417,6 +419,8 @@ impl Default for ChainStep {
 }
 
 impl ChainStep {
+    pub const V4_SIZE : usize = 2;
+
     pub fn is_empty(self) -> bool {
         self.phrase == 0xFF
     }
@@ -462,6 +466,8 @@ pub struct Phrase {
 }
 
 impl Phrase {
+    pub const V4_SIZE : usize = 16 * Step::V4_SIZE;
+
     pub fn is_empty(&self) -> bool {
         self.steps.iter().all(|s| s.is_empty())
     }
@@ -511,7 +517,7 @@ impl Phrase {
         }
     }
 
-    fn from_reader(reader: &mut Reader,  version: Version) -> M8Result<Self> {
+    pub fn from_reader(reader: &mut Reader,  version: Version) -> M8Result<Self> {
         Ok(Self {
             steps: arr![Step::from_reader(reader)?; 16],
             version,
@@ -548,6 +554,8 @@ pub struct Step {
 
 
 impl Step {
+    pub const V4_SIZE : usize = 3 + 3 * FX::V4_SIZE;
+
     pub fn print(&self, row: u8, fx_cmds: FxCommands, cmd_pack: CommandPack ) -> String {
         let velocity = if self.velocity == 255 {
             format!("--")
@@ -682,6 +690,8 @@ pub struct Table {
     version: Version,
 }
 impl Table {
+    pub const V4_SIZE : usize = 16 * TableStep::V4_SIZE;
+
     pub fn is_empty(&self) -> bool {
         self.steps.iter().all(|s| s.is_empty())
     }
@@ -714,7 +724,7 @@ impl Table {
         }
     }
 
-    fn from_reader(reader: &mut Reader, version: Version) -> M8Result<Self> {
+    pub fn from_reader(reader: &mut Reader, version: Version) -> M8Result<Self> {
         Ok(Self { steps: arr![TableStep::from_reader(reader)?; 16], version })
     }
 }
@@ -758,6 +768,8 @@ impl Default for TableStep {
 }
 
 impl TableStep {
+    pub const V4_SIZE : usize = 2 + 3 * FX::V4_SIZE;
+
     pub fn is_empty(&self) -> bool {
         self.transpose == 0 &&
             self.velocity == 0xFF &&

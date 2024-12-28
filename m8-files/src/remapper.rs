@@ -1,7 +1,24 @@
 use arr_macro::arr;
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 
 use crate::{song::Song, Instrument};
 
+#[repr(u8)]
+#[allow(non_camel_case_types)]
+#[derive(IntoPrimitive, TryFromPrimitive)]
+#[derive(PartialEq, Copy, Clone, Default, Debug)]
+pub enum MoveKind {
+  #[default]
+  EQ,
+  INS,
+  PHR,
+  CHN,
+  TBL
+}
+
+pub trait RemapperDescriptorBuilder {
+    fn moved(&mut self, kind: MoveKind, from: usize, to: usize);
+}
 
 fn make_mapping<const C : usize>(offset: u8) -> [u8; C] {
     let mut arr = [0 as u8; C];
@@ -23,6 +40,13 @@ pub struct EqMapping {
 }
 
 impl EqMapping {
+    pub fn describe<T : RemapperDescriptorBuilder>(&self, builder: &mut T) {
+        for ix in &self.to_move {
+            let ixu = *ix as usize;
+            builder.moved(MoveKind::EQ, ixu, self.mapping[ixu] as usize)
+        }
+    }
+
     pub fn print(&self) -> String {
         let mut acc = String::new();
 
@@ -53,6 +77,13 @@ pub struct InstrumentMapping {
 }
 
 impl InstrumentMapping {
+    pub fn describe<T : RemapperDescriptorBuilder>(&self, builder: &mut T) {
+        for ix in &self.to_move {
+            let ixu = *ix as usize;
+            builder.moved(MoveKind::INS, ixu, self.mapping[ixu] as usize)
+        }
+    }
+
     pub fn print(&self) -> String {
         let mut acc = String::new();
 
@@ -82,6 +113,13 @@ pub struct TableMapping {
 impl TableMapping {
     const EXTRA_TABLES : usize = Song::N_TABLES - Song::N_INSTRUMENTS;
 
+    pub fn describe<T : RemapperDescriptorBuilder>(&self, builder: &mut T) {
+        for ix in &self.to_move {
+            let ixu = *ix as usize;
+            builder.moved(MoveKind::TBL, ixu, self.mapping[ixu] as usize)
+        }
+    }
+
     pub fn remap_table(&mut self, from: u8, to: u8) {
         self.mapping[from as usize - Song::N_INSTRUMENTS] = to;
         self.to_move.push(from);
@@ -105,6 +143,13 @@ pub struct PhraseMapping {
 }
 
 impl PhraseMapping {
+    pub fn describe<T : RemapperDescriptorBuilder>(&self, builder: &mut T) {
+        for ix in &self.to_move {
+            let ixu = *ix as usize;
+            builder.moved(MoveKind::PHR, ixu, self.mapping[ixu] as usize)
+        }
+    }
+
     pub fn print(&self) -> String {
         let mut acc = String::new();
 
@@ -129,6 +174,13 @@ pub struct ChainMapping {
 }
 
 impl ChainMapping {
+    pub fn describe<T : RemapperDescriptorBuilder>(&self, builder: &mut T) {
+        for ix in &self.to_move {
+            let ixu = *ix as usize;
+            builder.moved(MoveKind::CHN, ixu, self.mapping[ixu] as usize)
+        }
+    }
+
     pub fn print(&self) -> String {
         let mut acc = String::new();
 
@@ -256,6 +308,14 @@ impl Default for Remapper {
 }
 
 impl Remapper {
+    pub fn describe<T : RemapperDescriptorBuilder>(&self, builder: &mut T) {
+        self.eq_mapping.describe(builder);
+        self.instrument_mapping.describe(builder);
+        self.table_mapping.describe(builder);
+        self.phrase_mapping.describe(builder);
+        self.chain_mapping.describe(builder);
+    }
+
     pub fn out_chain(&self, chain_id: u8) -> u8{
         self.chain_mapping.mapping[chain_id as usize]
     }

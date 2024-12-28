@@ -164,6 +164,8 @@ pub const INSTRUMENT_MEMORY_SIZE : usize = 215;
 // const MOD_OFFSET : usize = 0x3B;
 
 impl Instrument {
+    pub const V4_SIZE : usize = INSTRUMENT_MEMORY_SIZE;
+
     pub fn is_empty(&self) -> bool {
         match self {
             Instrument::None => true,

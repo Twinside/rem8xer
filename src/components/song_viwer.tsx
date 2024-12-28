@@ -4,14 +4,15 @@ import { downloadBlob } from "../utils";
 import emptyUrl from "../V4EMPTY.m8s";
 import revUrl from "../CMDMAPPING.m8s";
 import { loadDroppedSong, loadUrl } from "../fileio";
-import { SongSide } from "./common";
 import { StepsRender } from "./steps_render";
 import { useContext } from 'preact/hooks';
+import { UndoRedoer } from './edit_log';
 
-export function SongViewer(props: { side: SongSide, panel: SongPane }) {
+export function SongViewer(props: { panel: SongPane, undoRedo: UndoRedoer }) {
   const state = useContext(GlobalState);
 
   const panel = props.panel;
+  const side = panel.side;
   const filename =  panel.loaded_name.value;
   const song = panel.song.value;
   const bump = panel.bumper.value;
@@ -37,10 +38,9 @@ export function SongViewer(props: { side: SongSide, panel: SongPane }) {
     </div>;
   }
 
+
   const steps =
-    <StepsRender side={props.side}
-                 steps={W.get_song_steps(song)}
-                 pane={props.panel} />;
+    <StepsRender steps={W.get_song_steps(song)} pane={props.panel} undoRedo={props.undoRedo} />;
 
   const save = () => {
     try {

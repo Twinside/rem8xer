@@ -1,7 +1,6 @@
 import { useContext, useEffect, useRef } from 'preact/hooks';
 import * as W from '../../m8-files/pkg/m8_files';
 import { GlobalState, SongPane } from "../state";
-import { hexStr } from './common';
 import { JSX } from 'preact/jsx-runtime';
 import { Descriptor, NestDescriptor } from './descriptor';
 import { Signal } from '@preact/signals';

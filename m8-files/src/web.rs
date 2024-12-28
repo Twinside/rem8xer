@@ -1,8 +1,9 @@
 use std::iter;
 
+use js_sys::Uint8Array;
 use wasm_bindgen::prelude::*;
 
-use crate::{eq::EqMode, reader::{Reader, Writer}, remapper::Remapper, song::{Song, SongSteps, V4_OFFSETS}, ParameterGatherer};
+use crate::{eq::{EqMode, Equ}, reader::{Reader, Writer}, remapper::{Remapper, RemapperDescriptorBuilder}, song::{Chain, Phrase, Song, SongSteps, Table, V4_OFFSETS}, Instrument, ParameterGatherer, Version};
 
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the
@@ -244,21 +245,48 @@ pub fn renumber_phrase(song: &mut WasmSong, phrase: usize, to_phrase: usize) -> 
     Ok(true)
 }
 
+pub struct WasmRemapper {
+    pub remapper : Remapper
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
 /////  Moving stuff
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
 #[wasm_bindgen]
-pub fn copy_chain(
+pub fn dump_chain(from: &WasmSong, chain: usize) -> Result<Uint8Array, String> {
+    if chain >= Song::N_CHAINS {
+        return Err(format!("Invalid chain source number"))
+    }
+
+    let mut w = Writer::new(vec![0; Chain::V4_SIZE]);
+    from.song.chains[chain].write(&mut w);
+    let fnl: &[u8] = &w.finish();
+    Ok(Uint8Array::from(fnl))
+}
+
+#[wasm_bindgen]
+pub fn blast_chain(from: &mut WasmSong, chain: usize, arr: Uint8Array) -> Result<bool, String> {
+    if chain >= Song::N_CHAINS {
+        return Err(format!("Invalid chain source number"))
+    }
+
+    let mut reader = Reader::new(arr.to_vec());
+    match Chain::from_reader(&mut reader) {
+      Err(_) => Err(format!("Invalid chain parsing")),
+      Ok(chn) => {
+        from.song.chains[chain] = chn;
+        Ok(true)
+      }
+    }
+}
+
+#[wasm_bindgen]
+pub fn remap_chain(
     from: &WasmSong,
     to: &mut WasmSong,
-    chain: usize,
-    x: usize,
-    y: usize) -> Result<String, String> {
-
-    if x >= SongSteps::TRACK_COUNT { return Err(format!("Invalid track number {x}")) }
-    if y >= SongSteps::ROW_COUNT { return Err(format!("Invalid row number {y}")) }
+    chain: usize) -> Result<*mut WasmRemapper, String> {
 
     let from_song = &from.song;
     let to_song = &mut to.song;
@@ -266,12 +294,46 @@ pub fn copy_chain(
     let mapping =
         Remapper::create(from_song, to_song, iter::once(&(chain as u8)))?;
 
+    let box_out = Box::new(WasmRemapper { remapper: mapping });
+    Ok(Box::into_raw(box_out))
+}
+
+#[wasm_bindgen]
+pub fn describe_mapping(remapper: *const WasmRemapper) -> js_sys::Array {
+    let mut builder = JsonGatherer::new();
+    unsafe {
+        (*remapper).remapper.describe(&mut builder);
+    }
+
+    builder.gather
+}
+
+#[wasm_bindgen]
+pub unsafe fn remap_chain_apply(
+    from: &WasmSong,
+    to: &mut WasmSong,
+    raw_mapping: *mut WasmRemapper,
+    chain: usize,
+    x: usize,
+    y: usize) -> Result<u8, String> {
+
+    if x >= SongSteps::TRACK_COUNT { return Err(format!("Invalid track number {x}")) }
+    if y >= SongSteps::ROW_COUNT { return Err(format!("Invalid row number {y}")) }
+
+    let from_song = &from.song;
+    let to_song = &mut to.song;
+
+    let mapping = Box::from_raw(raw_mapping);
+    let mapping = mapping.remapper;
+
     mapping.apply(from_song, to_song);
     let final_chain = mapping.out_chain(chain as u8);
 
-    to_song.song.steps[x + y * SongSteps::TRACK_COUNT] = final_chain;
+    let step_ix = x + y * SongSteps::TRACK_COUNT;
+    let returned = to_song.song.steps[step_ix];
+    to_song.song.steps[step_ix] = final_chain;
 
-    Ok(mapping.print())
+    Ok(returned)
 }
 
 #[wasm_bindgen]
@@ -300,6 +362,64 @@ pub fn copy_instrument(
     mapping.apply(from_song, to_song);
 
     Ok(mapping.print())
+}
+
+#[wasm_bindgen]
+pub fn dump_instrument(from: &WasmSong, instrument: usize) -> Result<Uint8Array, String> {
+    if instrument >= Song::N_INSTRUMENTS {
+        return Err(format!("Invalid instrument source number"))
+    }
+
+    let mut w = Writer::new(vec![0; Instrument::V4_SIZE]);
+    from.song.instruments[instrument].write(&mut w);
+    let fnl: &[u8] = &w.finish();
+    Ok(Uint8Array::from(fnl))
+}
+
+#[wasm_bindgen]
+pub fn blast_instrument(from: &mut WasmSong, instrument: usize, arr: Uint8Array) -> Result<bool, String> {
+    if instrument >= Song::N_INSTRUMENTS {
+        return Err(format!("Invalid instrument source number"))
+    }
+
+    let mut reader = Reader::new(arr.to_vec());
+
+    match Instrument::from_reader(&mut reader, instrument as u8, Version::default()) {
+        Err(_) => Err(format!("Invalid instrument parsing")),
+        Ok(instr) => {
+            from.song.instruments[instrument] = instr;
+            Ok(true)
+        }
+    }
+}
+
+
+#[wasm_bindgen]
+pub fn dump_phrase(from: &WasmSong, phrase: usize) -> Result<js_sys::Uint8Array, String> {
+    if phrase >= Song::N_PHRASES {
+        return Err(format!("Invalid phrase source number"))
+    }
+
+    let mut w = Writer::new(vec![0; Phrase::V4_SIZE]);
+    from.song.phrases[phrase].write(&mut w);
+    let fnl: &[u8] = &w.finish();
+    Ok(Uint8Array::from(fnl))
+}
+
+#[wasm_bindgen]
+pub fn blast_phrase(from: &mut WasmSong, phrase : usize, arr: Uint8Array) -> Result<bool, String> {
+    if phrase >= Song::N_PHRASES {
+        return Err(format!("Invalid phrase source number"))
+    }
+
+    let mut reader = Reader::new(arr.to_vec());
+    match Phrase::from_reader(&mut reader, Version::default()) {
+        Err(_) => Err(format!("Error while parsing phrase")),
+        Ok(phr) => {
+            from.song.phrases[phrase] = phr;
+            Ok(true)
+        }
+    }
 }
 
 #[wasm_bindgen]
@@ -357,6 +477,59 @@ pub fn copy_eq(
 
     Ok(mapping.print())
 }
+
+#[wasm_bindgen]
+pub fn dump_eq(from: &WasmSong, eq: usize) -> Result<Uint8Array, String> {
+    if eq >= Song::N_EQS {
+        return Err(format!("Invalid eq source number"))
+    }
+
+    let mut w = Writer::new(vec![0; Equ::V4_SIZE]);
+    from.song.eqs[eq].write(&mut w);
+    let fnl: &[u8] = &w.finish();
+    Ok(Uint8Array::from(fnl))
+}
+
+#[wasm_bindgen]
+pub fn blast_eq(from: &mut WasmSong, eq: usize, arr: Uint8Array) -> Result<bool, String> {
+    if eq >= Song::N_EQS {
+        return Err(format!("Invalid eq source number"))
+    }
+
+    let mut reader = Reader::new(arr.to_vec());
+    let equ = Equ::from_reader(&mut reader);
+    from.song.eqs[eq] = equ;
+    Ok(true)
+}
+
+#[wasm_bindgen]
+pub fn dump_table(from: &WasmSong, table: usize) -> Result<Uint8Array, String> {
+    if table >= Song::N_TABLES {
+        return Err(format!("Invalid table source number"))
+    }
+
+    let mut w = Writer::new(vec![0; Table::V4_SIZE]);
+    from.song.tables[table].write(&mut w);
+    let fnl: &[u8] = &w.finish();
+    Ok(Uint8Array::from(fnl))
+}
+
+#[wasm_bindgen]
+pub fn blast_table(from: &mut WasmSong, table:  usize, arr: Uint8Array) -> Result<bool, String> {
+    if table >= Song::N_TABLES {
+        return Err(format!("Invalid table source number"))
+    }
+
+    let mut reader = Reader::new(arr.to_vec());
+    match Table::from_reader(&mut reader, Version::default()) {
+        Err(_) => Err(format!("Error while parsing table")),
+        Ok(tbl) => {
+            from.song.tables[table] = tbl;
+            Ok(true)
+        }
+    }
+}
+
 
 #[wasm_bindgen]
 pub fn copy_table(
@@ -463,6 +636,28 @@ impl JsonGatherer {
 
 impl From<JsonGatherer> for js_sys::Array {
     fn from(v: JsonGatherer) -> Self { v.gather }
+}
+
+impl RemapperDescriptorBuilder for JsonGatherer {
+    fn moved(&mut self, kind: crate::remapper::MoveKind, from: usize, to: usize) {
+        let obj = js_sys::Object::new();
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"kind".into(), 
+            &JsValue::from_str(&format!("{:?}", kind)));
+
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"from".into(), 
+            &JsValue::from_f64(from as f64));
+
+        let _ = js_sys::Reflect::set(
+            &obj,
+            &"to".into(), 
+            &JsValue::from_f64(to as f64));
+
+        self.gather.push(&obj);
+    }
 }
 
 impl ParameterGatherer for JsonGatherer {

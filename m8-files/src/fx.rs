@@ -239,6 +239,8 @@ const COMMANDS_V4 : [&'static str; concat_arrays_size!(SEQ_COMMAND_V3, FX_MIXER_
     concat_arrays!(SEQ_COMMAND_V3, FX_MIXER_COMMAND_V4);
 
 impl FX {
+    pub const V4_SIZE : usize = 2;
+
     pub(crate) fn from_reader(reader: &mut Reader) -> M8Result<Self> {
         Ok(Self {
             command: reader.read(),

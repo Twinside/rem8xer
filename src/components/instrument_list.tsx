@@ -1,13 +1,16 @@
 import * as W from '../../m8-files/pkg/m8_files';
-import { EmptyInstrumentNameEdition, EmptyNumberEdition, GlobalState, InstrumentNameEditor, NumberEdition } from "../state";
+import { EmptyInstrumentNameEdition, EmptyNumberEdition, GlobalState, InstrumentNameEditor, NumberEdition, PanelSide } from "../state";
 import { Signal } from "@preact/signals";
 import { hexStr } from "./common";
 import { HexNumberEditor, NameEditor } from "./hexnumbereditor";
 import { useContext } from 'preact/hooks';
+import { UndoRedoer } from './edit_log';
 
 export function InstrumentList(props: {
   song: W.WasmSong,
   bump: Signal<number>,
+  side: PanelSide,
+  undoRedo: UndoRedoer,
   selected_instrument: Signal<number | undefined>,
   edited_instrument: Signal<NumberEdition | undefined>,
   edited_instrument_name: Signal<InstrumentNameEditor | undefined>,
@@ -44,13 +47,7 @@ export function InstrumentList(props: {
 
     const id_validate = (v : number) => {
       props.edited_instrument.value = undefined;
-      try {
-        W.renumber_instrument(props.song, edited_instr.base_value, v)
-        props.bump.value = bump + 1;
-      }
-      catch (err) {
-        state.message_banner.value = err.toString();
-      }
+      props.undoRedo.renumberInstrument(props.side, edited_instr.base_value, v)
     };
 
     const name_change = (name: string) => {
@@ -59,13 +56,7 @@ export function InstrumentList(props: {
 
     const name_validate = (name : string) => {
         props.edited_instrument_name.value = undefined;
-        try {
-            W.rename_instrument(props.song, edited_name.instrument_id, name);
-            props.bump.value = bump + 1;
-        }
-        catch (err) {
-            state.message_banner.value = err.toString();
-        }
+        props.undoRedo.renameInstrument(props.side, edited_name.instrument_id, name);
     }
 
     elems.push(

@@ -15,6 +15,7 @@ import { EqList } from "./components/eq_list";
 import { EqViewer } from "./components/eq_viewer";
 import { Signal } from "@preact/signals";
 import { HexNumberEditor } from "./components/hexnumbereditor";
+import { EditLog, UndoRedoer } from "./components/edit_log";
 
 W.init();
 const state = initState();
@@ -74,10 +75,16 @@ function HexRep(sig : Signal<number | undefined>) : JSX.Element {
     : <span style="font-family: monospace;">{hexStr(value)}</span>;
 }
 
-function SongExplorer(props: { pane: SongPane, other_pane: SongPane, banner: Signal<string | undefined> }) {
+function SongExplorer(props: {
+  pane: SongPane,
+  undoRedo: UndoRedoer,
+  other_pane: SongPane,
+  banner: Signal<string | undefined>
+}) {
   const song = props.pane.song.value;
   if (song === undefined) return <></>;
 
+  const side = props.pane.side;
   const bump = props.pane.bumper.value;
   const phraseControl =
         <EditControls
@@ -86,19 +93,13 @@ function SongExplorer(props: { pane: SongPane, other_pane: SongPane, banner: Sig
           selected={props.pane.selected_phrase}
           edited_number={props.pane.edited_phrase}
           onRenumber={(base_phrase, new_phrase) => {
-            try {
-              W.renumber_phrase(song, base_phrase, new_phrase)
+            if (props.undoRedo.renumberPhrase(side, base_phrase, new_phrase)) {
               props.pane.selected_phrase.value = new_phrase;
               props.pane.bumper.value = bump + 1;
             }
-            catch (err) {
-              state.message_banner.value = err.toString();
-            }
           }}
           onCopy={(phrase) => {
-            const other = props.other_pane.song.value
-            if (other === undefined) return;
-            W.copy_phrase(song, other, phrase, phrase);
+            props.undoRedo.copyPhrase(side, phrase);
             props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
           }} />
 
@@ -109,13 +110,9 @@ function SongExplorer(props: { pane: SongPane, other_pane: SongPane, banner: Sig
       selected={props.pane.selected_chain}
       edited_number={props.pane.edited_chain}
       onRenumber={(base_chain, new_chain) => {
-          try {
-            W.renumber_chain(song, base_chain, new_chain)
+          if (props.undoRedo.renumberChain(side, base_chain, new_chain)) {
             props.pane.selected_chain.value = new_chain;
             props.pane.bumper.value = bump + 1;
-          }
-          catch (err) {
-            state.message_banner.value = err.toString();
           }
       }}/>;
 
@@ -127,19 +124,13 @@ function SongExplorer(props: { pane: SongPane, other_pane: SongPane, banner: Sig
         edited_number={props.pane.edited_table}
         canRenumber={tbl => tbl > 0x7F}
         onRenumber={(base_table, new_table) => {
-          try {
-            W.renumber_table(song, base_table, new_table)
+          if (props.undoRedo.renumberTable(side, base_table, new_table)) {
             props.pane.selected_table.value = new_table;
             props.pane.bumper.value = bump + 1;
           }
-          catch (err) {
-            state.message_banner.value = err.toString();
-          }
         }}
         onCopy={(tbl) => {
-          const other = props.other_pane.song.value
-          if (other === undefined) return;
-          W.copy_table(song, other, tbl, tbl);
+          props.undoRedo.copyTable(side, tbl);
           props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
         }} />;
 
@@ -150,19 +141,13 @@ function SongExplorer(props: { pane: SongPane, other_pane: SongPane, banner: Sig
       selected={props.pane.selected_instrument}
       edited_number={props.pane.edited_instrument}
       onRenumber={(base_instrument, new_instrument) => {
-        try {
-          W.renumber_instrument(song, base_instrument, new_instrument)
+        if (props.undoRedo.renumberInstrument(side, base_instrument, new_instrument)) {
           props.pane.selected_instrument.value = new_instrument;
           props.pane.bumper.value = bump + 1;
         }
-        catch (err) {
-          state.message_banner.value = err.toString();
-        }
       }}
       onCopy={(instr) => {
-          const other = props.other_pane.song.value
-          if (other === undefined) return;
-          W.copy_instrument(song, other, instr, instr);
+          props.undoRedo.copyInstrument(side, instr);
           props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
       }} />
 
@@ -173,19 +158,13 @@ function SongExplorer(props: { pane: SongPane, other_pane: SongPane, banner: Sig
       selected={props.pane.selected_eq}
       edited_number={props.pane.edited_eq}
       onRenumber={(base_eq, new_eq) => {
-          try {
-            W.renumber_eq(song, base_eq, new_eq)
+          if (props.undoRedo.renumberEq(side, base_eq, new_eq)) {
             props.pane.selected_eq.value = new_eq;
             props.pane.bumper.value = bump + 1;
           }
-          catch (err) {
-            state.message_banner.value = err.toString();
-          }
       }}
       onCopy={(eq) => {
-          const other = props.other_pane.song.value
-          if (other === undefined) return;
-          W.copy_eq(song, other, eq, eq);
+        props.undoRedo.copyEq(side, eq);
           props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
       }}/>;
 
@@ -209,6 +188,8 @@ function SongExplorer(props: { pane: SongPane, other_pane: SongPane, banner: Sig
     <details class="songsection">
       <summary>Intruments</summary>
       <InstrumentList
+        side={props.pane.side}
+        undoRedo={props.undoRedo}
         bump={props.pane.bumper}
         song={song}
         selected_instrument={props.pane.selected_instrument}
@@ -254,15 +235,19 @@ function SongExplorer(props: { pane: SongPane, other_pane: SongPane, banner: Sig
 }
 
 function App() {
+  const undoRedo = new UndoRedoer(state);
+
   return <>
       <div class="selection-rect"></div>
       <div><h1>Re<pre class="titlepre">M8</pre>xer</h1><span>v0.4</span></div>
       <MessageBanner />
       <div class="rootcontainer">
-        <SongExplorer pane={state.left} other_pane={state.right} banner={state.message_banner} />
-        <SongViewer side="left" panel={state.left} />
-        <SongViewer side="right" panel={state.right} />
-        <SongExplorer pane={state.right} other_pane={state.left} banner={state.message_banner} />
+        <SongExplorer pane={state.left} undoRedo={undoRedo}
+                      other_pane={state.right} banner={state.message_banner} />
+        <SongViewer panel={state.left} undoRedo={undoRedo} />
+        <SongViewer panel={state.right} undoRedo={undoRedo} />
+        <SongExplorer pane={state.right} undoRedo={undoRedo}
+                      other_pane={state.left} banner={state.message_banner} />
       </div>
   </>;
 }

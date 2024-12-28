@@ -1,23 +1,25 @@
 import { useContext } from 'preact/hooks';
 import * as W from '../../m8-files/pkg/m8_files';
 import { EmptyChainEdition, EmptySelection, GlobalState, SongPane } from '../state';
-import { DraggedChain, hexStr, isDraggedChain, SongSide } from "./common";
+import { DraggedChain, hexStr, isDraggedChain } from "./common";
 import { HexNumberEditor } from './hexnumbereditor';
+import { UndoRedoer } from './edit_log';
 
 export function StepsRender(props: {
-    side: SongSide,
     steps: Uint8Array,
+    undoRedo: UndoRedoer,
     pane: SongPane,
   }) {
   const state = useContext(GlobalState);
   const elems = [];
   const pane = props.pane;
+  const side = pane.side;
   const steps = props.steps;
   const bump_val = props.pane.bumper.value;
   let read_cursor = 0;
 
   const dragStart = (evt : DragEvent, chain: number) => {
-    const asJson : DraggedChain = { chain, from_song: props.side };
+    const asJson : DraggedChain = { chain, from_song: side };
     evt.dataTransfer.setData("text/plain", JSON.stringify(asJson));
     evt.dataTransfer.dropEffect = "copy";
   };
@@ -29,23 +31,15 @@ export function StepsRender(props: {
 
   const dragEnd = (evt : DragEvent, line : number, col : number) => {
     const strPayload = evt.dataTransfer.getData('text/plain');
-    try {
-      const asJson = JSON.parse(strPayload);
-      if (!isDraggedChain(asJson))
-        return;
+    const asJson = JSON.parse(strPayload);
+    if (!isDraggedChain(asJson))
+      return;
 
-      if (asJson.from_song === props.side) {
-        state.message_banner.value = "We avoid copying a chain into the same song";
-      } else if (asJson.from_song === "left") {
-        W.copy_chain(state.left.song.value, state.right.song.value, asJson.chain, col, line);
-      } else {
-        W.copy_chain(state.right.song.value, state.left.song.value, asJson.chain, col, line);
-      }
-
-      pane.bumper.value = pane.bumper.value + 1;
-
-    } catch(err) {
-      state.message_banner.value = `Chain copy error: ${err}`;
+    if (asJson.from_song === side) {
+      state.message_banner.value = "We avoid copying a chain into the same song";
+    } else {
+      if (props.undoRedo.copyChain(asJson.from_song, asJson.chain, col, line))
+        pane.bumper.value = pane.bumper.value + 1;
     }
   }
 

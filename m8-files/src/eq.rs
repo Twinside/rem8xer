@@ -153,6 +153,8 @@ impl BiQuadCoeffs {
 }
 
 impl EqBand {
+    const V4_SIZE : usize = 6;
+
     pub fn default_low() -> EqBand {
         let freq = 100 as usize;
         EqBand {
@@ -359,6 +361,8 @@ pub struct Equ {
 }
 
 impl Equ {
+    pub const V4_SIZE : usize = 3 * EqBand::V4_SIZE;
+
     pub fn is_empty(&self) -> bool {
         self.low.is_empty() && self.mid.is_empty() && self.high.is_empty()
     }

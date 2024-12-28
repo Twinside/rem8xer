@@ -153,16 +153,32 @@ export function clearPanel(panel : SongPane) {
     panel.selection_range.value = undefined;
 }
 
-export type LogEntry =
+export type SongRef =
     {
-        song: string,
-        content: string
+        song_name: string,
+        side: PanelSide
     }
+
+export type PatchKind = "CHN" | "PHR" | "INS" | "EQ" | "TBL"
+
+export type PatchData =
+    {
+        kind: PatchKind
+        from_id: number,
+        to_id: number,
+        data?: Uint8Array
+    }
+
+export type EditLog =
+    | { kind: "renumber", ref: SongRef, elemKind: PatchKind, old_value: number, new_value: number }
+    | { kind: "rename", ref: SongRef, instr: number, old_name: string, new_name: string }
+    | { kind: "move", from_ref: SongRef, to_ref: SongRef, patch: PatchData[] }
+    | { kind: "error", ref: SongRef, message: string }
 
 export type State =
     {
         message_banner: Signal<string | undefined>;
-        remap_log: Signal<LogEntry[]>
+        remap_log: Signal<EditLog[]>
         left: SongPane;
         right: SongPane;
     }

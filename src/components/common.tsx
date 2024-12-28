@@ -6,10 +6,9 @@ export function hexStr(n : number) : string {
   return hexStr.length <= 1 ? "0" + hexStr : hexStr;
 }
 
-export type SongSide = "left" | "right"
 export type DraggedChain = {
   chain: number,
-  from_song: SongSide
+  from_song: PanelSide
 }
 
 export function isDraggedChain(o : any) : o is DraggedChain {
