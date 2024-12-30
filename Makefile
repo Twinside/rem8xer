@@ -9,3 +9,5 @@ release:
 	cd m8-files; wasm-pack build --release
 	npm run build
 
+test:
+	npm run test
