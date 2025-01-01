@@ -104,15 +104,13 @@ impl Default for InstrumentMapping {
 
 pub struct TableMapping {
     /// Mapping from the "from" song index to the to
-    pub mapping: [u8; TableMapping::EXTRA_TABLES],
+    pub mapping: [u8; Song::N_TABLES],
 
     /// Table to be moved during remapping
     pub to_move: Vec<u8>
 }
 
 impl TableMapping {
-    const EXTRA_TABLES : usize = Song::N_TABLES - Song::N_INSTRUMENTS;
-
     pub fn describe<T : RemapperDescriptorBuilder>(&self, builder: &mut T) {
         for ix in &self.to_move {
             let ixu = *ix as usize;
@@ -121,14 +119,14 @@ impl TableMapping {
     }
 
     pub fn remap_table(&mut self, from: u8, to: u8) {
-        self.mapping[from as usize - Song::N_INSTRUMENTS] = to;
+        self.mapping[from as usize] = to;
         self.to_move.push(from);
     }
 }
 
 impl Default for TableMapping {
     fn default() -> Self {
-        Self { mapping: make_mapping(Song::N_INSTRUMENTS as u8), to_move: vec![] }
+        Self { mapping: make_mapping(Song::N_TABLES as u8), to_move: vec![] }
     }
 }
 
@@ -536,8 +534,8 @@ impl Remapper {
     for equ in self.eq_mapping.to_move.iter() {
         let equ = *equ as usize;
         let to_index = self.eq_mapping.mapping[equ];
-        song.eqs[equ].clear();
         song.eqs[to_index as usize] = song.eqs[equ].clone();
+        song.eqs[equ].clear();
     }
 
     // move instr
@@ -554,7 +552,7 @@ impl Remapper {
     // move table
     for table_id in self.table_mapping.to_move.iter() {
         let table_id = *table_id as usize;
-        let to_index = self.table_mapping.mapping[table_id + Song::N_INSTRUMENTS] as usize;
+        let to_index = self.table_mapping.mapping[table_id] as usize;
         let table = song.tables[table_id].clone();
 
         song.tables[to_index] = table;
@@ -627,7 +625,7 @@ impl Remapper {
     // move table
     for table_id in self.table_mapping.to_move.iter() {
         let table_id = *table_id as usize;
-        let to_index = self.table_mapping.mapping[table_id + Song::N_INSTRUMENTS] as usize;
+        let to_index = self.table_mapping.mapping[table_id] as usize;
         to.tables[to_index] = from.tables[table_id].clone();
     }
 

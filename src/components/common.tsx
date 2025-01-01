@@ -27,8 +27,16 @@ export function RenumberButton(props: { name: string, onClick: () => void}) {
                    onClick={() => props.onClick()}>#</button>;
 }
 
+export function UnicodeSideAction(side: PanelSide) : string {
+  return side=== "left" ? "▶" : "◀";
+}
+
+export function UnicodeSideIcon(side: PanelSide) : string {
+  return side=== "left" ? "◧" : "◨";
+}
+
 export function CopyElement(props: { name: string, from_side: PanelSide, onClick: () => void }) {
-    let label = props.from_side === "left" ? "▶" : "◀";
+    let label = UnicodeSideAction(props.from_side);
     return <button type="button"
                    class="modButton"
                    title={`copy ${props.name} to other song`}

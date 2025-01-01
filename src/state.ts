@@ -163,9 +163,11 @@ export type PatchKind = "CHN" | "PHR" | "INS" | "EQ" | "TBL"
 
 export type PatchData =
     {
-        kind: PatchKind
+        kind: PatchKind | "SNGSTEP"
         from_id: number,
         to_id: number,
+        /** Only for chains */
+        pos?: Position,
         data?: Uint8Array
     }
 
@@ -178,7 +180,8 @@ export type EditLog =
 export type State =
     {
         message_banner: Signal<string | undefined>;
-        remap_log: Signal<EditLog[]>
+        remap_log: Signal<EditLog[]>;
+        undo_stack_pointer: Signal<number>;
         left: SongPane;
         right: SongPane;
     }
@@ -186,6 +189,7 @@ export type State =
 export function initState() : State {
     return {
         message_banner: signal(undefined),
+        undo_stack_pointer: signal(0),
         left: initPane("left"),
         right: initPane("right"),
         remap_log: signal([])

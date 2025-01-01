@@ -65,6 +65,30 @@ pub fn load_song(arr: js_sys::Uint8Array) -> Result<WasmSong, String> {
 }
 
 #[wasm_bindgen]
+pub fn pick_song_step(song: &WasmSong, x: usize, y: usize) -> Result<u8, String> {
+    if x >= SongSteps::TRACK_COUNT { return Err(format!("Invalid track number {x}")) }
+    if y >= SongSteps::ROW_COUNT { return Err(format!("Invalid row number {y}")) }
+
+    let slice : &[u8] = &song.song.song.steps;
+    let step_ix = x + y * SongSteps::TRACK_COUNT;
+
+    Ok(slice[step_ix])
+}
+
+#[wasm_bindgen]
+pub fn set_song_step(song: &mut WasmSong, x: usize, y: usize, value: u8) -> Result<bool, String> {
+    if x >= SongSteps::TRACK_COUNT { return Err(format!("Invalid track number {x}")) }
+    if y >= SongSteps::ROW_COUNT { return Err(format!("Invalid row number {y}")) }
+
+    let slice = &mut song.song.song.steps;
+    let step_ix = x + y * SongSteps::TRACK_COUNT;
+
+    slice[step_ix] = value;
+
+    Ok(true)
+}
+
+#[wasm_bindgen]
 pub unsafe fn get_song_steps(song: &WasmSong) -> js_sys::Uint8Array {
     let slice : &[u8] = &song.song.song.steps;
     js_sys::Uint8Array::view(slice)
@@ -477,6 +501,36 @@ pub fn copy_eq(
 
     Ok(mapping.print())
 }
+
+/// Copy a chain without dependency (used for undo/redo)
+#[wasm_bindgen]
+pub fn copy_chain_raw(
+    from: &WasmSong,
+    to: &mut WasmSong,
+    chain: usize,
+    to_chain: usize) -> Result<String, String> {
+
+    if chain >= Song::N_CHAINS {
+        return Err(format!("Invalid phrase source number"))
+    }
+
+    if to_chain >= Song::N_CHAINS {
+        return Err(format!("Invalid phrase destination number"))
+    }
+
+    let from_song = &from.song;
+    let to_song = &mut to.song;
+
+    let mut mapping =
+        Remapper::create(from_song, to_song, iter::empty())?;
+
+    mapping.chain_mapping.to_move.push(chain as u8);
+    mapping.chain_mapping.mapping[chain] = to_chain as u8;
+    mapping.apply(from_song, to_song);
+
+    Ok(mapping.print())
+}
+
 
 #[wasm_bindgen]
 pub fn dump_eq(from: &WasmSong, eq: usize) -> Result<Uint8Array, String> {

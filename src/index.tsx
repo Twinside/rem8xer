@@ -1,13 +1,13 @@
 import { JSX, render } from "preact";
 import "./style.css";
 import * as W from '../m8-files/pkg/m8_files';
-import { GlobalState, initState, NumberEdition, PanelSide, SongPane } from "./state";
+import { EditLog, GlobalState, initState, NumberEdition, PanelSide, PatchData, PatchKind, SongPane, SongRef } from "./state";
 import { InstrumentList } from "./components/instrument_list";
 import { ChainViewer } from "./components/chain_viewer";
 import { SongViewer } from "./components/song_viwer";
 import { PhraseList } from "./components/phrase_list";
 import { PhraseViewer, TableViewer } from "./components/phrase_viewer";
-import { CopyElement, hexStr, RenumberButton } from "./components/common";
+import { CopyElement, hexStr, RenumberButton, UnicodeSideAction, UnicodeSideIcon } from "./components/common";
 import { ChainList } from "./components/chain_list";
 import { TableList } from "./components/table_list";
 import { InstrumentViewer } from "./components/instrument_view";
@@ -15,16 +15,10 @@ import { EqList } from "./components/eq_list";
 import { EqViewer } from "./components/eq_viewer";
 import { Signal } from "@preact/signals";
 import { HexNumberEditor } from "./components/hexnumbereditor";
-import { EditLog, UndoRedoer } from "./components/edit_log";
+import { UndoRedoer } from "./components/edit_log";
 
 W.init();
 const state = initState();
-
-function MessageBanner() {
-  const msg = state.message_banner.value;
-  if (msg === undefined) return <></>;
-  return <div>{msg}</div>;
-}
 
 /** Renumbering and copy button dependent on current selected/edited. */
 function EditControls(props: {
@@ -234,13 +228,88 @@ function SongExplorer(props: {
   </div>;
 }
 
+function UndoButton(props: { idx: number, log: EditLog, undoredo: UndoRedoer }) {
+  return <button type="button"
+                 class="modButton"
+                 title="Undo operation and all after"
+                 onClick={() => props.undoredo.undoTo(props.idx)}>↩</button>;
+}
+
+function RefRender(props: { reference: SongRef }) {
+  const side = UnicodeSideIcon(props.reference.side);
+  return <span class="songref">{side} {props.reference.song_name}</span>
+}
+
+function PatchKindRender(pk : PatchKind | "SNGSTEP") : string {
+  return pk;
+}
+
+function PatchRender(props: { patch: PatchData }) {
+  const patch = props.patch;
+  return <li>{PatchKindRender(patch.kind)} {hexStr(patch.from_id)} -&gt; {hexStr(patch.to_id)}</li>;
+}
+
+function LogElement(props: { idx: number, elem: EditLog, disabled: boolean, undoredo: UndoRedoer }) {
+  const elem = props.elem;
+  const elem_class = props.disabled ? "logUndo disabledUndo" : "logUndo";
+
+  switch (elem.kind) {
+    case "error":
+      return <div class="logError">
+        🚫 <RefRender reference={elem.ref} />{elem.message}
+      </div>;
+
+    case "rename":
+      return <div class={elem_class + " summary-root"} title={`Renamed instrument ${hexStr(elem.instr)}`}>
+        <span class="icon">🏷</span>
+        <RefRender reference={elem.ref} />
+        <span>instrument {hexStr(elem.instr)}:{elem.old_name} -&gt; {elem.new_name}</span>
+        <UndoButton idx={props.idx} log={elem} undoredo={props.undoredo}/>
+      </div>;
+
+    case "move":
+      const elems = elem.patch.map(pe => <PatchRender patch={pe} />);
+
+      return <div class={elem_class} title="Moved elements">
+        <details>
+          <summary class="summary-root">
+            <span>
+              <RefRender reference={elem.from_ref} /> -&gt; <RefRender reference={elem.to_ref} />
+            </span>
+            <span class="edit-controls">
+              <UndoButton idx={props.idx} log={elem} undoredo={props.undoredo} />
+            </span>
+          </summary>
+          <ul>{elems}</ul>
+        </details>
+      </div>;
+
+    case "renumber":
+      return <div class={elem_class + " summary-root"}>
+        # <RefRender reference={elem.ref} /> {PatchKindRender(elem.elemKind)}:{hexStr(elem.old_value)} -&gt; {hexStr(elem.new_value)}
+        <UndoButton idx={props.idx} log={elem} undoredo={props.undoredo} />
+      </div>;
+  }
+}
+
+function UndoRedoLog(props: { log: Signal<EditLog[]>, undo_level: Signal<number>, undoredo: UndoRedoer }) {
+  const log = props.log.value;
+  const log_pointer = props.undo_level.value;
+
+  return <div class="undoredobox">
+    {log.map((el,i) => <LogElement idx={i} disabled={i >= log_pointer} elem={el} undoredo={props.undoredo}/>)}
+  </div>;
+}
+
 function App() {
   const undoRedo = new UndoRedoer(state);
 
   return <>
       <div class="selection-rect"></div>
-      <div><h1>Re<pre class="titlepre">M8</pre>xer</h1><span>v0.4</span></div>
-      <MessageBanner />
+      <div class="header">
+        <div><h1>Re<pre class="titlepre">M8</pre>xer</h1><span>v0.4</span></div>
+        <UndoRedoLog log={state.remap_log} undo_level={state.undo_stack_pointer} undoredo={undoRedo} />
+      </div>
       <div class="rootcontainer">
         <SongExplorer pane={state.left} undoRedo={undoRedo}
                       other_pane={state.right} banner={state.message_banner} />

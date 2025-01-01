@@ -266,6 +266,59 @@ button:focus-visible {
 }
 
 .edit-controls {
-  display: block;
+  display: inline-block;
   margin-left: auto;
+}
+
+.header {
+  display: flex;
+}
+
+
+.songref {
+  border: 1px dashed gray;
+  padding: 1px;
+  padding-left: 3px;
+  padding-right: 3px;
+}
+
+.logUndo details {
+  width: 100%;
+}
+
+.logUndo details summary::before {
+  content: "📦";
+}
+
+.icon {
+  font-weight: bold;
+  font-size: 15px;
+  margin: 3px;
+  margin-right: 10px;
+}
+
+.logUndo {
+  border-radius: 5px;;
+  border: 1px solid #777;
+  width: 100%;
+  padding: 3px;
+}
+
+.disabledUndo {
+  opacity: 0.5;
+}
+
+.logUndo:hover {
+  background-color: #2C2C2C;
+}
+
+.undoredobox {
+  flex: auto;
+  margin: 10px;
+  max-height: 100px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  margin-left: 50px;
+  padding: 10px;
+  border: 1px dashed black;
 }
