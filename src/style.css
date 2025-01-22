@@ -118,37 +118,14 @@ button:focus-visible {
   font-size:18px;
 }
 
-.tab:nth-child(1):hover,
-.tab:nth-child(2):hover,
-.tab:nth-child(3):hover {
-  --color:black;
-}
-.tabs:has(.tab-child:hover){
-  --show:1;
+.tab:hover {
+  background-color: rgb(40, 40, 40);
 }
 
-.tabs:has(.tab:nth-child(1):hover){
-  --width:var(--tab-one-width);
-  --left :10px;
-}
-.tabs:has(.tab:nth-child(2):hover){
-  --width:var(--tab-two-width);
-  --left :calc(var(--tab-one-width) + 10px);
+.tabactive {
+  background-color: rgb(90, 90, 90);
 }
 
-.tabs::after{
-  content : '';
-  position:absolute;
-  inset:0px;
-  background-color:#535353;
-  border-radius:inherit;
-  z-index:-1;
-  opacity:var(--show,0);
-  width:var(--width);
-  left:var(--left);
-  transition : opacity 0.15s , width 0.15s , left 0.15s; 
-  transform:scale(1,0.8);
-}
 .tab{
   --color:white;
   padding:10px;

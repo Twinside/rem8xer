@@ -117,6 +117,16 @@ impl SynthParams {
         self.mods[3].describe(&mut pg.nest("MOD4"), 3, dests);
     }
 
+    pub fn describe_succint<PG : ParameterGatherer>(&self, pg: &mut PG) {
+        pg.hex("AMP", self.amp);
+        pg.enumeration("LIM", self.limit.0, self.limit.str());
+        pg.hex("PAN", self.mixer_pan);
+        pg.hex("DRY", self.mixer_dry);
+        pg.hex("CHORUS", self.mixer_chorus);
+        pg.hex("DELAY", self.mixer_delay);
+        pg.hex("REVERB", self.mixer_reverb);
+    }
+
     pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, filters: &[&str]) {
         pg.hex("FINE", self.fine_tune);
 
@@ -129,14 +139,7 @@ impl SynthParams {
 
         pg.hex("CUT", self.filter_cutoff);
         pg.hex("RES", self.filter_res);
-        pg.hex("AMP", self.amp);
-        pg.enumeration("LIM", self.limit.0, self.limit.str());
-
-        pg.hex("PAN", self.mixer_pan);
-        pg.hex("DRY", self.mixer_dry);
-        pg.hex("CHORUS", self.mixer_chorus);
-        pg.hex("DELAY", self.mixer_delay);
-        pg.hex("REVERB", self.mixer_reverb);
+        self.describe_succint(pg);
     }
 
     pub fn mod_only2(_reader: &mut Reader) -> M8Result<Self>{

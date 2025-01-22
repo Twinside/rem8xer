@@ -828,6 +828,19 @@ pub fn describe_instrument(song: &WasmSong, instrument: usize) -> Result<js_sys:
     Ok(pg.into())
 }
 
+/// Instrument parameters description.
+#[wasm_bindgen]
+pub fn describe_succint_instrument(song: &WasmSong, instrument: usize) -> Result<js_sys::Array, String> {
+    if instrument >= Song::N_INSTRUMENTS {
+        return Err(format!("Error invalid source instrument number {instrument:02X}"));
+    }
+
+    let mut pg = JsonGatherer::new();
+    song.song.instruments[instrument].describe_succint(&mut pg, song.song.version);
+
+    Ok(pg.into())
+}
+
 /// Eq parameter description.
 #[wasm_bindgen]
 pub fn describe_eq(song: &WasmSong, eq_idx: usize) -> Result<js_sys::Array, String> {

@@ -1,6 +1,7 @@
 use crate::reader::*;
 use crate::version::*;
 use common::SynthParams;
+use common::TranspEq;
 use external_inst::ExternalInst;
 use fmsynth::FMSynth;
 use hypersynth::HyperSynth;
@@ -184,6 +185,34 @@ impl Instrument {
             Instrument::External(ex) => ex.describe(&mut pg.nest("EXTERNALINST"), ver),
             Instrument::None => {}
         };
+    }
+
+    pub fn describe_succint<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
+        let (k, transp_eq, common) =
+            match self {
+                Instrument::WavSynth(ws)     =>
+                    ("WAVSYNTH", ws.transp_eq, Some(&ws.synth_params)),
+                Instrument::MacroSynth(ms) =>
+                    ("MACROSYN", ms.transp_eq, Some(&ms.synth_params)),
+                Instrument::Sampler(s)        =>
+                    ("SAMPLE", s.transp_eq, Some(&s.synth_params)),
+                Instrument::MIDIOut(mo)       =>
+                    ("MIDIOUT", TranspEq::default(), None),
+                Instrument::FMSynth(fs)       =>
+                    ("FMSYNTH", fs.transp_eq, Some(&fs.synth_params)),
+                Instrument::HyperSynth(hs) =>
+                    ("HYPERSYNTH", hs.transp_eq, Some(&hs.synth_params)),
+                Instrument::External(ex) =>
+                    ("EXTERNALINST", ex.transp_eq, Some(&ex.synth_params)),
+                Instrument::None => ("NONE", TranspEq::default(), None)
+            };
+
+        pg.str("KIND", k);
+        pg.hex(params::EQ, transp_eq.eq);
+        match common {
+            None => {}
+            Some(c) => c.describe_succint(pg)
+        }
     }
 
     pub fn instr_command_text(&self, ver: Version) -> CommandPack {

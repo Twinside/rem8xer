@@ -48,6 +48,7 @@ export function SongHeader(props: { panel: SongPane}) {
     clearPanel(props.panel)
   };
 
+  const activeTab = props.panel.active_view.value;
   return <div>
       <h3 style="display: inline-block;">{songName}</h3>
       <span class="separator" />
@@ -55,8 +56,10 @@ export function SongHeader(props: { panel: SongPane}) {
       <button onClick={clear}>Clear</button>
       <div class="tabcontainer">
         <div class="tabs">
-          <div class="tab">Song</div>
-          <div class="tab">Spectraview</div>
+          <div class={"tab" + (activeTab === "song" ? " tabactive" : "")}
+               onClick={() => props.panel.active_view.value = "song"}>Song</div>
+          <div class={"tab" + (activeTab === "spectra" ? " tabactive" : "")}
+               onClick={() => props.panel.active_view.value = "spectra"}>Spectraview</div>
         </div>
       </div>
     </div>;

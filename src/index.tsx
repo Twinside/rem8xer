@@ -16,6 +16,7 @@ import { EqViewer } from "./components/eq_viewer";
 import { Signal } from "@preact/signals";
 import { HexNumberEditor } from "./components/hexnumbereditor";
 import { UndoRedoer } from "./components/edit_log";
+import { SpectraView } from "./components/spectra_view";
 
 W.init();
 const state = initState();
@@ -304,6 +305,23 @@ function UndoRedoLog(props: { log: Signal<EditLog[]>, undo_level: Signal<number>
 function App() {
   const undoRedo = new UndoRedoer(state);
 
+  const leftView = state.left.active_view.value === "song"
+    ?  <div class="rootcontent">
+        <SongExplorer pane={state.left} undoRedo={undoRedo}
+                      other_pane={state.right} banner={state.message_banner} />
+        <SongViewer panel={state.left} undoRedo={undoRedo} />
+      </div>
+    : <SpectraView panel={state.left} banner={state.message_banner} />;
+
+  const rightView = state.right.active_view.value === "song"
+    ? <div class="rootcontent">
+        <SongViewer panel={state.right} undoRedo={undoRedo} />
+        <SongExplorer pane={state.right} undoRedo={undoRedo}
+                      other_pane={state.left} banner={state.message_banner} />
+      </div>
+    : <SpectraView panel={state.right} banner={state.message_banner} />;
+
+
   return <>
       <div class="selection-rect"></div>
       <div class="header">
@@ -313,19 +331,11 @@ function App() {
       <div class="rootcontainer">
         <div class="rootheader">
           <SongHeader panel={state.left} />
-          <div class="rootcontent">
-            <SongExplorer pane={state.left} undoRedo={undoRedo}
-                          other_pane={state.right} banner={state.message_banner} />
-            <SongViewer panel={state.left} undoRedo={undoRedo} />
-          </div>
+          {leftView}
         </div>
         <div class="rootheader">
           <SongHeader panel={state.right} />
-          <div class="rootcontent">
-            <SongViewer panel={state.right} undoRedo={undoRedo} />
-            <SongExplorer pane={state.right} undoRedo={undoRedo}
-                          other_pane={state.left} banner={state.message_banner} />
-          </div>
+          {rightView}
         </div>
       </div>
   </>;

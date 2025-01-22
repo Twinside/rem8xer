@@ -125,10 +125,10 @@ function EqPlot(props: { song: W.WasmSong, eq: number, banner: Signal<string | u
   return <canvas ref={canvasRef} width={300} height={150} />;
 }
 
-export function EqViewer(props: { panel: SongPane, banner: Signal<string | undefined> }) {
+export function EqParamViewer(props: { panel: SongPane, banner: Signal<string | undefined>, eq:number}) {
   const song = props.panel.song.value;
   const bump = props.panel.bumper.value;
-  const selected = props.panel.selected_eq.value;
+  const selected = props.eq;;
   const state = useContext(GlobalState);
 
   if (song === undefined || selected === undefined)
@@ -171,9 +171,7 @@ export function EqViewer(props: { panel: SongPane, banner: Signal<string | undef
     </tr>);
   }
 
-  return <div class="instrparam">
-    <EqPlot song={song} eq={selected} banner={props.banner} eq_modes={Array.from(modes)} />
-    <table>
+  const dom = <table>
         <thead>
             <tr>
               <th></th>
@@ -185,6 +183,27 @@ export function EqViewer(props: { panel: SongPane, banner: Signal<string | undef
         <tbody>
             {final}
         </tbody>
-    </table>
+    </table>;
+    
+    return { dom, modes };
+}
+
+export function EqViewer(props: { panel: SongPane, banner: Signal<string | undefined> }) {
+  const selected = props.panel.selected_eq.value;
+  if (selected === undefined) return undefined;
+
+  return <EqViewerAt panel={props.panel} eq={selected} banner={props.banner} />
+}
+
+export function EqViewerAt(props: { panel: SongPane, eq: number, banner: Signal<string | undefined> }) {
+  const song = props.panel.song.value;
+  const bump = props.panel.bumper.value;
+  const selected = props.eq;
+  if (song === undefined) return undefined;
+
+  const { dom, modes } = EqParamViewer({ panel: props.panel, banner: props.banner, eq: selected });
+  return <div class="instrparam">
+    <EqPlot song={song} eq={selected} banner={props.banner} eq_modes={Array.from(modes)} />
+    {dom}
   </div>;
 }

@@ -69,6 +69,8 @@ export const EmptyInstrumentNameEdition =
 
 export type PanelSide = "left" | "right"
 
+export type ActiveView = "song" | "spectra"
+
 export type SongPane =
     {
         side: PanelSide,
@@ -119,7 +121,10 @@ export type SongPane =
         edited_instrument_name: Signal<InstrumentNameEditor | undefined>,
 
         /** Obsolete for now */
-        selection_range: Signal<ChainSelection | undefined>
+        selection_range: Signal<ChainSelection | undefined>,
+
+        /** Current view */
+        active_view: Signal<ActiveView>
     }
 
 function initPane(side: PanelSide) : SongPane {
@@ -140,7 +145,8 @@ function initPane(side: PanelSide) : SongPane {
         selected_phrase: signal(undefined),
         selection_range: signal(undefined),
         selected_table: signal(undefined),
-        selected_instrument: signal(undefined)
+        selected_instrument: signal(undefined),
+        active_view: signal("song")
     };
 }
 
