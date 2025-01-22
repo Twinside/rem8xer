@@ -101,6 +101,62 @@ button:focus-visible {
   }
 }
 
+.tabcontainer {
+  display: inline-block;
+  margin-left: 40px;
+}
+.tabs{
+  background-color:rgb(15, 15, 15);
+  width:100%;
+  display: flex;
+  flex-direction: row;
+
+  cursor:pointer;
+  position:relative;
+  isolation:isolate;
+  border-radius:5px;
+  font-size:18px;
+}
+
+.tab:nth-child(1):hover,
+.tab:nth-child(2):hover,
+.tab:nth-child(3):hover {
+  --color:black;
+}
+.tabs:has(.tab-child:hover){
+  --show:1;
+}
+
+.tabs:has(.tab:nth-child(1):hover){
+  --width:var(--tab-one-width);
+  --left :10px;
+}
+.tabs:has(.tab:nth-child(2):hover){
+  --width:var(--tab-two-width);
+  --left :calc(var(--tab-one-width) + 10px);
+}
+
+.tabs::after{
+  content : '';
+  position:absolute;
+  inset:0px;
+  background-color:#535353;
+  border-radius:inherit;
+  z-index:-1;
+  opacity:var(--show,0);
+  width:var(--width);
+  left:var(--left);
+  transition : opacity 0.15s , width 0.15s , left 0.15s; 
+  transform:scale(1,0.8);
+}
+.tab{
+  --color:white;
+  padding:10px;
+  text-align:center;
+  color:var(--color);
+  transition:color 0.15s;
+}
+
 .rootcontainer {
   display: flex;
   flex-direction: row;
@@ -109,11 +165,17 @@ button:focus-visible {
 }
 
 .rootheader {
+  width: 100%;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   margin: 20px;
 }
 
+.rootcontent {
+  display: flex;
+  direction: row;
+  margin: 0px;
+}
 .rootcolumn {
   display: flex;
   flex-direction: column;

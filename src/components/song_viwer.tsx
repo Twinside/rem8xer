@@ -8,18 +8,12 @@ import { StepsRender } from "./steps_render";
 import { useContext } from 'preact/hooks';
 import { UndoRedoer } from './edit_log';
 
-export function SongViewer(props: { panel: SongPane, undoRedo: UndoRedoer }) {
+export function SongHeader(props: { panel: SongPane}) {
   const state = useContext(GlobalState);
 
   const panel = props.panel;
-  const side = panel.side;
-  const filename =  panel.loaded_name.value;
   const song = panel.song.value;
   const bump = panel.bumper.value;
-
-  const songName = song !== undefined
-    ? W.song_name(song)
-    : filename;
 
   if (song === undefined) {
     // debug helper
@@ -38,9 +32,7 @@ export function SongViewer(props: { panel: SongPane, undoRedo: UndoRedoer }) {
     </div>;
   }
 
-
-  const steps =
-    <StepsRender steps={W.get_song_steps(song)} pane={props.panel} undoRedo={props.undoRedo} />;
+  const songName = W.song_name(song);
 
   const save = () => {
     try {
@@ -56,15 +48,29 @@ export function SongViewer(props: { panel: SongPane, undoRedo: UndoRedoer }) {
     clearPanel(props.panel)
   };
 
-  return <div class="rootcolumn">
-    <div>
+  return <div>
       <h3 style="display: inline-block;">{songName}</h3>
       <span class="separator" />
-      {song !== undefined ? <button onClick={save}>Save</button> : undefined}
-      {song !== undefined ? <button onClick={clear}>Clear</button> : undefined}
-    </div>
+      <button onClick={save}>Save</button>
+      <button onClick={clear}>Clear</button>
+      <div class="tabcontainer">
+        <div class="tabs">
+          <div class="tab">Song</div>
+          <div class="tab">Spectraview</div>
+        </div>
+      </div>
+    </div>;
+}
+
+export function SongViewer(props: { panel: SongPane, undoRedo: UndoRedoer }) {
+  const panel = props.panel;
+  const song = panel.song.value;
+
+  if (song === undefined) return <></>;
+
+  return <div class="rootcolumn">
     <div class="songsteps-wrapper">
-      {steps}
+      <StepsRender steps={W.get_song_steps(song)} pane={props.panel} undoRedo={props.undoRedo} />
     </div>
   </div>;
 }

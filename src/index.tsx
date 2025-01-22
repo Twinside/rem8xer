@@ -4,7 +4,7 @@ import * as W from '../m8-files/pkg/m8_files';
 import { EditLog, GlobalState, initState, NumberEdition, PanelSide, PatchData, PatchKind, SongPane, SongRef } from "./state";
 import { InstrumentList } from "./components/instrument_list";
 import { ChainViewer } from "./components/chain_viewer";
-import { SongViewer } from "./components/song_viwer";
+import { SongHeader, SongViewer } from "./components/song_viwer";
 import { PhraseList } from "./components/phrase_list";
 import { PhraseViewer, TableViewer } from "./components/phrase_viewer";
 import { CopyElement, hexStr, RenumberButton, UnicodeSideAction, UnicodeSideIcon } from "./components/common";
@@ -311,12 +311,22 @@ function App() {
         <UndoRedoLog log={state.remap_log} undo_level={state.undo_stack_pointer} undoredo={undoRedo} />
       </div>
       <div class="rootcontainer">
-        <SongExplorer pane={state.left} undoRedo={undoRedo}
-                      other_pane={state.right} banner={state.message_banner} />
-        <SongViewer panel={state.left} undoRedo={undoRedo} />
-        <SongViewer panel={state.right} undoRedo={undoRedo} />
-        <SongExplorer pane={state.right} undoRedo={undoRedo}
-                      other_pane={state.left} banner={state.message_banner} />
+        <div class="rootheader">
+          <SongHeader panel={state.left} />
+          <div class="rootcontent">
+            <SongExplorer pane={state.left} undoRedo={undoRedo}
+                          other_pane={state.right} banner={state.message_banner} />
+            <SongViewer panel={state.left} undoRedo={undoRedo} />
+          </div>
+        </div>
+        <div class="rootheader">
+          <SongHeader panel={state.right} />
+          <div class="rootcontent">
+            <SongViewer panel={state.right} undoRedo={undoRedo} />
+            <SongExplorer pane={state.right} undoRedo={undoRedo}
+                          other_pane={state.left} banner={state.message_banner} />
+          </div>
+        </div>
       </div>
   </>;
 }
