@@ -108,10 +108,16 @@ impl Reader {
 
     pub fn read_string(&mut self, n: usize) -> String {
         let b = self.read_bytes(n);
-        let end = b.iter().position(|&x| x == 0 || x == 255).unwrap_or(0);
-        std::str::from_utf8(&b[0..end])
-            .expect("invalid utf-8 sequence in string")
-            .to_string()
+        let mut end = b.iter().position(|&x| x == 0 || x == 255).unwrap_or(n);
+
+        while end > 0 {
+            match std::str::from_utf8(&b[0..end]) {
+                Ok(str) => return str.to_string(),
+                Err(_) => end -= 1
+            }
+        }
+        
+        String::from("")
     }
 
     pub fn pos(&self) -> usize { self.position }
