@@ -119,7 +119,7 @@ function ModRender(props: { v: Descriptor[]}) {
     </table>;
 }
 
-function DescriptorRender(props: { desc: Descriptor }) {
+export function DescriptorRender(props: { desc: Descriptor }) {
     const { desc } = props;
 
     if ("str" in desc) return <StrRender v={desc} />;

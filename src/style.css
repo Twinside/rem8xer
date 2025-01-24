@@ -313,6 +313,22 @@ button:focus-visible {
   display: flex;
 }
 
+.succint {
+  display: flex;
+  flex-direction: row;
+  border: 2px solid #445;
+  margin: 1em;
+  font-size: 10px;
+}
+
+.succintfields {
+  display: flex;
+  flex-direction: row;
+}
+
+.succintfields td {
+  margin: 0px;
+}
 
 .songref {
   border: 1px dashed gray;

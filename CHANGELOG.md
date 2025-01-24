@@ -1,3 +1,9 @@
+# 0.5
+
+ - Fix: handling of invalid utf-8 characters in song name.
+ - Added: "spectraview" showing eq plots of all instruments
+          and some basic parameters usefull for mixing
+
 # 0.4
 
  - Eq viewing and plotting.

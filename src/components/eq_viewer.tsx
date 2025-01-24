@@ -131,15 +131,16 @@ export function EqParamViewer(props: { panel: SongPane, banner: Signal<string | 
   const selected = props.eq;;
   const state = useContext(GlobalState);
 
-  if (song === undefined || selected === undefined)
-        return undefined;
+  if (song === undefined || selected === undefined) {
+        return { dom: undefined, modes: undefined };
+  }
 
   let info : Descriptor[] = [];
   try {
     info = W.describe_eq(song, selected);
   } catch (err) {
     state.message_banner.value = err.toString();
-    return undefined;
+    return { dom: undefined, modes: undefined };
   }
 
   let low : JSX.Element[]= [];
@@ -192,7 +193,9 @@ export function EqViewer(props: { panel: SongPane, banner: Signal<string | undef
   const selected = props.panel.selected_eq.value;
   if (selected === undefined) return undefined;
 
-  return <EqViewerAt panel={props.panel} eq={selected} banner={props.banner} />
+  return <div class="instrparam">
+    <EqViewerAt panel={props.panel} eq={selected} banner={props.banner} />
+  </div>;
 }
 
 export function EqViewerAt(props: { panel: SongPane, eq: number, banner: Signal<string | undefined> }) {
@@ -201,9 +204,12 @@ export function EqViewerAt(props: { panel: SongPane, eq: number, banner: Signal<
   const selected = props.eq;
   if (song === undefined) return undefined;
 
-  const { dom, modes } = EqParamViewer({ panel: props.panel, banner: props.banner, eq: selected });
-  return <div class="instrparam">
-    <EqPlot song={song} eq={selected} banner={props.banner} eq_modes={Array.from(modes)} />
-    {dom}
-  </div>;
+  const paramView = EqParamViewer({ panel: props.panel, banner: props.banner, eq: selected });
+  return  <>
+    <EqPlot song={song}
+            eq={selected}
+            banner={props.banner}
+            eq_modes={Array.from(paramView.modes ?? [])} />
+    {paramView.dom}
+  </>;
 }
