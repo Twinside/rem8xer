@@ -68,12 +68,14 @@ export function SongHeader(props: { panel: SongPane}) {
 export function SongViewer(props: { panel: SongPane, undoRedo: UndoRedoer }) {
   const panel = props.panel;
   const song = panel.song.value;
+  const bump = panel.bumper.value;
 
   if (song === undefined) return <></>;
 
+  const steps = W.get_song_steps(song);
   return <div class="rootcolumn">
     <div class="songsteps-wrapper">
-      <StepsRender steps={W.get_song_steps(song)} pane={props.panel} undoRedo={props.undoRedo} />
+      <StepsRender steps={steps} pane={props.panel} undoRedo={props.undoRedo} />
     </div>
   </div>;
 }

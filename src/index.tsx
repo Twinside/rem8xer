@@ -325,7 +325,7 @@ function App() {
   return <>
       <div class="selection-rect"></div>
       <div class="header">
-        <div><h1>Re<pre class="titlepre">M8</pre>xer</h1><span>v0.5</span></div>
+        <div><h1>Re<pre class="titlepre">M8</pre>xer</h1><span>v0.5.1</span></div>
         <UndoRedoLog log={state.remap_log} undo_level={state.undo_stack_pointer} undoredo={undoRedo} />
       </div>
       <div class="rootcontainer">

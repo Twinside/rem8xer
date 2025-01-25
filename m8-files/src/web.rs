@@ -91,6 +91,7 @@ pub fn set_song_step(song: &mut WasmSong, x: usize, y: usize, value: u8) -> Resu
 #[wasm_bindgen]
 pub unsafe fn get_song_steps(song: &WasmSong) -> js_sys::Uint8Array {
     let slice : &[u8] = &song.song.song.steps;
+    log(&format!("SIZE: {}", slice.len()));
     js_sys::Uint8Array::view(slice)
 }
 

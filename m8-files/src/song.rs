@@ -54,7 +54,7 @@ pub const V4_OFFSETS : Offsets = Offsets {
     effect_settings: 0x1A5C1,
     midi_mapping: 0x1A5FE,
     scale: 0x1AA7E,
-    eq: 0x1AD5D
+    eq: 0x1AD5A + 4
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -245,7 +245,7 @@ impl Song {
             .collect::<M8Result<Vec<MidiMapping>>>()?;
 
         let scales: Vec<Scale> = if version.at_least(2, 5) {
-            reader.set_pos(0x1AA7E);
+            reader.set_pos(V4_OFFSETS.scale);
             (0..Self::N_SCALES)
                 .map(|i| Scale::from_reader(reader, i as u8))
                 .collect::<M8Result<Vec<Scale>>>()?
@@ -260,8 +260,8 @@ impl Song {
         };
 
         let eqs = if version.at_least(4, 0) {
-            reader.set_pos(0x1AD5A + 4);
-            (0..Self::N_EQS)
+            reader.set_pos(V4_OFFSETS.eq);
+            (0..Self::N_INSTRUMENT_EQS)
                 .map(|_i| Equ::from_reader(reader))
                 .collect::<Vec<Equ>>()
         } else {

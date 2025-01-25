@@ -1,3 +1,8 @@
+# 0.5.1
+
+ - Fix: botchered EQ writing in file...
+ - Fix: some refresh issue in chain copy
+
 # 0.5
 
  - Fix: handling of invalid utf-8 characters in song name.

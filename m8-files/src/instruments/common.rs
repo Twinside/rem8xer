@@ -5,7 +5,7 @@ use crate::instruments::modulator::lfo::LFO;
 use arr_macro::arr;
 
 use super::modulator::Mod;
-use super::ParameterGatherer;
+use super::{dests, params, ParameterGatherer};
 
 /// Type storing transpose field and eq number
 #[derive(PartialEq, Copy, Clone, Default, Debug)]
@@ -118,9 +118,9 @@ impl SynthParams {
     }
 
     pub fn describe_succint<PG : ParameterGatherer>(&self, pg: &mut PG) {
-        pg.hex("AMP", self.amp);
+        pg.hex(dests::AMP, self.amp);
         pg.enumeration("LIM", self.limit.0, self.limit.str());
-        pg.hex("PAN", self.mixer_pan);
+        pg.hex(dests::PAN, self.mixer_pan);
         pg.hex("DRY", self.mixer_dry);
         pg.hex("CHORUS", self.mixer_chorus);
         pg.hex("DELAY", self.mixer_delay);

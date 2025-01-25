@@ -263,7 +263,7 @@ function RootDescriptorRender(props: { desc: Descriptor }) {
             <div>
                 <span>TRANSP. {transpose ? "ON" : "OFF"}</span>&nbsp;&nbsp;
                 <span>TBL TIC. {hexStr(tblTic)}</span>&nbsp;&nbsp;
-                <span>EQ {eq === 0xFF ? "--" : hexStr(eq)}</span>
+                <span>EQ {eq >= 0x20 ? "--" : hexStr(eq)}</span>
             </div>
             <table>
                 <tbody>{globalLines}</tbody>
