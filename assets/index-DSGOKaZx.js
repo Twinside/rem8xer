@@ -359,7 +359,7 @@
     if ("function" == typeof e2 && (a2 = e2.defaultProps)) for (c2 in a2) void 0 === l2[c2] && (l2[c2] = a2[c2]);
     return l$3.vnode && l$3.vnode(p2), p2;
   }
-  const __vite__wasmUrl = "" + new URL("m8_files_bg-CBUhOe_8.wasm", import.meta.url).href;
+  const __vite__wasmUrl = "" + new URL("m8_files_bg-BfC0wrtz.wasm", import.meta.url).href;
   const __vite__initWasm = async (opts = {}, url) => {
     let result;
     if (url.startsWith("data:")) {
@@ -955,6 +955,9 @@
     const ret = arg0.length;
     return ret;
   }
+  function __wbg_log_1aa24fddc2908219(arg0, arg1) {
+    console.log(getStringFromWasm0(arg0, arg1));
+  }
   function __wbg_new_254fa9eac11932ae() {
     const ret = new Array();
     return ret;
@@ -1039,6 +1042,7 @@
     "./m8_files_bg.js": {
       __wbindgen_string_new,
       __wbindgen_number_new,
+      __wbg_log_1aa24fddc2908219,
       __wbg_new_8a6f238a6ece86ea,
       __wbg_stack_0ed75d68575b0f3c,
       __wbg_error_7534b8e9a36f1ab4,
@@ -2302,13 +2306,15 @@
   function SongViewer(props) {
     const panel = props.panel;
     const song = panel.song.value;
+    panel.bumper.value;
     if (song === void 0) return u$2(b$1, {});
+    const steps = get_song_steps$1(song);
     return u$2("div", {
       class: "rootcolumn",
       children: u$2("div", {
         class: "songsteps-wrapper",
         children: u$2(StepsRender, {
-          steps: get_song_steps$1(song),
+          steps,
           pane: props.panel,
           undoRedo: props.undoRedo
         })
@@ -2962,7 +2968,7 @@
               u$2("span", {
                 children: [
                   "EQ ",
-                  eq === 255 ? "--" : hexStr(eq)
+                  eq >= 32 ? "--" : hexStr(eq)
                 ]
               })
             ]
@@ -4327,7 +4333,7 @@
                   ]
                 }),
                 u$2("span", {
-                  children: "v0.5"
+                  children: "v0.5.1"
                 })
               ]
             }),
