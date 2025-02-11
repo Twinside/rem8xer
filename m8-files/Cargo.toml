@@ -9,7 +9,8 @@ homepage = "https://github.com/AlexCharlton/m8-files"
 license = "MIT"
 keywords = ["music"]
 
-# [features]
+[features]
+"const_panic" = []
 # default = ["console_error_panic_hook"]
 
 [dependencies]

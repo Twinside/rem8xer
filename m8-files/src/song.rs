@@ -41,7 +41,16 @@ pub struct Offsets {
     pub effect_settings : usize,
     pub midi_mapping: usize,
     pub scale: usize,
-    pub eq: usize
+    pub eq: usize,
+
+    pub instrument_eq_count: usize
+}
+
+impl Offsets {
+    pub fn eq_count(&self) -> usize {
+        // general EQ + 3 for effects + 1 global
+        self.instrument_eq_count + 3 + 1
+    }
 }
 
 pub const V4_OFFSETS : Offsets = Offsets {
@@ -54,8 +63,24 @@ pub const V4_OFFSETS : Offsets = Offsets {
     effect_settings: 0x1A5C1,
     midi_mapping: 0x1A5FE,
     scale: 0x1AA7E,
-    eq: 0x1AD5A + 4
+    eq: 0x1AD5A + 4,
+    instrument_eq_count: 32
 };
+
+pub const V4_1_OFFSETS : Offsets = Offsets {
+    groove: 0xEE,
+    song: 0x2EE,
+    phrases: 0xAEE,
+    chains: 0x9A5E,
+    table: 0xBA3E,
+    instruments: 0x13A3E,
+    effect_settings: 0x1A5C1,
+    midi_mapping: 0x1A5FE,
+    scale: 0x1AA7E,
+    eq: 0x1AD5A + 4,
+    instrument_eq_count: 0x80
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 /// MARK: Song
@@ -123,9 +148,6 @@ impl Song {
     pub const N_GROOVES: usize = 32;
     pub const N_SCALES: usize = 16;
 
-    /// 32 general EQ + 3 for effects + 1 global
-    pub const N_INSTRUMENT_EQS: usize = 32;
-    pub const N_EQS: usize = Song::N_INSTRUMENT_EQS + 4;
     pub const N_MIDI_MAPPINGS: usize = 128;
 
     pub fn phrase_view(&self, ix: usize) -> PhraseView {
@@ -133,6 +155,18 @@ impl Song {
             phrase: &self.phrases[ix],
             instruments: &self.instruments
         }
+    }
+
+    pub fn offsets(&self) -> &'static Offsets {
+        if self.version.at_least(4, 1) {
+            &V4_1_OFFSETS
+        } else {
+            &V4_OFFSETS
+        }
+    }
+
+    pub fn eq_count(&self) -> usize {
+        self.offsets().eq_count()
     }
 
     pub fn table_view(&self, ix: usize) -> TableView {
@@ -176,7 +210,11 @@ impl Song {
         Self::from_reader(&mut reader, version)
     }
 
-    pub fn write_patterns(&self, ofs : Offsets, w : &mut Writer) {
+    pub fn write(&self, w: &mut Writer) {
+        self.write_patterns(self.offsets(), w);
+    }
+
+    pub fn write_patterns(&self, ofs : &Offsets, w : &mut Writer) {
         w.seek(ofs.song);
         w.write_bytes(&self.song.steps);
 
@@ -260,8 +298,14 @@ impl Song {
         };
 
         let eqs = if version.at_least(4, 0) {
-            reader.set_pos(V4_OFFSETS.eq);
-            (0..Self::N_INSTRUMENT_EQS)
+            let ofs = if version.at_least(4, 1) {
+                &V4_1_OFFSETS
+            } else {
+                &V4_OFFSETS
+            };
+
+            reader.set_pos(ofs.eq);
+            (0..ofs.instrument_eq_count)
                 .map(|_i| Equ::from_reader(reader))
                 .collect::<Vec<Equ>>()
         } else {

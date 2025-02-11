@@ -48,7 +48,7 @@ pub fn write_song(song: &WasmSong, current_song: js_sys::Uint8Array) -> Result<j
     }
 
     let mut w = Writer::new(current_song.to_vec());
-    song.song.write_patterns(V4_OFFSETS, &mut w);
+    song.song.write(&mut w);
     Ok(js_sys::Uint8Array::from(&w.finish()[..]))
 }
 
@@ -175,7 +175,7 @@ pub fn renumber_table(song: &mut WasmSong, table: usize, to_table: usize) -> Res
         return Err(format!("Destination table is not empty"))
     }
 
-    let mut remapper = Remapper::default();
+    let mut remapper = Remapper::default_ver(song.song.version);
     remapper.table_mapping.remap_table(table as u8, to_table as u8);
     remapper.renumber(&mut song.song);
 
@@ -184,11 +184,11 @@ pub fn renumber_table(song: &mut WasmSong, table: usize, to_table: usize) -> Res
 
 #[wasm_bindgen]
 pub fn renumber_eq(song: &mut WasmSong, eq: usize, to_eq: usize) -> Result<bool, String> {
-    if eq >= Song::N_INSTRUMENT_EQS {
+    if eq >= song.song.eq_count() {
         return Err(format!("Error invalid source eq number {eq:02X}"));
     }
 
-    if to_eq >= Song::N_INSTRUMENT_EQS {
+    if to_eq >= song.song.eq_count() {
         return Err(format!("Error invalid source destination number {to_eq:02X}"));
     }
 
@@ -197,7 +197,7 @@ pub fn renumber_eq(song: &mut WasmSong, eq: usize, to_eq: usize) -> Result<bool,
         return Err(format!("Destination instrument {to_instrument:02X} is not empty"));
     } */
 
-    let mut remapper = Remapper::default();
+    let mut remapper = Remapper::default_ver(song.song.version);
     remapper.eq_mapping.mapping[eq] = to_eq as u8;
     remapper.eq_mapping.to_move.push(eq as u8);
     remapper.renumber(&mut song.song);
@@ -219,7 +219,7 @@ pub fn renumber_instrument(song: &mut WasmSong, instrument: usize, to_instrument
         return Err(format!("Destination instrument {to_instrument:02X} is not empty"));
     }
 
-    let mut remapper = Remapper::default();
+    let mut remapper = Remapper::default_ver(song.song.version);
     remapper.instrument_mapping.mapping[instrument] = to_instrument as u8;
     remapper.instrument_mapping.to_move.push(instrument as u8);
     remapper.renumber(&mut song.song);
@@ -262,7 +262,7 @@ pub fn renumber_phrase(song: &mut WasmSong, phrase: usize, to_phrase: usize) -> 
         return Err(format!("Destination phrase {to_phrase} is not empty"))
     }
 
-    let mut remapper = Remapper::default();
+    let mut remapper = Remapper::default_ver(song.song.version);
     remapper.phrase_mapping.mapping[phrase] = to_phrase as u8;
     remapper.phrase_mapping.to_move.push(phrase as u8);
     remapper.renumber(&mut song.song);
@@ -482,11 +482,13 @@ pub fn copy_eq(
     eq: usize,
     to_eq: usize) -> Result<String, String> {
 
-    if eq >= Song::N_INSTRUMENT_EQS {
+    let from_eq_count = from.song.eq_count();
+    if eq >= from_eq_count {
         return Err(format!("Invalid phrase source number"))
     }
 
-    if to_eq >= Song::N_INSTRUMENT_EQS {
+    let to_eq_count = to.song.eq_count();
+    if to_eq >= to_eq_count {
         return Err(format!("Invalid phrase destination number"))
     }
 
@@ -535,7 +537,7 @@ pub fn copy_chain_raw(
 
 #[wasm_bindgen]
 pub fn dump_eq(from: &WasmSong, eq: usize) -> Result<Uint8Array, String> {
-    if eq >= Song::N_EQS {
+    if eq >= from.song.eq_count() {
         return Err(format!("Invalid eq source number"))
     }
 
@@ -547,7 +549,7 @@ pub fn dump_eq(from: &WasmSong, eq: usize) -> Result<Uint8Array, String> {
 
 #[wasm_bindgen]
 pub fn blast_eq(from: &mut WasmSong, eq: usize, arr: Uint8Array) -> Result<bool, String> {
-    if eq >= Song::N_EQS {
+    if eq >= from.song.eq_count() {
         return Err(format!("Invalid eq source number"))
     }
 
@@ -845,7 +847,7 @@ pub fn describe_succint_instrument(song: &WasmSong, instrument: usize) -> Result
 /// Eq parameter description.
 #[wasm_bindgen]
 pub fn describe_eq(song: &WasmSong, eq_idx: usize) -> Result<js_sys::Array, String> {
-    if eq_idx >= Song::N_EQS {
+    if eq_idx >= song.song.eq_count() {
         return Err(format!("Error invalid eq number {eq_idx:02X}"));
     }
 
@@ -891,7 +893,7 @@ pub fn eq_frequencies() -> js_sys::Float64Array {
 /// Plot a an eq just plotting a specific mode.
 #[wasm_bindgen]
 pub fn plot_eq(song: &WasmSong, eq_idx: usize, mode: usize) -> Result<js_sys::Float64Array, String>{
-    if eq_idx >= Song::N_EQS {
+    if eq_idx >= song.song.eq_count() {
         return Err(format!("Error invalid eq number {eq_idx:02X}"));
     }
 
