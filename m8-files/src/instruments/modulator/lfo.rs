@@ -2,7 +2,8 @@ use num_enum::{IntoPrimitive, TryFromPrimitive};
 
 use crate::{ParameterGatherer, params, Version};
 
-use super::{M8Result, Mod, ParseError, Reader, Writer};
+use super::{M8Result, Mod, ParseError, Reader};
+use crate::writer::Writer;
 
 
 #[repr(u8)]

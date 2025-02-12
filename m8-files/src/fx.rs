@@ -1,6 +1,7 @@
 use array_concat::*;
 use crate::reader::*;
 use crate::version::*;
+use crate::writer::Writer;
 use crate::CommandPack;
 
 #[derive(Copy, Clone)]

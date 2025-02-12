@@ -1,6 +1,7 @@
 use crate::{ParameterGatherer, params, Version};
 
-use super::{M8Result, Reader, Writer};
+use super::{M8Result, Reader};
+use crate::writer::Writer;
 
 
 const DRUMENV_COMMAND_NAMES : [[&'static str; 5]; 4] =

@@ -2,7 +2,7 @@ use std::f64::consts::PI;
 
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
-use crate::{reader::*, ParameterGatherer, Version};
+use crate::{reader::*, writer::Writer, ParameterGatherer, Version};
 
 #[repr(u8)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
@@ -427,7 +427,3 @@ impl Equ {
         Self { low, mid, high }
     }
 }
-
-pub const CHORUS_EQ_IDX : usize = 33;
-pub const DELAY_EQ_IDX : usize = 34;
-pub const REVERB_EQ_IDX : usize = 35;

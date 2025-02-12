@@ -1,7 +1,7 @@
 use crate::reader::*;
 use crate::version::*;
+use crate::writer::Writer;
 use common::SynthParams;
-use common::TranspEq;
 use external_inst::ExternalInst;
 use fmsynth::FMSynth;
 use hypersynth::HyperSynth;
@@ -188,27 +188,26 @@ impl Instrument {
     }
 
     pub fn describe_succint<PG : ParameterGatherer>(&self, pg: &mut PG, _ver: Version) {
-        let (k, transp_eq, common) =
+        let (k, common) =
             match self {
                 Instrument::WavSynth(ws)     =>
-                    ("WAVSYNTH", ws.transp_eq, Some(&ws.synth_params)),
+                    ("WAVSYNTH", Some(&ws.synth_params)),
                 Instrument::MacroSynth(ms) =>
-                    ("MACROSYN", ms.transp_eq, Some(&ms.synth_params)),
+                    ("MACROSYN", Some(&ms.synth_params)),
                 Instrument::Sampler(s)        =>
-                    ("SAMPLE", s.transp_eq, Some(&s.synth_params)),
+                    ("SAMPLE", Some(&s.synth_params)),
                 Instrument::MIDIOut(_mo)       =>
-                    ("MIDIOUT", TranspEq::default(), None),
+                    ("MIDIOUT", None),
                 Instrument::FMSynth(fs)       =>
-                    ("FMSYNTH", fs.transp_eq, Some(&fs.synth_params)),
+                    ("FMSYNTH", Some(&fs.synth_params)),
                 Instrument::HyperSynth(hs) =>
-                    ("HYPERSYNTH", hs.transp_eq, Some(&hs.synth_params)),
+                    ("HYPERSYNTH", Some(&hs.synth_params)),
                 Instrument::External(ex) =>
-                    ("EXTERNALINST", ex.transp_eq, Some(&ex.synth_params)),
-                Instrument::None => ("NONE", TranspEq::default(), None)
+                    ("EXTERNALINST", Some(&ex.synth_params)),
+                Instrument::None => ("NONE", None)
             };
 
         pg.str("KIND", k);
-        pg.hex(params::EQ, transp_eq.eq);
         match common {
             None => {}
             Some(c) => c.describe_succint(pg)
@@ -280,26 +279,26 @@ impl Instrument {
 
     pub fn equ(&self) -> Option<u8> {
         match self {
-            Instrument::WavSynth(ws)     => Some(ws.transp_eq.eq),
-            Instrument::MacroSynth(ms) => Some(ms.transp_eq.eq),
-            Instrument::Sampler(s)        => Some(s.transp_eq.eq),
+            Instrument::WavSynth(ws)     => Some(ws.synth_params.associated_eq),
+            Instrument::MacroSynth(ms) => Some(ms.synth_params.associated_eq),
+            Instrument::Sampler(s)        => Some(s.synth_params.associated_eq),
             Instrument::MIDIOut(_)                  => None,
-            Instrument::FMSynth(fs)       => Some(fs.transp_eq.eq),
-            Instrument::HyperSynth(hs) => Some(hs.transp_eq.eq),
-            Instrument::External(ex) => Some(ex.transp_eq.eq),
+            Instrument::FMSynth(fs)       => Some(fs.synth_params.associated_eq),
+            Instrument::HyperSynth(hs) => Some(hs.synth_params.associated_eq),
+            Instrument::External(ex) => Some(ex.synth_params.associated_eq),
             Instrument::None => None,
         }
     }
 
     pub fn set_eq(&mut self, eq_ix: u8) {
         match self {
-            Instrument::WavSynth(ws)     => ws.transp_eq.set_eq(eq_ix),
-            Instrument::MacroSynth(ms) => ms.transp_eq.set_eq(eq_ix),
-            Instrument::Sampler(s)        => s.transp_eq.set_eq(eq_ix),
+            Instrument::WavSynth(ws)     => ws.synth_params.set_eq(eq_ix),
+            Instrument::MacroSynth(ms) => ms.synth_params.set_eq(eq_ix),
+            Instrument::Sampler(s)        => s.synth_params.set_eq(eq_ix),
             Instrument::MIDIOut(_)                      => {},
-            Instrument::FMSynth(fs)       => fs.transp_eq.set_eq(eq_ix),
-            Instrument::HyperSynth(hs) => hs.transp_eq.set_eq(eq_ix),
-            Instrument::External(ex) => ex.transp_eq.set_eq(eq_ix),
+            Instrument::FMSynth(fs)       => fs.synth_params.set_eq(eq_ix),
+            Instrument::HyperSynth(hs) => hs.synth_params.set_eq(eq_ix),
+            Instrument::External(ex) => ex.synth_params.set_eq(eq_ix),
             Instrument::None => {},
         }
     }

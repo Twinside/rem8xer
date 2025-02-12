@@ -3,7 +3,8 @@ use std::iter;
 use js_sys::Uint8Array;
 use wasm_bindgen::prelude::*;
 
-use crate::{eq::{EqMode, Equ}, reader::{Reader, Writer}, remapper::{Remapper, RemapperDescriptorBuilder}, song::{Chain, Phrase, Song, SongSteps, Table}, Instrument, ParameterGatherer, Version};
+use crate::{eq::{EqMode, Equ}, reader::Reader, remapper::{Remapper, RemapperDescriptorBuilder}, songs::{Chain, Phrase, Song, SongSteps, Table}, Instrument, ParameterGatherer, Version};
+use crate::writer::Writer;
 
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the

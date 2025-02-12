@@ -1,6 +1,6 @@
-use crate::{ParameterGatherer, params, Version};
+use crate::{params, writer::Writer, ParameterGatherer, Version};
 
-use super::{M8Result, Mod, Reader, Writer};
+use super::{M8Result, Mod, Reader};
 
 
 #[derive(PartialEq, Debug, Clone, Default)]

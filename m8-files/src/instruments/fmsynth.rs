@@ -1,6 +1,7 @@
 use crate::reader::*;
 use crate::version::*;
 use crate::instruments::common::*;
+use crate::writer::Writer;
 use num_enum::IntoPrimitive;
 use num_enum::TryFromPrimitive;
 
@@ -211,7 +212,7 @@ impl Operator {
 pub struct FMSynth {
     pub number: u8,
     pub name: String,
-    pub transp_eq: TranspEq,
+    pub transpose: bool,
     pub table_tick: u8,
     pub synth_params: SynthParams,
 
@@ -236,8 +237,8 @@ impl FMSynth {
 
     pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
         pg.str(params::NAME, &self.name);
-        pg.bool(params::TRANSPOSE, self.transp_eq.transpose);
-        pg.hex(params::EQ, self.transp_eq.eq);
+        pg.bool(params::TRANSPOSE, self.transpose);
+        pg.hex(params::EQ, self.synth_params.associated_eq);
         pg.hex(params::TBLTIC, self.table_tick);
         pg.enumeration("ALG", self.algo.0, self.algo.str());
 
@@ -252,7 +253,7 @@ impl FMSynth {
 
     pub fn write(&self, ver: Version, w: &mut Writer) {
         w.write_string(&self.name, 12);
-        w.write(self.transp_eq.into());
+        w.write(TranspEq::from(ver, self.transpose, self.synth_params.associated_eq).into());
         w.write(self.table_tick);
         w.write(self.synth_params.volume);
         w.write(self.synth_params.pitch);
@@ -329,7 +330,7 @@ impl FMSynth {
 
         let synth_params =
             if version.at_least(3, 0) {
-                SynthParams::from_reader3(ver, reader, volume, pitch, fine_tune, FMSynth::MOD_OFFSET)?
+                SynthParams::from_reader3(ver, reader, volume, pitch, fine_tune, transp_eq.eq, FMSynth::MOD_OFFSET)?
             } else {
                 SynthParams::from_reader2(reader, volume, pitch, fine_tune)?
             };
@@ -337,7 +338,7 @@ impl FMSynth {
         Ok(FMSynth {
             number,
             name,
-            transp_eq,
+            transpose: transp_eq.transpose,
             table_tick,
             synth_params,
 

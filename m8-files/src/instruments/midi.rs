@@ -1,6 +1,7 @@
 use crate::reader::*;
 use crate::version::*;
 use crate::instruments::common::*;
+use crate::writer::Writer;
 
 use arr_macro::arr;
 

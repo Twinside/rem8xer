@@ -1,4 +1,4 @@
-use crate::reader::*;
+use crate::{reader::*, writer::Writer};
 
 use std::fmt;
 

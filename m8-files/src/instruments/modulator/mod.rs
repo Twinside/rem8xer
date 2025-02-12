@@ -1,4 +1,4 @@
-use crate::reader::*;
+use crate::{reader::*, writer::Writer};
 use adsr_env::ADSREnv;
 use ahd_env::AHDEnv;
 use drum_env::DrumEnv;

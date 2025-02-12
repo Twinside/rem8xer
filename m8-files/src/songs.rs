@@ -1,20 +1,3 @@
-//! This library lets you parse Dirtywave M8 data
-//!
-//! See, in particular, the `read` method available on:
-//! - [`Song::read`]
-//! - [`Instrument::read`]
-//! - [`Scale::read`]
-//! - [`Theme::read`]
-//!
-//! E.g.:
-//! ```
-//! use m8_files::*;
-//!
-//! let mut f = std::fs::File::open("./examples/songs/TEST-FILE.m8s").unwrap();
-//! let song = song::Song::read_from_stream(&mut f).unwrap();
-//! dbg!(song);
-//! ```
-//!
 use std::fmt;
 
 use crate::eq::Equ;
@@ -27,6 +10,7 @@ pub use crate::scale::*;
 pub use crate::settings::*;
 pub use crate::theme::*;
 pub use crate::version::*;
+use crate::writer::Writer;
 
 use arr_macro::arr;
 use byteorder::{ByteOrder, LittleEndian};
@@ -905,9 +889,7 @@ impl fmt::Debug for Groove {
 ////////////////////////////////////////////////////////////////////////////////////
 #[cfg(test)]
 mod tests {
-    use modulator::Mod;
-
-    use crate::song::*;
+    use crate::{modulator::Mod, songs::*};
     use std::fs::File;
 
     fn test_file() -> Song {
@@ -926,7 +908,7 @@ mod tests {
         assert!(
             match &test_file.instruments[1] {
                 Instrument::WavSynth(s) => {
-                    assert_eq!(s.transp_eq.transpose, true);
+                    assert_eq!(s.transpose, true);
                     assert_eq!(s.size, 0x20);
                     assert_eq!(s.synth_params.mixer_reverb, 0xD0);
                     assert!(match s.synth_params.mods[0] {
@@ -954,7 +936,7 @@ mod tests {
         );
         assert!(match &test_file.instruments[2] {
             Instrument::MacroSynth(s) => {
-                assert_eq!(s.transp_eq.transpose, false);
+                assert_eq!(s.transpose, false);
                 assert!(match s.synth_params.mods[0] {
                     Mod::TrigEnv(_) => true,
                     _ => false,

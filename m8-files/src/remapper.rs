@@ -1,7 +1,7 @@
 use arr_macro::arr;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
-use crate::{song::{Song, V4_1_OFFSETS, V4_OFFSETS}, Instrument, Version};
+use crate::{songs::{Song, V4_1_OFFSETS, V4_OFFSETS}, Instrument, Version};
 
 #[repr(u8)]
 #[allow(non_camel_case_types)]
