@@ -1,11 +1,11 @@
-use crate::reader::*;
+use crate::{reader::*, Version};
 use crate::instruments::modulator::ahd_env::AHDEnv;
 use crate::instruments::modulator::lfo::LFO;
 
 use arr_macro::arr;
 
 use super::modulator::Mod;
-use super::{dests, params, ParameterGatherer};
+use super::{dests, ParameterGatherer};
 
 /// Type storing transpose field and eq number
 #[derive(PartialEq, Copy, Clone, Default, Debug)]
@@ -18,20 +18,34 @@ impl TranspEq {
     pub fn set_eq(&mut self, eq_ix : u8) {
         self.eq = eq_ix;
     }
-}
-impl From<TranspEq> for u8 {
-    fn from(value: TranspEq) -> Self {
-        (if value.transpose { 1 } else { 0 }) |
-        (value.eq << 1)
-    }
-}
 
-impl From<u8> for TranspEq {
-    fn from(value: u8) -> Self {
+    fn fromv4_0(value : u8) -> Self {
         Self {
             transpose: (value & 1) != 0,
             eq: value >> 1
         }
+    }
+
+    fn fromv4_1(value : u8) -> Self {
+        Self {
+            transpose: (value & 1) != 0,
+            eq: 0x00
+        }
+    }
+
+    pub fn from_version(ver: Version, value: u8) -> Self {
+        if ver.at_least(4, 1) {
+            Self::fromv4_1(value)
+        } else {
+            Self::fromv4_0(value)
+        }
+    }
+}
+
+impl From<TranspEq> for u8 {
+    fn from(value: TranspEq) -> Self {
+        (if value.transpose { 1 } else { 0 }) |
+        (value.eq << 1)
     }
 }
 
@@ -220,7 +234,7 @@ impl SynthParams {
         })
     }
 
-    pub fn write(&self, w: &mut Writer, mod_offset: usize) {
+    pub fn write(&self, _ver: Version, w: &mut Writer, mod_offset: usize) {
         w.write(self.filter_type);
         w.write(self.filter_cutoff);
         w.write(self.filter_res);
@@ -243,6 +257,7 @@ impl SynthParams {
     }
 
     pub fn from_reader3(
+        _version: Version,
         reader: &mut Reader,
         volume: u8,
         pitch: u8,

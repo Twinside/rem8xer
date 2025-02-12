@@ -187,7 +187,7 @@ impl Instrument {
         };
     }
 
-    pub fn describe_succint<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
+    pub fn describe_succint<PG : ParameterGatherer>(&self, pg: &mut PG, _ver: Version) {
         let (k, transp_eq, common) =
             match self {
                 Instrument::WavSynth(ws)     =>
@@ -196,7 +196,7 @@ impl Instrument {
                     ("MACROSYN", ms.transp_eq, Some(&ms.synth_params)),
                 Instrument::Sampler(s)        =>
                     ("SAMPLE", s.transp_eq, Some(&s.synth_params)),
-                Instrument::MIDIOut(mo)       =>
+                Instrument::MIDIOut(_mo)       =>
                     ("MIDIOUT", TranspEq::default(), None),
                 Instrument::FMSynth(fs)       =>
                     ("FMSYNTH", fs.transp_eq, Some(&fs.synth_params)),
@@ -239,15 +239,15 @@ impl Instrument {
         }
     }
 
-    pub fn write(&self, w: &mut Writer) {
+    pub fn write(&self, ver: Version, w: &mut Writer) {
         match self {
-            Instrument::WavSynth(ws)     => { w.write(0); ws.write(w); }
-            Instrument::MacroSynth(ms) => { w.write(1); ms.write(w); }
-            Instrument::Sampler(s)        => { w.write(2); s.write(w); }
-            Instrument::MIDIOut(mo)       => { w.write(3); mo.write(w); }
-            Instrument::FMSynth(fs)       => { w.write(4); fs.write(w); }
-            Instrument::HyperSynth(hs) => { w.write(5); hs.write(w); }
-            Instrument::External(ex) => { w.write(6); ex.write(w); }
+            Instrument::WavSynth(ws)     => { w.write(0); ws.write(ver, w); }
+            Instrument::MacroSynth(ms) => { w.write(1); ms.write(ver, w); }
+            Instrument::Sampler(s)        => { w.write(2); s.write(ver, w); }
+            Instrument::MIDIOut(mo)       => { w.write(3); mo.write(ver, w); }
+            Instrument::FMSynth(fs)       => { w.write(4); fs.write(ver, w); }
+            Instrument::HyperSynth(hs) => { w.write(5); hs.write(ver, w); }
+            Instrument::External(ex) => { w.write(6); ex.write(ver, w); }
             Instrument::None => w.write(0xFF),
         }
     }
@@ -325,13 +325,13 @@ impl Instrument {
         let kind = reader.read();
 
         let instr = match kind {
-            0x00 => Self::WavSynth(WavSynth::from_reader(reader, number, version)?),
-            0x01 => Self::MacroSynth(MacroSynth::from_reader(reader, number, version)?),
-            0x02 => Self::Sampler(Sampler::from_reader(reader, start_pos, number, version)?),
-            0x03 => Self::MIDIOut(MIDIOut::from_reader(reader, number, version)?),
-            0x04 => Self::FMSynth(FMSynth::from_reader(reader, number, version)?),
-            0x05 if version.at_least(3, 0) => Self::HyperSynth(HyperSynth::from_reader(reader, number)?),
-            0x06 if version.at_least(3, 0) => Self::External(ExternalInst::from_reader(reader, number)?),
+            0x00 => Self::WavSynth(WavSynth::from_reader(version, reader, number, version)?),
+            0x01 => Self::MacroSynth(MacroSynth::from_reader(version, reader, number, version)?),
+            0x02 => Self::Sampler(Sampler::from_reader(version, reader, start_pos, number, version)?),
+            0x03 => Self::MIDIOut(MIDIOut::from_reader(version, reader, number, version)?),
+            0x04 => Self::FMSynth(FMSynth::from_reader(version, reader, number, version)?),
+            0x05 if version.at_least(3, 0) => Self::HyperSynth(HyperSynth::from_reader(version, reader, number)?),
+            0x06 if version.at_least(3, 0) => Self::External(ExternalInst::from_reader(version, reader, number)?),
             0xFF => Self::None,
             _ => return Err(ParseError(format!("Instrument type {} not supported", kind))),
         };

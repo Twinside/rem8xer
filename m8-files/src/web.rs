@@ -3,7 +3,7 @@ use std::iter;
 use js_sys::Uint8Array;
 use wasm_bindgen::prelude::*;
 
-use crate::{eq::{EqMode, Equ}, reader::{Reader, Writer}, remapper::{Remapper, RemapperDescriptorBuilder}, song::{Chain, Phrase, Song, SongSteps, Table, V4_OFFSETS}, Instrument, ParameterGatherer, Version};
+use crate::{eq::{EqMode, Equ}, reader::{Reader, Writer}, remapper::{Remapper, RemapperDescriptorBuilder}, song::{Chain, Phrase, Song, SongSteps, Table}, Instrument, ParameterGatherer, Version};
 
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the
@@ -396,7 +396,7 @@ pub fn dump_instrument(from: &WasmSong, instrument: usize) -> Result<Uint8Array,
     }
 
     let mut w = Writer::new(vec![0; Instrument::V4_SIZE]);
-    from.song.instruments[instrument].write(&mut w);
+    from.song.instruments[instrument].write(from.song.version, &mut w);
     let fnl: &[u8] = &w.finish();
     Ok(Uint8Array::from(fnl))
 }

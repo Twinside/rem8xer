@@ -236,7 +236,7 @@ impl Song {
         w.seek(ofs.instruments);
         for instr in &self.instruments {
             let pos = w.pos();
-            instr.write(w);
+            instr.write(self.version, w);
             w.seek(pos + INSTRUMENT_MEMORY_SIZE);
         }
 
