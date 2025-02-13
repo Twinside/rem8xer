@@ -1,3 +1,7 @@
+# 0.6
+
+ - M8 Firmware 4.1 support
+
 # 0.5.1
 
  - Fix: botchered EQ writing in file...

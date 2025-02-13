@@ -43,6 +43,11 @@ pub fn song_name(song: &WasmSong) -> String {
 }
 
 #[wasm_bindgen]
+pub fn song_version(song: &WasmSong) -> String {
+    format!("{}", song.song.version)
+}
+
+#[wasm_bindgen]
 pub fn write_song(song: &WasmSong, current_song: js_sys::Uint8Array) -> Result<js_sys::Uint8Array, String> {
     if !song.song.version.at_least(4, 0) {
         return Err("Only version 4 song can be written".into())
@@ -634,6 +639,16 @@ pub fn allocated_instrument_list(song: &WasmSong) -> Vec<usize> {
         .enumerate()
         .filter_map(|(i, inst)|
             if inst.is_empty() { None } else { Some(i) })
+        .collect()
+}
+
+#[wasm_bindgen]
+pub fn allocated_eq_list(song: &WasmSong) -> Vec<usize> {
+    song.song.eqs
+        .iter()
+        .enumerate()
+        .filter_map(|(i, eq)|
+            if eq.is_empty() { None } else { Some(i) })
         .collect()
 }
 

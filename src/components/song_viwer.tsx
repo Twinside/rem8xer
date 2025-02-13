@@ -1,12 +1,17 @@
 import * as W from '../../m8-files/pkg/m8_files';
 import { clearPanel, GlobalState, SongPane } from "../state";
 import { downloadBlob } from "../utils";
-import emptyUrl from "../V4EMPTY.m8s";
-import revUrl from "../CMDMAPPING.m8s";
+import empty4_0_url from "../V4EMPTY.m8s";
+import empty4_1_url from "../V4-1BETAEMPTY.m8s";
+import reverseUrl_4_0 from "../CMDMAPPING_4_0.m8s";
+import reverseUrl_4_1 from "../CMDMAPPING_4_1_beta.m8s";
 import { loadDroppedSong, loadUrl } from "../fileio";
 import { StepsRender } from "./steps_render";
 import { useContext } from 'preact/hooks';
 import { UndoRedoer } from './edit_log';
+
+const  versionHelpText =
+  "Song version is important for writing song, you can only write a song of the same version, you can transfert across version though.";
 
 export function SongHeader(props: { panel: SongPane}) {
   const state = useContext(GlobalState);
@@ -18,11 +23,19 @@ export function SongHeader(props: { panel: SongPane}) {
   if (song === undefined) {
     // debug helper
     const debugLoad = false
-      ? <button onClick={() => loadUrl(state, panel, revUrl)}>Reversing</button>
+      ? <>
+        <button onClick={() => loadUrl(state, panel, reverseUrl_4_0)}>Reversing 4.0</button>
+        <button onClick={() => loadUrl(state, panel, reverseUrl_4_1)}>Reversing 4.1</button>
+      </>
       : undefined;
 
     return <div class="rootcolumn">
-      <button onClick={() => loadUrl(state, panel, emptyUrl)}>Load empty song</button>
+      <button
+        onClick={() => loadUrl(state, panel, empty4_0_url)}
+        title={versionHelpText}>Load v4.0 empty song</button>
+      <button
+        onClick={() => loadUrl(state, panel, empty4_1_url)}
+        title={versionHelpText}>Load v4.1 empty song</button>
       {debugLoad}
       <div class="filetarget"
            onDragOver={(ev) => ev.preventDefault()}
@@ -33,6 +46,7 @@ export function SongHeader(props: { panel: SongPane}) {
   }
 
   const songName = W.song_name(song);
+  const songVersion = W.song_version(song);
 
   const save = () => {
     try {
@@ -50,7 +64,7 @@ export function SongHeader(props: { panel: SongPane}) {
 
   const activeTab = props.panel.active_view.value;
   return <div>
-      <h3 style="display: inline-block;">{songName}</h3>
+      <h3 style="display: inline-block;" title={`'${panel.loaded_name}' version ${songVersion}`}>{songName}</h3>
       <span class="separator" />
       <button onClick={save}>Save</button>
       <button onClick={clear}>Clear</button>

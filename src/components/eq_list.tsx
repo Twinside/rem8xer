@@ -7,13 +7,13 @@ export function EqList(props: {
   bump: Signal<number>,
   selected_eq: Signal<number | undefined>
 } ) {
-  const phrases = W.allocated_table(props.song);
+  const eqs = W.allocated_eq_list(props.song);
   const elems = [];
   const eqPerRow = 8;
   let bucket = [];
-  let prevEq = phrases.length > 0 ? phrases[0] : 0;
+  let prevEq = eqs.length > 0 ? eqs[0] : 0;
 
-  for (let vix = 0; vix < 32 + 3; vix++) {
+  for (const vix of eqs) {
     if ((prevEq / eqPerRow | 0 ) !== (vix / eqPerRow | 0)) {
         elems.push(<div class="instr">{bucket}</div>);
         bucket = [];
