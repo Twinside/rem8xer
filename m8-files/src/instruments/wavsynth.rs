@@ -6,10 +6,9 @@ use num_enum::IntoPrimitive;
 use num_enum::TryFromPrimitive;
 
 use super::dests;
-use super::params;
 use super::CommandPack;
-use super::ParameterGatherer;
 
+/// Wavsynth wave shape
 #[repr(u8)]
 #[allow(non_camel_case_types)]
 #[derive(IntoPrimitive, TryFromPrimitive)]
@@ -146,7 +145,7 @@ const DESTINATIONS : [&'static str; 15] =
         dests::MOD_BINV,
     ];
 
-const WAVSYNTH_FILTER_TYPES : [&'static str; 12] =
+pub(crate) const WAVSYNTH_FILTER_TYPES : [&'static str; 12] =
     [
         "OFF",
         "LOWPASS",
@@ -173,19 +172,8 @@ impl WavSynth {
         &DESTINATIONS
     }
 
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
-        pg.str(params::NAME, &self.name);
-        pg.bool(params::TRANSPOSE, self.transpose);
-        pg.hex(params::TBLTIC, self.table_tick);
-        pg.hex(params::EQ, self.synth_params.associated_eq);
-        pg.enumeration("SHAPE", self.shape as u8, &format!("{:?}", self.shape));
-        pg.hex("SIZE", self.size);
-        pg.hex("MULT", self.mult);
-        pg.hex("WARP", self.warp);
-        pg.hex("SCAN", self.scan);
-
-        self.synth_params.describe(pg, &WAVSYNTH_FILTER_TYPES);
-        self.synth_params.describe_modulators(pg, self.destination_names(ver));
+    pub fn human_readable_filter(&self) -> &'static str {
+        WAVSYNTH_FILTER_TYPES[self.synth_params.filter_type as usize]
     }
 
     pub fn write(&self, ver: Version, w: &mut Writer) {

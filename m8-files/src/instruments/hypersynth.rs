@@ -4,9 +4,7 @@ use super::common::SynthParams;
 use super::common::TranspEq;
 use super::common::COMMON_FILTER_TYPES;
 use super::dests;
-use super::params;
 use super::CommandPack;
-use super::ParameterGatherer;
 use super::Version;
 
 use arr_macro::arr;
@@ -87,23 +85,8 @@ impl HyperSynth {
         &DESTINATIONS
     }
 
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
-        pg.str(params::NAME, &self.name);
-        pg.bool(params::TRANSPOSE, self.transpose);
-        pg.hex(params::EQ, self.synth_params.associated_eq);
-        pg.hex(params::SCALE, self.scale);
-        let dc = &self.default_chord;
-        pg.str("CHORD", &format!("{:02X} | {:02X} {:02X} {:02X} {:02X} {:02X} {:02X}", dc[0], dc[1], dc[2], dc[3], dc[4], dc[5], dc[6]));
-        pg.hex(params::TBLTIC, self.table_tick);
-        pg.hex("SHIFT", self.shift);
-        pg.hex("SWARM", self.swarm);
-        pg.hex("WIDTH", self.width);
-        pg.hex("SUBOSC", self.subosc);
-
-        self.synth_params.describe(pg, &COMMON_FILTER_TYPES);
-        self.synth_params.describe_modulators(pg, self.destination_names(ver));
-
-        // TODO: other chords
+    pub fn human_readable_filter(&self) -> &'static str {
+        COMMON_FILTER_TYPES[self.synth_params.filter_type as usize]
     }
 
     pub fn write(&self, ver: Version, w: &mut Writer) {

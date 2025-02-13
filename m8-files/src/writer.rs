@@ -1,3 +1,4 @@
+
 pub struct Writer {
     buffer: Vec<u8>,
     pos: usize

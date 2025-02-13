@@ -1,9 +1,8 @@
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
-use crate::{ParameterGatherer, params, Version};
+use crate::{writer::Writer, Version};
 
 use super::{M8Result, Mod, ParseError, Reader};
-use crate::writer::Writer;
 
 
 #[repr(u8)]
@@ -67,15 +66,6 @@ const LFO_COMMAND_NAMES : [[&'static str; 5]; 4] =
 impl LFO {
     pub fn command_name(_ver: Version, mod_id: usize) -> &'static[&'static str] {
         &LFO_COMMAND_NAMES[mod_id]
-    }
-
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str]) {
-        let dest_str = dests.get(self.dest as usize).unwrap_or(&"??");
-        pg.enumeration(params::DEST, self.dest, dest_str);
-        pg.enumeration(params::LFOSHAPE, self.shape as u8, &format!("{:?}", self.shape));
-        pg.hex(params::AMOUNT, self.amount);
-        pg.hex(params::FREQ, self.freq);
-        pg.enumeration(params::TRIGGER, self.shape as u8, &format!("{:?}", self.trigger_mode));
     }
 
     pub fn from_reader2(reader: &mut Reader) -> M8Result<Self> {

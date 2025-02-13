@@ -1,25 +1,32 @@
 use crate::reader::*;
 use crate::version::*;
 use crate::writer::Writer;
-use common::SynthParams;
-use external_inst::ExternalInst;
-use fmsynth::FMSynth;
-use hypersynth::HyperSynth;
-use macrosynth::MacroSynth;
-use midi::MIDIOut;
-use modulator::Mod;
-use sampler::Sampler;
-use wavsynth::WavSynth;
 
-pub mod common;
-pub mod modulator;
-pub mod external_inst;
-pub mod midi;
-pub mod macrosynth;
-pub mod fmsynth;
-pub mod hypersynth;
-pub mod sampler;
-pub mod wavsynth;
+mod common;
+mod modulator;
+mod external_inst;
+mod midi;
+mod macrosynth;
+mod fmsynth;
+mod hypersynth;
+mod sampler;
+mod wavsynth;
+
+pub use common::{
+    LimitType,
+    SynthParams,
+};
+
+pub(crate) use common::COMMON_FILTER_TYPES;
+
+pub use external_inst::*;
+pub use fmsynth::*;
+pub use hypersynth::*;
+pub use macrosynth::*;
+pub use midi::*;
+pub use modulator::*;
+pub use sampler::*;
+pub use wavsynth::*;
 
 #[derive(PartialEq, Debug, Clone, Default)]
 pub enum Instrument {
@@ -34,31 +41,9 @@ pub enum Instrument {
     None
 }
 
-/// Interface to gather and display parameters in a semi
-/// automated manner
-pub trait ParameterGatherer {
-    /// Display a hex value for the instrument
-    fn hex(&mut self, name: &str, val: u8);
-
-    /// Display a boolean value for the described element
-    fn bool(&mut self, name: &str, val: bool);
-
-    /// Display a floating point value.
-    fn float(&mut self, name: &str, val: f64);
-
-    /// Display a string
-    fn str(&mut self, name: &str, val: &str);
-
-    /// Write an enumeration, with an hex code and a string representation
-    /// alongside it.
-    fn enumeration(&mut self, name: &str, hex: u8, val: &str);
-
-    /// Enter a sub scope, the returned object represent the subscope
-    /// where you can write new parameters.
-    fn nest(&mut self, name: &str) -> Self;
-}
-
-pub mod params {
+/// Various constants for common parameters, to avoid nasty typos everywhere
+#[allow(unused)]
+pub(crate) mod params {
     pub const NAME : &'static str = "NAME";
     pub const TRANSPOSE : &'static str = "TRANSPOSE";
     pub const TBLTIC : &'static str = "TBL. TIC";
@@ -85,7 +70,8 @@ pub mod params {
     pub const SOURCE : &'static str = "SRC";
 }
 
-pub mod dests {
+/// Various constants for modulation destinations, to avoid nasty typos everywhere
+pub(crate) mod dests {
     pub const OFF : &'static str = "OFF";
     pub const VOLUME : &'static str = "VOLUME";
     pub const PITCH : &'static str = "PITCH";
@@ -100,7 +86,8 @@ pub mod dests {
     pub const MOD_BINV : &'static str = "MOD BINV";
 }
 
-/// For every instrument, retrieve the command names
+/// This structure will aggregate for every instrument and its
+/// modulator the name of the commands associated to it.
 #[derive(Clone, Copy)]
 pub struct CommandPack {
     /// Instruments command
@@ -118,12 +105,19 @@ impl Default for CommandPack {
 }
 
 impl CommandPack {
-    pub const BASE_INSTRUMENT_COMMAND_COUNT : usize = 18;
+    /// Instrument specific command start at 0x80
     pub const INSTRUMENT_COMMAND_OFFSET : usize = 0x80;
+
+    /// If we are below INSTRUMENT_COMMAND_OFFSET + this number, we will access to
+    /// CommandPack::instr array, for instrument specific command.
+    pub const BASE_INSTRUMENT_COMMAND_COUNT : usize = 18;
+
+    /// Last base instrument command index.
     pub const BASE_INSTRUMENT_COMMAND_END : usize =
         CommandPack::INSTRUMENT_COMMAND_OFFSET +
             Mod::COMMAND_PER_MOD * SynthParams::MODULATOR_COUNT;
 
+    /// Does this command pack can render properly a given command.
     pub fn accepts(self, cmd: u8) -> bool {
         let cmd = cmd as usize;
         CommandPack::INSTRUMENT_COMMAND_OFFSET <= cmd &&
@@ -161,56 +155,15 @@ impl CommandPack {
     }
 }
 
-pub const INSTRUMENT_MEMORY_SIZE : usize = 215;
-// const MOD_OFFSET : usize = 0x3B;
 
 impl Instrument {
-    pub const V4_SIZE : usize = INSTRUMENT_MEMORY_SIZE;
+    pub const INSTRUMENT_MEMORY_SIZE : usize = 215;
+    pub const V4_SIZE : usize = Self::INSTRUMENT_MEMORY_SIZE;
 
     pub fn is_empty(&self) -> bool {
         match self {
             Instrument::None => true,
             _ => false
-        }
-    }
-
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
-        match self {
-            Instrument::WavSynth(ws)     => ws.describe(&mut pg.nest("WAVSYNTH"), ver),
-            Instrument::MacroSynth(ms) => ms.describe(&mut pg.nest("MACROSYN"), ver),
-            Instrument::Sampler(s)        => s.describe(&mut pg.nest("SAMPLE"), ver),
-            Instrument::MIDIOut(mo)       => mo.describe(&mut pg.nest("MIDIOUT"), ver),
-            Instrument::FMSynth(fs)       => fs.describe(&mut pg.nest("FMSYNTH"), ver),
-            Instrument::HyperSynth(hs) => hs.describe(&mut pg.nest("HYPERSYNTH"), ver),
-            Instrument::External(ex) => ex.describe(&mut pg.nest("EXTERNALINST"), ver),
-            Instrument::None => {}
-        };
-    }
-
-    pub fn describe_succint<PG : ParameterGatherer>(&self, pg: &mut PG, _ver: Version) {
-        let (k, common) =
-            match self {
-                Instrument::WavSynth(ws)     =>
-                    ("WAVSYNTH", Some(&ws.synth_params)),
-                Instrument::MacroSynth(ms) =>
-                    ("MACROSYN", Some(&ms.synth_params)),
-                Instrument::Sampler(s)        =>
-                    ("SAMPLE", Some(&s.synth_params)),
-                Instrument::MIDIOut(_mo)       =>
-                    ("MIDIOUT", None),
-                Instrument::FMSynth(fs)       =>
-                    ("FMSYNTH", Some(&fs.synth_params)),
-                Instrument::HyperSynth(hs) =>
-                    ("HYPERSYNTH", Some(&hs.synth_params)),
-                Instrument::External(ex) =>
-                    ("EXTERNALINST", Some(&ex.synth_params)),
-                Instrument::None => ("NONE", None)
-            };
-
-        pg.str("KIND", k);
-        match common {
-            None => {}
-            Some(c) => c.describe_succint(pg)
         }
     }
 
@@ -309,7 +262,7 @@ impl Instrument {
         let len = buf.len();
         let mut reader = Reader::new(buf);
 
-        if len < INSTRUMENT_MEMORY_SIZE + Version::SIZE {
+        if len < Instrument::INSTRUMENT_MEMORY_SIZE + Version::SIZE {
             return Err(ParseError(
                 "File is not long enough to be a M8 Instrument".to_string(),
             ));
@@ -335,7 +288,7 @@ impl Instrument {
             _ => return Err(ParseError(format!("Instrument type {} not supported", kind))),
         };
 
-        reader.set_pos(start_pos + INSTRUMENT_MEMORY_SIZE);
+        reader.set_pos(start_pos + Instrument::INSTRUMENT_MEMORY_SIZE);
 
         Ok(instr)
     }

@@ -7,8 +7,6 @@ use num_enum::TryFromPrimitive;
 
 use super::dests;
 use super::CommandPack;
-use super::ParameterGatherer;
-use super::params;
 
 #[repr(u8)]
 #[allow(non_camel_case_types)]
@@ -98,24 +96,6 @@ impl Sampler {
 
     pub fn destination_names(&self, _ver: Version) -> &'static [&'static str] {
         &DESTINATIONS
-    }
-
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
-        pg.str(params::NAME, &self.name);
-        pg.bool(params::TRANSPOSE, self.transpose);
-        pg.hex(params::TBLTIC, self.table_tick);
-        pg.hex(params::EQ, self.synth_params.associated_eq);
-        pg.str("SAMPLE", &self.sample_path);
-        pg.enumeration("PLAY", self.play_mode as u8, &format!("{:?}", self.play_mode));
-        pg.hex("SLICE", self.slice);
-        pg.hex("START", self.start);
-        pg.hex("LOOP", self.loop_start);
-        pg.hex("LEN", self.length);
-
-        pg.hex("DEGRADE", self.degrade);
-
-        self.synth_params.describe(pg, &COMMON_FILTER_TYPES);
-        self.synth_params.describe_modulators(pg, self.destination_names(ver));
     }
 
     pub fn write(&self, ver: Version, w: &mut Writer) {

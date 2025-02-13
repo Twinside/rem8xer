@@ -1,12 +1,11 @@
-use crate::writer::Writer;
-use crate::{reader::*, Version};
-use crate::instruments::modulator::ahd_env::AHDEnv;
-use crate::instruments::modulator::lfo::LFO;
+use std::fmt;
 
+use crate::writer::Writer;
+use crate::reader::*;
+use crate::Version;
+use super::modulator::*;
 use arr_macro::arr;
 
-use super::modulator::Mod;
-use super::{dests, params, ParameterGatherer};
 
 /// Type storing transpose field and eq number
 #[derive(PartialEq, Copy, Clone, Default, Debug)]
@@ -58,8 +57,14 @@ const LIMIT_TYPE : [&str; 8] =
        "POST:W2"
     ];
 
-#[derive(PartialEq, Debug, Clone, Copy)]
-pub struct LimitType(u8);
+#[derive(PartialEq, Clone, Copy)]
+pub struct LimitType(pub u8);
+
+impl fmt::Debug for LimitType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(LIMIT_TYPE[self.0 as usize])
+    }
+}
 
 impl TryFrom<u8> for LimitType{
     type Error = ParseError;
@@ -108,7 +113,7 @@ pub struct SynthParams {
     pub mods: [Mod; SynthParams::MODULATOR_COUNT],
 }
 
-pub const COMMON_FILTER_TYPES : [&'static str; 8] =
+pub(crate) const COMMON_FILTER_TYPES : [&'static str; 8] =
     [
         "OFF",
         "LOWPASS",
@@ -123,41 +128,8 @@ pub const COMMON_FILTER_TYPES : [&'static str; 8] =
 impl SynthParams {
     pub const MODULATOR_COUNT : usize = 4;
 
-    pub fn describe_modulators<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str]) {
-        self.mods[0].describe(&mut pg.nest("MOD1"), 0, dests);
-        self.mods[1].describe(&mut pg.nest("MOD2"), 1, dests);
-        self.mods[2].describe(&mut pg.nest("MOD3"), 2, dests);
-        self.mods[3].describe(&mut pg.nest("MOD4"), 3, dests);
-    }
-
     pub fn set_eq(&mut self, eq: u8) {
         self.associated_eq = eq
-    }
-
-    pub fn describe_succint<PG : ParameterGatherer>(&self, pg: &mut PG) {
-        pg.hex(params::EQ, self.associated_eq);
-        pg.hex(dests::AMP, self.amp);
-        pg.enumeration("LIM", self.limit.0, self.limit.str());
-        pg.hex(dests::PAN, self.mixer_pan);
-        pg.hex("DRY", self.mixer_dry);
-        pg.hex("CHORUS", self.mixer_chorus);
-        pg.hex("DELAY", self.mixer_delay);
-        pg.hex("REVERB", self.mixer_reverb);
-    }
-
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, filters: &[&str]) {
-        pg.hex("FINE", self.fine_tune);
-
-        match filters.get(self.filter_type as usize) {
-            None =>
-                pg.enumeration("FILTER", self.filter_type, &format!("{:02X}", self.filter_type)),
-            Some(str) => 
-                pg.enumeration("FILTER", self.filter_type, str)
-        };
-
-        pg.hex("CUT", self.filter_cutoff);
-        pg.hex("RES", self.filter_res);
-        self.describe_succint(pg);
     }
 
     pub fn mod_only2(_reader: &mut Reader) -> M8Result<Self>{

@@ -1,15 +1,14 @@
 use std::fmt;
 
 use crate::eq::Equ;
-pub use crate::fx::*;
-pub use crate::instruments::*;
+use crate::fx::*;
+use crate::instruments::*;
 use crate::reader::*;
 use crate::remapper::InstrumentMapping;
 use crate::remapper::PhraseMapping;
-pub use crate::scale::*;
-pub use crate::settings::*;
-pub use crate::theme::*;
-pub use crate::version::*;
+use crate::scale::*;
+use crate::settings::*;
+use crate::version::*;
 use crate::writer::Writer;
 
 use arr_macro::arr;
@@ -169,14 +168,14 @@ impl Song {
         f.debug_list().entries(self.eqs.iter()).finish()
     }
 
-    pub fn read_from_stream(reader: &mut impl std::io::Read) -> M8Result<Self> {
+    pub fn read(reader: &mut impl std::io::Read) -> M8Result<Self> {
         let mut buf: Vec<u8> = vec![];
         reader.read_to_end(&mut buf).unwrap();
         let mut reader = Reader::new(buf);
-        Self::read(&mut reader)
+        Self::read_from_reader(&mut reader)
     }
 
-    pub fn read(mut reader: &mut Reader) -> M8Result<Self> {
+    pub fn read_from_reader(mut reader: &mut Reader) -> M8Result<Self> {
         if reader.len() < Self::SIZE_PRIOR_TO_2_5 + Version::SIZE {
             return Err(ParseError(
                 "File is not long enough to be a M8 song".to_string(),
@@ -194,11 +193,16 @@ impl Song {
         Self::from_reader(&mut reader, version)
     }
 
-    pub fn write(&self, w: &mut Writer) {
-        self.write_patterns(self.offsets(), w);
+    pub fn write(&self, w: &mut Writer) -> Result<(), String> {
+        if !self.version.at_least(4, 0) {
+            Err(String::from("Only version 4.0 or above song can be rewritten"))
+        } else {
+            self.write_patterns(V4_OFFSETS, w);
+            Ok(())
+        }
     }
 
-    pub fn write_patterns(&self, ofs : &Offsets, w : &mut Writer) {
+    fn write_patterns(&self, ofs : Offsets, w : &mut Writer) {
         w.seek(ofs.song);
         w.write_bytes(&self.song.steps);
 
@@ -221,7 +225,7 @@ impl Song {
         for instr in &self.instruments {
             let pos = w.pos();
             instr.write(self.version, w);
-            w.seek(pos + INSTRUMENT_MEMORY_SIZE);
+            w.seek(pos + Instrument::INSTRUMENT_MEMORY_SIZE);
         }
 
         w.seek(ofs.eq);
@@ -321,7 +325,7 @@ impl Song {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-/// MARK: SongSteps
+// MARK: SongSteps
 ////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Clone)]
 pub struct SongSteps {
@@ -374,7 +378,7 @@ impl fmt::Debug for SongSteps {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-/// MARK: Chains
+// MARK: Chains
 ////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Clone, Default)]
 pub struct Chain {
@@ -485,7 +489,7 @@ impl ChainStep {
 
 
 ////////////////////////////////////////////////////////////////////////////////////
-/// MARK: Phrase
+// MARK: Phrase
 ////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Clone, Default)]
 pub struct Phrase {
@@ -664,7 +668,7 @@ impl Step {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-/// MARK: Note
+// MARK: Note
 ////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub struct Note(pub u8);
@@ -710,7 +714,7 @@ impl fmt::Display for Note {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-/// MARK: Table
+// MARK: Table
 ////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Clone)]
 pub struct Table {
@@ -848,7 +852,7 @@ impl TableStep {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-/// MARK: Groove
+// MARK: Groove
 ////////////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Clone)]
 pub struct Groove {
@@ -885,16 +889,16 @@ impl fmt::Debug for Groove {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-/// MARK: Tests
+// MARK: Tests
 ////////////////////////////////////////////////////////////////////////////////////
 #[cfg(test)]
 mod tests {
-    use crate::{modulator::Mod, songs::*};
+    use crate::songs::*;
     use std::fs::File;
 
     fn test_file() -> Song {
         let mut f = File::open("./examples/songs/TEST-FILE.m8s").expect("Could not open TEST-FILE");
-        Song::read_from_stream(&mut f).expect("Could not parse TEST-FILE")
+        Song::read(&mut f).expect("Could not parse TEST-FILE")
     }
 
     #[test]

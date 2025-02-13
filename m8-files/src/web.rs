@@ -3,7 +3,7 @@ use std::iter;
 use js_sys::Uint8Array;
 use wasm_bindgen::prelude::*;
 
-use crate::{eq::{EqMode, Equ}, reader::Reader, remapper::{Remapper, RemapperDescriptorBuilder}, songs::{Chain, Phrase, Song, SongSteps, Table}, Instrument, ParameterGatherer, Version};
+use crate::{eq::{EqMode, Equ}, param_gather::{Describable, ParameterGatherer}, reader::Reader, remapper::{Remapper, RemapperDescriptorBuilder}, songs::{Chain, Phrase, Song, SongSteps, Table}, Instrument, Version};
 use crate::writer::Writer;
 
 pub fn set_panic_hook() {
@@ -54,15 +54,17 @@ pub fn write_song(song: &WasmSong, current_song: js_sys::Uint8Array) -> Result<j
     }
 
     let mut w = Writer::new(current_song.to_vec());
-    song.song.write(&mut w);
-    Ok(js_sys::Uint8Array::from(&w.finish()[..]))
+    match song.song.write(&mut w) {
+        Ok(_) => Ok(js_sys::Uint8Array::from(&w.finish()[..])),
+        Err(v) => Err(v)
+    }
 }
 
 #[wasm_bindgen]
 pub fn load_song(arr: js_sys::Uint8Array) -> Result<WasmSong, String> {
     let as_vec : Vec<u8> = arr.to_vec();
     let mut reader = Reader::new(as_vec);
-    let song = Song::read(&mut reader);
+    let song = Song::read_from_reader(&mut reader);
 
     match song {
         Ok(song) => Ok(WasmSong { song }),

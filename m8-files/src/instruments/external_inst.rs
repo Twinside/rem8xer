@@ -2,12 +2,10 @@ use crate::reader::*;
 use crate::writer::Writer;
 use super::common::SynthParams;
 use super::common::TranspEq;
-use super::common::COMMON_FILTER_TYPES;
 use super::dests;
 use super::midi::ControlChange;
 use super::params;
 use super::CommandPack;
-use super::ParameterGatherer;
 use super::Version;
 
 #[derive(PartialEq, Debug, Clone)]
@@ -74,7 +72,8 @@ const DESTINATIONS : [&'static str; 14] =
         dests::MOD_BINV,
     ];
 
-const PORT : [&'static str; 4] =
+/// Ports name of the external instrument
+pub(crate) const PORT : [&'static str; 4] =
     [
         "NONE",
         "MIDI+USB",
@@ -93,24 +92,9 @@ impl ExternalInst {
         &DESTINATIONS
     }
 
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
-        pg.str(params::NAME, &self.name);
-        pg.bool(params::TRANSPOSE, self.transpose);
-        pg.hex(params::EQ, self.synth_params.associated_eq);
-        pg.hex(params::TBLTIC, self.table_tick);
-
-        let port_str =
-            PORT.get(self.port as usize).unwrap_or(&"");
-        pg.enumeration("PORT", self.port, port_str);
-        pg.hex("CHANNEL", self.channel);
-        pg.hex("BANK", self.bank);
-        pg.hex("PROGRAM", self.program);
-        self.cca.describe(&mut pg.nest(params::CCA));
-        self.ccb.describe(&mut pg.nest(params::CCB));
-        self.ccc.describe(&mut pg.nest(params::CCC));
-        self.ccd.describe(&mut pg.nest(params::CCD));
-        self.synth_params.describe(pg, &COMMON_FILTER_TYPES);
-        self.synth_params.describe_modulators(pg, self.destination_names(ver));
+    /// Return human readable name of the port.
+    pub fn human_readable_port(&self) -> &'static str {
+        PORT[self.port as usize]
     }
 
     pub fn write(&self, ver: Version, w: &mut Writer) {

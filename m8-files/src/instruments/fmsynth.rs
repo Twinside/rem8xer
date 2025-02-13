@@ -8,12 +8,10 @@ use num_enum::TryFromPrimitive;
 use arr_macro::arr;
 
 use super::dests;
-use super::params;
 use super::CommandPack;
-use super::ParameterGatherer;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub struct FmAlgo(u8);
+pub struct FmAlgo(pub u8);
 
 const FM_ALGO_STRINGS : [&str; 0x0C] =
     [
@@ -197,17 +195,6 @@ pub struct Operator {
     pub mod_b: u8,
 }
 
-impl Operator {
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG) {
-        pg.str("SHAPE", &format!("{:?}", self.shape));
-        pg.float("RATIO", (self.ratio as f64) + (self.ratio_fine as f64) / 100.0);
-        pg.hex("LEVEL", self.level);
-        pg.hex("FBK", self.feedback);
-        pg.hex("MOD_A", self.mod_a);
-        pg.hex("MOD_B", self.mod_b);
-    }
-}
-
 #[derive(PartialEq, Debug, Clone)]
 pub struct FMSynth {
     pub number: u8,
@@ -235,20 +222,8 @@ impl FMSynth {
         &DESTINATIONS
     }
 
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
-        pg.str(params::NAME, &self.name);
-        pg.bool(params::TRANSPOSE, self.transpose);
-        pg.hex(params::EQ, self.synth_params.associated_eq);
-        pg.hex(params::TBLTIC, self.table_tick);
-        pg.enumeration("ALG", self.algo.0, self.algo.str());
-
-        self.operators[0].describe(&mut pg.nest("A"));
-        self.operators[1].describe(&mut pg.nest("B"));
-        self.operators[2].describe(&mut pg.nest("C"));
-        self.operators[3].describe(&mut pg.nest("D"));
-
-        self.synth_params.describe(pg, &COMMON_FILTER_TYPES);
-        self.synth_params.describe_modulators(pg, self.destination_names(ver));
+    pub fn human_readable_filter(&self) -> &'static str {
+        COMMON_FILTER_TYPES[self.synth_params.filter_type as usize]
     }
 
     pub fn write(&self, ver: Version, w: &mut Writer) {

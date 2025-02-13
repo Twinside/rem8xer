@@ -8,7 +8,6 @@ use arr_macro::arr;
 use super::dests;
 use super::params;
 use super::CommandPack;
-use super::ParameterGatherer;
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub struct ControlChange {
@@ -20,11 +19,6 @@ pub struct ControlChange {
 }
 
 impl ControlChange {
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG) {
-        pg.hex("CC", self.number);
-        pg.hex("VAL", self.value);
-    }
-
     pub fn write(self, writer: &mut Writer) {
         writer.write(self.number);
         writer.write(self.value);
@@ -77,7 +71,7 @@ const DESTINATIONS : [&'static str; 15] =
         dests::MOD_BINV,
     ];
 
-const PORTS : [&'static str; 4] =
+pub(crate) const PORTS : [&'static str; 4] =
     [
         "MIDI + USB",
         "MIDI",
@@ -112,28 +106,8 @@ impl MIDIOut {
         &DESTINATIONS
     }
 
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
-        pg.str(params::NAME, &self.name);
-        pg.bool(params::TRANSPOSE, self.transpose);
-        pg.hex(params::TBLTIC, self.table_tick);
-
-        let port_str = PORTS.get(self.port as usize).unwrap_or(&"??");
-        pg.enumeration("PORT", self.port, port_str);
-        pg.hex("CHANNEL", self.channel);
-        pg.hex("BANK", self.bank_select);
-        pg.hex("PROGRAM", self.program_change);
-        self.custom_cc[0].describe(&mut pg.nest("CCA"));
-        self.custom_cc[1].describe(&mut pg.nest("CCB"));
-        self.custom_cc[2].describe(&mut pg.nest("CCC"));
-        self.custom_cc[3].describe(&mut pg.nest("CCD"));
-        self.custom_cc[4].describe(&mut pg.nest("CCE"));
-        self.custom_cc[5].describe(&mut pg.nest("CCF"));
-        self.custom_cc[6].describe(&mut pg.nest("CCG"));
-        self.custom_cc[7].describe(&mut pg.nest("CCH"));
-        self.custom_cc[8].describe(&mut pg.nest("CCI"));
-        self.custom_cc[9].describe(&mut pg.nest("CCJ"));
-
-        self.mods.describe_modulators(pg, self.destination_names(ver));
+    pub fn human_readable_port(&self) -> &'static str {
+        PORTS[self.port as usize]
     }
 
     pub fn write(&self, _ver: Version, w: &mut Writer) {
