@@ -1,4 +1,4 @@
-import * as W from '../../m8-files/pkg/m8_files';
+import * as W from '../../rem8x/pkg/m8_files';
 import { SongPane } from "../state";
 
 export function PhraseViewer(props: { panel: SongPane }) {

@@ -1,5 +1,5 @@
 import { Signal } from '@preact/signals';
-import * as W from '../../m8-files/pkg/m8_files';
+import * as W from '../../rem8x/pkg/m8_files';
 import { SongPane } from "../state";
 import { EqViewerAt } from './eq_viewer';
 import { Descriptor } from './descriptor';

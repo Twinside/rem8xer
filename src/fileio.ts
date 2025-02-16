@@ -1,5 +1,5 @@
 import { SongPane, State } from "./state";
-import * as W from '../m8-files/pkg/m8_files';
+import * as W from '../rem8x/pkg/m8_files';
 
 async function loadFile(state: State, pane: SongPane, buff : Promise<ArrayBuffer>) : Promise<void> {
     const loaded_file = new Uint8Array(await buff);

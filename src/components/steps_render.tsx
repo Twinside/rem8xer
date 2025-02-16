@@ -1,5 +1,5 @@
 import { useContext } from 'preact/hooks';
-import * as W from '../../m8-files/pkg/m8_files';
+import * as W from '../../rem8x/pkg/m8_files';
 import { EmptyChainEdition, EmptySelection, GlobalState, SongPane } from '../state';
 import { DraggedChain, hexStr, isDraggedChain } from "./common";
 import { HexNumberEditor } from './hexnumbereditor';
