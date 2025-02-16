@@ -1,5 +1,5 @@
 import { useContext } from 'preact/hooks';
-import * as W from '../../rem8x/pkg/m8_files';
+import * as W from '../../rem8x/pkg/rem8x';
 import { GlobalState, SongPane } from "../state";
 import { hexStr } from './common';
 import { JSX } from 'preact/jsx-runtime';

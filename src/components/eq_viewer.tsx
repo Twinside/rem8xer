@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef } from 'preact/hooks';
-import * as W from '../../rem8x/pkg/m8_files';
+import * as W from '../../rem8x/pkg/rem8x';
 import { GlobalState, SongPane } from "../state";
 import { JSX } from 'preact/jsx-runtime';
 import { Descriptor, NestDescriptor } from './descriptor';

@@ -1,4 +1,4 @@
-import * as W from '../../rem8x/pkg/m8_files';
+import * as W from '../../rem8x/pkg/rem8x';
 import { ChainNumberEdition, EmptyChainEdition, GlobalState } from "../state";
 import { Signal } from "@preact/signals";
 import { hexStr } from "./common";

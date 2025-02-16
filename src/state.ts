@@ -1,5 +1,5 @@
 import { Signal, signal } from "@preact/signals";
-import { WasmSong } from "../rem8x/pkg/m8_files";
+import { WasmSong } from "../rem8x/pkg/rem8x";
 import { createContext } from "preact";
 
 export type Position =
