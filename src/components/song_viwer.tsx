@@ -1,4 +1,4 @@
-import * as W from '../../m8-files/pkg/m8_files';
+import * as W from '../../rem8x/pkg/m8_files';
 import { clearPanel, GlobalState, SongPane } from "../state";
 import { downloadBlob } from "../utils";
 import empty4_0_url from "../V4EMPTY.m8s";

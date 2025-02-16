@@ -1,6 +1,6 @@
 import { JSX, render } from "preact";
 import "./style.css";
-import * as W from '../m8-files/pkg/m8_files';
+import * as W from '../rem8x/pkg/m8_files';
 import { EditLog, GlobalState, initState, NumberEdition, PanelSide, PatchData, PatchKind, SongPane, SongRef } from "./state";
 import { InstrumentList } from "./components/instrument_list";
 import { ChainViewer } from "./components/chain_viewer";
