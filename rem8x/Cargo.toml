@@ -12,6 +12,7 @@ keywords = ["music"]
 [dependencies]
 js-sys = "0.3.72"
 wasm-bindgen = "0.2.84"
+console_error_panic_hook = "=0.1.7"
 m8-files ={ path="../m8-files" }
 
 [lib]

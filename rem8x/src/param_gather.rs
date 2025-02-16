@@ -1,5 +1,4 @@
-use crate::{dests, eq::{EqBand, Equ}, ADSREnv, AHDEnv, ControlChange, DrumEnv, ExternalInst, FMSynth, HyperSynth, Instrument, MIDIOut, MacroSynth, Mod, Operator, Sampler, SynthParams, TrackingEnv, TrigEnv, Version, WavSynth, COMMON_FILTER_TYPES, LFO, WAVSYNTH_FILTER_TYPES};
-use crate::instruments::params;
+use m8_files::*;
 
 /// Interface to gather and display parameters in a semi
 /// automated manner
@@ -27,6 +26,10 @@ pub trait ParameterGatherer {
 
 pub trait Describable {
     fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version);
+}
+
+pub trait DescribableWithDictionary {
+    fn describe_with_dic<PG : ParameterGatherer>(&self, pg: &mut PG, dic: &[&'static str], ver: Version);
 }
 
 impl Describable for EqBand {
@@ -71,8 +74,8 @@ impl Describable for FMSynth {
         self.operators[2].describe(&mut pg.nest("C"), ver);
         self.operators[3].describe(&mut pg.nest("D"), ver);
 
-        self.synth_params.describe(pg, &COMMON_FILTER_TYPES, ver);
-        self.synth_params.describe_modulators(pg, self.destination_names(ver), ver);
+        self.synth_params.describe_with_dic(pg, self.filter_types(ver), ver);
+        describe_modulators(&self.synth_params, pg, self.destination_names(ver), ver);
    }
 }
 
@@ -91,8 +94,8 @@ impl Describable for Sampler {
 
         pg.hex("DEGRADE", self.degrade);
 
-        self.synth_params.describe(pg, &COMMON_FILTER_TYPES, ver);
-        self.synth_params.describe_modulators(pg, self.destination_names(ver), ver);
+        self.synth_params.describe_with_dic(pg, self.filter_types(ver), ver);
+        describe_modulators(&self.synth_params, pg, self.destination_names(ver), ver);
     }
 }
 
@@ -108,8 +111,8 @@ impl Describable for WavSynth {
         pg.hex("WARP", self.warp);
         pg.hex("SCAN", self.scan);
 
-        self.synth_params.describe(pg, &WAVSYNTH_FILTER_TYPES, ver);
-        self.synth_params.describe_modulators(pg, self.destination_names(ver), ver);
+        self.synth_params.describe_with_dic(pg, self.filter_types(ver), ver);
+        describe_modulators(&self.synth_params, pg, self.destination_names(ver), ver);
    }
 }
 
@@ -128,25 +131,23 @@ impl Describable for Instrument {
     }
 }
 
-impl Instrument {
-    pub fn describe_succint<PG : ParameterGatherer>(&self, pg: &mut PG, ver: Version) {
-        let (k, common) =
-            match self {
-                Instrument::WavSynth(ws)     => ("WAVSYNTH", Some(&ws.synth_params)),
-                Instrument::MacroSynth(ms) => ("MACROSYN", Some(&ms.synth_params)),
-                Instrument::Sampler(s)        => ("SAMPLE", Some(&s.synth_params)),
-                Instrument::MIDIOut(_mo)       => ("MIDIOUT", None),
-                Instrument::FMSynth(fs)       => ("FMSYNTH", Some(&fs.synth_params)),
-                Instrument::HyperSynth(hs) => ("HYPERSYNTH", Some(&hs.synth_params)),
-                Instrument::External(ex) => ("EXTERNALINST", Some(&ex.synth_params)),
-                Instrument::None => ("NONE", None)
-            };
+pub fn describe_succint<PG : ParameterGatherer>(instr: &Instrument, pg: &mut PG, ver: Version) {
+    let (k, common) =
+        match instr {
+            Instrument::WavSynth(ws)     => ("WAVSYNTH", Some(&ws.synth_params)),
+            Instrument::MacroSynth(ms) => ("MACROSYN", Some(&ms.synth_params)),
+            Instrument::Sampler(s)        => ("SAMPLE", Some(&s.synth_params)),
+            Instrument::MIDIOut(_mo)       => ("MIDIOUT", None),
+            Instrument::FMSynth(fs)       => ("FMSYNTH", Some(&fs.synth_params)),
+            Instrument::HyperSynth(hs) => ("HYPERSYNTH", Some(&hs.synth_params)),
+            Instrument::External(ex) => ("EXTERNALINST", Some(&ex.synth_params)),
+            Instrument::None => ("NONE", None)
+        };
 
-        pg.str("KIND", k);
-        match common {
-            None => {}
-            Some(c) => c.describe_succint(pg, ver)
-        }
+    pg.str("KIND", k);
+    match common {
+        None => {}
+        Some(c) => describe_succint_params(&c, pg, ver)
     }
 }
 
@@ -157,8 +158,7 @@ impl Describable for ExternalInst {
         pg.hex(params::EQ, self.synth_params.associated_eq);
         pg.hex(params::TBLTIC, self.table_tick);
 
-        let port_str =
-            crate::PORT.get(self.port as usize).unwrap_or(&"");
+        let port_str = self.human_readable_port();
         pg.enumeration("PORT", self.port, port_str);
         pg.hex("CHANNEL", self.channel);
         pg.hex("BANK", self.bank);
@@ -167,8 +167,8 @@ impl Describable for ExternalInst {
         self.ccb.describe(&mut pg.nest(params::CCB), ver);
         self.ccc.describe(&mut pg.nest(params::CCC), ver);
         self.ccd.describe(&mut pg.nest(params::CCD), ver);
-        self.synth_params.describe(pg, &COMMON_FILTER_TYPES, ver);
-        self.synth_params.describe_modulators(pg, self.destination_names(ver), ver);
+        self.synth_params.describe_with_dic(pg, self.filter_types(ver), ver);
+        describe_modulators(&self.synth_params, pg, self.destination_names(ver), ver);
     }
 }
 
@@ -186,8 +186,8 @@ impl Describable for HyperSynth {
         pg.hex("WIDTH", self.width);
         pg.hex("SUBOSC", self.subosc);
 
-        self.synth_params.describe(pg, &COMMON_FILTER_TYPES, ver);
-        self.synth_params.describe_modulators(pg, self.destination_names(ver), ver);
+        self.synth_params.describe_with_dic(pg, self.filter_types(ver), ver);
+        describe_modulators(&self.synth_params, pg, self.destination_names(ver), ver);
     }
 }
 
@@ -203,8 +203,8 @@ impl Describable for MacroSynth {
         pg.hex("DEGRADE", self.degrade);
         pg.hex("REDUX", self.redux);
 
-        self.synth_params.describe(pg, &COMMON_FILTER_TYPES, ver);
-        self.synth_params.describe_modulators(pg, self.destination_names(ver), ver);
+        self.synth_params.describe_with_dic(pg, self.filter_types(ver), ver);
+        describe_modulators(&self.synth_params, pg, self.destination_names(ver), ver);
     }
 }
 
@@ -221,7 +221,7 @@ impl Describable for MIDIOut {
         pg.bool(params::TRANSPOSE, self.transpose);
         pg.hex(params::TBLTIC, self.table_tick);
 
-        let port_str = crate::PORTS.get(self.port as usize).unwrap_or(&"??");
+        let port_str = self.human_readable_port();
         pg.enumeration("PORT", self.port, port_str);
         pg.hex("CHANNEL", self.channel);
         pg.hex("BANK", self.bank_select);
@@ -237,12 +237,12 @@ impl Describable for MIDIOut {
         self.custom_cc[8].describe(&mut pg.nest("CCI"), ver);
         self.custom_cc[9].describe(&mut pg.nest("CCJ"), ver);
 
-        self.mods.describe_modulators(pg, self.destination_names(ver), ver);
+        describe_modulators(&self.mods, pg, self.destination_names(ver), ver);
     }
 }
 
-impl ADSREnv {
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str], _ver: Version) {
+impl DescribableWithDictionary for ADSREnv {
+    fn describe_with_dic<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &[&'static str], _ver: Version) {
         let dest_str = dests.get(self.dest as usize).unwrap_or(&"??");
         pg.enumeration(params::DEST, self.dest, dest_str);
         pg.hex(params::AMOUNT, self.amount);
@@ -253,8 +253,8 @@ impl ADSREnv {
     }
 }
 
-impl AHDEnv {
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str], _ver: Version) {
+impl DescribableWithDictionary for AHDEnv {
+    fn describe_with_dic<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &[&'static str], _ver: Version) {
         let dest_str = dests.get(self.dest as usize).unwrap_or(&"??");
         pg.enumeration(params::DEST, self.dest, dest_str);
         pg.hex(params::AMOUNT, self.amount);
@@ -264,8 +264,8 @@ impl AHDEnv {
     }
 }
 
-impl DrumEnv {
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str], _ver: Version) {
+impl DescribableWithDictionary for DrumEnv {
+    fn describe_with_dic<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &[&'static str], _ver: Version) {
         let dest_str = dests.get(self.dest as usize).unwrap_or(&"??");
         pg.enumeration(params::DEST, self.dest, dest_str);
         pg.hex(params::AMOUNT, self.amount);
@@ -275,8 +275,8 @@ impl DrumEnv {
     }
 }
 
-impl LFO {
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str], _ver: Version) {
+impl DescribableWithDictionary for LFO {
+    fn describe_with_dic<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &[&'static str], _ver: Version) {
         let dest_str = dests.get(self.dest as usize).unwrap_or(&"??");
         pg.enumeration(params::DEST, self.dest, dest_str);
         pg.enumeration(params::LFOSHAPE, self.shape as u8, &format!("{:?}", self.shape));
@@ -286,8 +286,8 @@ impl LFO {
     }
 }
 
-impl TrackingEnv {
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str], _ver: Version) {
+impl DescribableWithDictionary for TrackingEnv {
+    fn describe_with_dic<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &[&'static str], _ver: Version) {
         let dest_str = dests.get(self.dest as usize).unwrap_or(&"??");
         pg.enumeration(params::DEST, self.dest, dest_str);
         pg.hex(params::AMOUNT, self.amount);
@@ -297,8 +297,8 @@ impl TrackingEnv {
     }
 }
 
-impl TrigEnv {
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str], _ver: Version) {
+impl DescribableWithDictionary for TrigEnv {
+    fn describe_with_dic<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &[&'static str], _ver: Version) {
         let dest_str = dests.get(self.dest as usize).unwrap_or(&"??");
         pg.enumeration(params::DEST, self.dest, dest_str);
         pg.hex(params::AMOUNT, self.amount);
@@ -308,58 +308,56 @@ impl TrigEnv {
     }
 }
 
-impl Mod {
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, ix: usize, dests:&'static[&'static str], ver: Version) {
-        let ix = ix + 1;
-        match self {
-            Mod::AHDEnv(ahd)  => {
-                pg.enumeration(&format!("MOD{ix}"), 0, "AHD ENV");
-                ahd.describe(pg, dests, ver);
-            },
-            Mod::ADSREnv(adsr) => {
-                pg.enumeration(&format!("MOD{ix}"), 1, "ADSR ENV");
-                adsr.describe(pg, dests, ver);
-            },
-            Mod::DrumEnv(drum_env) =>{
-                pg.enumeration(&format!("MOD{ix}"), 1, "DRUM ENV");
-                drum_env.describe(pg, dests, ver)
-            }
-            Mod::LFO(lfo) => {
-                pg.enumeration(&format!("MOD{ix}"), 1, "LFO");
-                lfo.describe(pg, dests, ver)
-            }
-            Mod::TrigEnv(tenv) => {
-                pg.enumeration(&format!("MOD{ix}"), 1, "TRIGENV");
-                tenv.describe(pg, dests, ver);
-            }
-            Mod::TrackingEnv(tenv) => {
-                pg.enumeration(&format!("MOD{ix}"), 1, "TRACKENV");
-                tenv.describe(pg, dests, ver)
-            },
+fn describe_mod<PG : ParameterGatherer>(modulator: &Mod, pg: &mut PG, ix: usize, dests:&[&'static str], ver: Version) {
+    let ix = ix + 1;
+    match modulator {
+        Mod::AHDEnv(ahd)  => {
+            pg.enumeration(&format!("MOD{ix}"), 0, "AHD ENV");
+            ahd.describe_with_dic(pg, dests, ver);
+        },
+        Mod::ADSREnv(adsr) => {
+            pg.enumeration(&format!("MOD{ix}"), 1, "ADSR ENV");
+            adsr.describe_with_dic(pg, dests, ver);
+        },
+        Mod::DrumEnv(drum_env) =>{
+            pg.enumeration(&format!("MOD{ix}"), 1, "DRUM ENV");
+            drum_env.describe_with_dic(pg, dests, ver)
         }
+        Mod::LFO(lfo) => {
+            pg.enumeration(&format!("MOD{ix}"), 1, "LFO");
+            lfo.describe_with_dic(pg, dests, ver)
+        }
+        Mod::TrigEnv(tenv) => {
+            pg.enumeration(&format!("MOD{ix}"), 1, "TRIGENV");
+            tenv.describe_with_dic(pg, dests, ver);
+        }
+        Mod::TrackingEnv(tenv) => {
+            pg.enumeration(&format!("MOD{ix}"), 1, "TRACKENV");
+            tenv.describe_with_dic(pg, dests, ver)
+        },
     }
 }
 
-impl SynthParams {
-    pub fn describe_modulators<PG : ParameterGatherer>(&self, pg: &mut PG, dests: &'static[&'static str], ver: Version) {
-        self.mods[0].describe(&mut pg.nest("MOD1"), 0, dests, ver);
-        self.mods[1].describe(&mut pg.nest("MOD2"), 1, dests, ver);
-        self.mods[2].describe(&mut pg.nest("MOD3"), 2, dests, ver);
-        self.mods[3].describe(&mut pg.nest("MOD4"), 3, dests, ver);
-    }
+pub fn describe_modulators<PG : ParameterGatherer>(sp: &SynthParams, pg: &mut PG, dests: &[&'static str], ver: Version) {
+    describe_mod(&sp.mods[0], &mut pg.nest("MOD1"), 0, dests, ver);
+    describe_mod(&sp.mods[1], &mut pg.nest("MOD2"), 1, dests, ver);
+    describe_mod(&sp.mods[2], &mut pg.nest("MOD3"), 2, dests, ver);
+    describe_mod(&sp.mods[3], &mut pg.nest("MOD4"), 3, dests, ver);
+}
 
-    pub fn describe_succint<PG : ParameterGatherer>(&self, pg: &mut PG, _ver: Version) {
-        pg.hex(params::EQ, self.associated_eq);
-        pg.hex(dests::AMP, self.amp);
-        pg.enumeration("LIM", self.limit.0, self.limit.str());
-        pg.hex(dests::PAN, self.mixer_pan);
-        pg.hex("DRY", self.mixer_dry);
-        pg.hex("CHORUS", self.mixer_chorus);
-        pg.hex("DELAY", self.mixer_delay);
-        pg.hex("REVERB", self.mixer_reverb);
-    }
+pub fn describe_succint_params<PG : ParameterGatherer>(sp: &SynthParams, pg: &mut PG, _ver: Version) {
+    pg.hex(params::EQ, sp.associated_eq);
+    pg.hex(dests::AMP, sp.amp);
+    pg.enumeration("LIM", sp.limit.0, sp.limit.str());
+    pg.hex(dests::PAN, sp.mixer_pan);
+    pg.hex("DRY", sp.mixer_dry);
+    pg.hex("CHORUS", sp.mixer_chorus);
+    pg.hex("DELAY", sp.mixer_delay);
+    pg.hex("REVERB", sp.mixer_reverb);
+}
 
-    pub fn describe<PG : ParameterGatherer>(&self, pg: &mut PG, filters: &[&str], ver: Version) {
+impl DescribableWithDictionary for SynthParams {
+    fn describe_with_dic<PG : ParameterGatherer>(&self, pg: &mut PG, filters: &[&str], ver: Version) {
         pg.hex("FINE", self.fine_tune);
 
         match filters.get(self.filter_type as usize) {
@@ -371,6 +369,6 @@ impl SynthParams {
 
         pg.hex("CUT", self.filter_cutoff);
         pg.hex("RES", self.filter_res);
-        self.describe_succint(pg, ver);
+        describe_succint_params(self, pg, ver);
     }
 }

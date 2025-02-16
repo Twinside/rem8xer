@@ -2,9 +2,9 @@ use std::iter;
 
 use js_sys::Uint8Array;
 use wasm_bindgen::prelude::*;
+use m8_files::{reader::Reader, remapper::{Remapper, RemapperDescriptorBuilder}, writer::Writer, *};
 
-use crate::{eq::{EqMode, Equ}, param_gather::{Describable, ParameterGatherer}, reader::Reader, remapper::{Remapper, RemapperDescriptorBuilder}, songs::{Chain, Phrase, Song, SongSteps, Table}, Instrument, Version};
-use crate::writer::Writer;
+use crate::{eq_render::accumulate, param_gather::{describe_succint, Describable, ParameterGatherer}};
 
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the
@@ -714,7 +714,7 @@ impl From<JsonGatherer> for js_sys::Array {
 }
 
 impl RemapperDescriptorBuilder for JsonGatherer {
-    fn moved(&mut self, kind: crate::remapper::MoveKind, from: usize, to: usize) {
+    fn moved(&mut self, kind: remapper::MoveKind, from: usize, to: usize) {
         let obj = js_sys::Object::new();
         let _ = js_sys::Reflect::set(
             &obj,
@@ -857,7 +857,7 @@ pub fn describe_succint_instrument(song: &WasmSong, instrument: usize) -> Result
     }
 
     let mut pg = JsonGatherer::new();
-    song.song.instruments[instrument].describe_succint(&mut pg, song.song.version);
+    describe_succint(&song.song.instruments[instrument], &mut pg, song.song.version);
 
     Ok(pg.into())
 }
@@ -923,7 +923,7 @@ pub fn plot_eq(song: &WasmSong, eq_idx: usize, mode: usize) -> Result<js_sys::Fl
 
     let frequencies =
         frequencies(MIN_EQ_PLOT_FREQUENCY, MAX_EQ_PLOT_FREQUENCY, EQ_PLOT_POINT_COUNT);
-    let gains : Vec<f64> = song.song.eqs[eq_idx].accumulate(&frequencies, mode);
+    let gains : Vec<f64> = accumulate(&song.song.eqs[eq_idx], &frequencies, mode);
 
     Ok(gains.as_slice().into())
 }
