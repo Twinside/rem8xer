@@ -359,7 +359,7 @@
     if ("function" == typeof e2 && (a2 = e2.defaultProps)) for (c2 in a2) void 0 === l2[c2] && (l2[c2] = a2[c2]);
     return l$3.vnode && l$3.vnode(p2), p2;
   }
-  const __vite__wasmUrl = "" + new URL("rem8x_bg-DpbOrDSH.wasm", import.meta.url).href;
+  const __vite__wasmUrl = "" + new URL("rem8x_bg-sypNf0_5.wasm", import.meta.url).href;
   const __vite__initWasm = async (opts = {}, url) => {
     let result;
     if (url.startsWith("data:")) {
@@ -956,7 +956,7 @@
       wasm$1.__wbg_wasmsong_free(ptr, 0);
     }
   }
-  function __wbg_buffer_609cc3eee51ed158(arg0) {
+  function __wbg_buffer_61b7ce01341d7f88(arg0) {
     const ret = arg0.buffer;
     return ret;
   }
@@ -971,59 +971,59 @@
       wasm$1.__wbindgen_free(deferred0_0, deferred0_1, 1);
     }
   }
-  function __wbg_length_a446193dc22c12f8(arg0) {
+  function __wbg_length_65d1cd11729ced11(arg0) {
     const ret = arg0.length;
     return ret;
   }
   function __wbg_log_822dd57fc941aa50(arg0, arg1) {
     console.log(getStringFromWasm0(arg0, arg1));
   }
-  function __wbg_new_405e22f390576ce2() {
-    const ret = new Object();
+  function __wbg_new_254fa9eac11932ae() {
+    const ret = new Array();
     return ret;
   }
-  function __wbg_new_78c8a92080461d08(arg0) {
+  function __wbg_new_3ff5b33b1ce712df(arg0) {
+    const ret = new Uint8Array(arg0);
+    return ret;
+  }
+  function __wbg_new_6345e64e36c253c5(arg0) {
     const ret = new Float64Array(arg0);
     return ret;
   }
-  function __wbg_new_78feb108b6472713() {
-    const ret = new Array();
+  function __wbg_new_688846f374351c92() {
+    const ret = new Object();
     return ret;
   }
   function __wbg_new_8a6f238a6ece86ea() {
     const ret = new Error();
     return ret;
   }
-  function __wbg_new_a12002a7f91c75be(arg0) {
-    const ret = new Uint8Array(arg0);
-    return ret;
-  }
-  function __wbg_newwithbyteoffsetandlength_93c8e0c1a479fa1a(arg0, arg1, arg2) {
+  function __wbg_newwithbyteoffsetandlength_11300648888c0ebb(arg0, arg1, arg2) {
     const ret = new Float64Array(arg0, arg1 >>> 0, arg2 >>> 0);
     return ret;
   }
-  function __wbg_newwithbyteoffsetandlength_d97e637ebe145a9a(arg0, arg1, arg2) {
+  function __wbg_newwithbyteoffsetandlength_ba35896968751d91(arg0, arg1, arg2) {
     const ret = new Uint8Array(arg0, arg1 >>> 0, arg2 >>> 0);
     return ret;
   }
-  function __wbg_newwithlength_a381634e90c276d4(arg0) {
+  function __wbg_newwithlength_34ce8f1051e74449(arg0) {
     const ret = new Uint8Array(arg0 >>> 0);
     return ret;
   }
-  function __wbg_push_737cfc8c1432c2c6(arg0, arg1) {
+  function __wbg_push_6edad0df4b546b2c(arg0, arg1) {
     const ret = arg0.push(arg1);
     return ret;
   }
-  function __wbg_set_65595bdd868b3009(arg0, arg1, arg2) {
+  function __wbg_set_23d69db4e5c66a6e(arg0, arg1, arg2) {
     arg0.set(arg1, arg2 >>> 0);
   }
-  function __wbg_set_bb8cecf6a62b9f46() {
+  function __wbg_set_4e647025551483bd() {
     return handleError(function(arg0, arg1, arg2) {
       const ret = Reflect.set(arg0, arg1, arg2);
       return ret;
     }, arguments);
   }
-  function __wbg_setindex_dcd71eabf405bde1(arg0, arg1, arg2) {
+  function __wbg_setindex_4cae52fc4c0872b0(arg0, arg1, arg2) {
     arg0[arg1 >>> 0] = arg2;
   }
   function __wbg_stack_0ed75d68575b0f3c(arg0, arg1) {
@@ -1066,19 +1066,19 @@
       __wbg_new_8a6f238a6ece86ea,
       __wbg_stack_0ed75d68575b0f3c,
       __wbg_error_7534b8e9a36f1ab4,
-      __wbg_new_78feb108b6472713,
-      __wbg_new_405e22f390576ce2,
-      __wbg_push_737cfc8c1432c2c6,
-      __wbg_buffer_609cc3eee51ed158,
-      __wbg_newwithbyteoffsetandlength_d97e637ebe145a9a,
-      __wbg_new_a12002a7f91c75be,
-      __wbg_set_65595bdd868b3009,
-      __wbg_length_a446193dc22c12f8,
-      __wbg_newwithbyteoffsetandlength_93c8e0c1a479fa1a,
-      __wbg_new_78c8a92080461d08,
-      __wbg_newwithlength_a381634e90c276d4,
-      __wbg_setindex_dcd71eabf405bde1,
-      __wbg_set_bb8cecf6a62b9f46,
+      __wbg_new_254fa9eac11932ae,
+      __wbg_new_688846f374351c92,
+      __wbg_push_6edad0df4b546b2c,
+      __wbg_buffer_61b7ce01341d7f88,
+      __wbg_newwithbyteoffsetandlength_ba35896968751d91,
+      __wbg_new_3ff5b33b1ce712df,
+      __wbg_set_23d69db4e5c66a6e,
+      __wbg_length_65d1cd11729ced11,
+      __wbg_newwithbyteoffsetandlength_11300648888c0ebb,
+      __wbg_new_6345e64e36c253c5,
+      __wbg_newwithlength_34ce8f1051e74449,
+      __wbg_setindex_4cae52fc4c0872b0,
+      __wbg_set_4e647025551483bd,
       __wbindgen_throw,
       __wbindgen_memory,
       __wbindgen_init_externref_table
@@ -2105,7 +2105,7 @@
     a2.remove();
   }
   const empty4_0_url = "" + new URL("V4EMPTY-BJSP-h73.m8s", import.meta.url).href;
-  const empty4_1_url = "" + new URL("V4-1BETAEMPTY-CSdRpa-n.m8s", import.meta.url).href;
+  const empty5_0_url = "" + new URL("V5EMPTY-C3POO0vy.m8s", import.meta.url).href;
   async function loadFile(state2, pane, buff) {
     const loaded_file = new Uint8Array(await buff);
     try {
@@ -2264,12 +2264,12 @@
           u$2("button", {
             onClick: () => loadUrl(state2, panel, empty4_0_url),
             title: versionHelpText,
-            children: "Load v4.0 empty song"
+            children: "Load M8 FW 4.0 empty song (song format 4)"
           }),
           u$2("button", {
-            onClick: () => loadUrl(state2, panel, empty4_1_url),
+            onClick: () => loadUrl(state2, panel, empty5_0_url),
             title: versionHelpText,
-            children: "Load v4.1 empty song"
+            children: "Load M8 FW 5.0 empty song (song format 4.2)"
           }),
           debugLoad,
           u$2("div", {
@@ -2298,11 +2298,12 @@
       clearPanel(props.panel);
     };
     const activeTab = props.panel.active_view.value;
+    const loaded_name = panel.loaded_name.value === void 0 ? "" : `'${panel.loaded_name.value}' `;
     return u$2("div", {
       children: [
         u$2("h3", {
           style: "display: inline-block;",
-          title: `'${panel.loaded_name}' version ${songVersion}`,
+          title: `${loaded_name}version ${songVersion}`,
           children: songName
         }),
         u$2("span", {
