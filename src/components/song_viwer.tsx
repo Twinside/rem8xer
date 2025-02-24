@@ -2,9 +2,8 @@ import * as W from '../../rem8x/pkg/rem8x';
 import { clearPanel, GlobalState, SongPane } from "../state";
 import { downloadBlob } from "../utils";
 import empty4_0_url from "../V4EMPTY.m8s";
-import empty4_1_url from "../V4-1BETAEMPTY.m8s";
-import reverseUrl_4_0 from "../CMDMAPPING_4_0.m8s";
-import reverseUrl_4_1 from "../CMDMAPPING_4_1_beta.m8s";
+import empty5_0_url from "../V5EMPTY.m8s";
+import reverseUrl_5_0 from "../CMDMAPPING_5_0.m8s";
 import { loadDroppedSong, loadUrl } from "../fileio";
 import { StepsRender } from "./steps_render";
 import { useContext } from 'preact/hooks';
@@ -24,18 +23,17 @@ export function SongHeader(props: { panel: SongPane}) {
     // debug helper
     const debugLoad = false
       ? <>
-        <button onClick={() => loadUrl(state, panel, reverseUrl_4_0)}>Reversing 4.0</button>
-        <button onClick={() => loadUrl(state, panel, reverseUrl_4_1)}>Reversing 4.1</button>
+        <button onClick={() => loadUrl(state, panel, reverseUrl_5_0)}>Reversing 5.0</button>
       </>
       : undefined;
 
     return <div class="rootcolumn">
       <button
         onClick={() => loadUrl(state, panel, empty4_0_url)}
-        title={versionHelpText}>Load v4.0 empty song</button>
+        title={versionHelpText}>Load M8 FW 4.0 empty song (song format 4)</button>
       <button
-        onClick={() => loadUrl(state, panel, empty4_1_url)}
-        title={versionHelpText}>Load v4.1 empty song</button>
+        onClick={() => loadUrl(state, panel, empty5_0_url)}
+        title={versionHelpText}>Load M8 FW 5.0 empty song (song format 4.2)</button>
       {debugLoad}
       <div class="filetarget"
            onDragOver={(ev) => ev.preventDefault()}
@@ -63,8 +61,12 @@ export function SongHeader(props: { panel: SongPane}) {
   };
 
   const activeTab = props.panel.active_view.value;
+  const loaded_name = panel.loaded_name.value === undefined
+    ? ''
+    : `'${panel.loaded_name.value}' `;
+
   return <div>
-      <h3 style="display: inline-block;" title={`'${panel.loaded_name}' version ${songVersion}`}>{songName}</h3>
+      <h3 style="display: inline-block;" title={`${loaded_name}version ${songVersion}`}>{songName}</h3>
       <span class="separator" />
       <button onClick={save}>Save</button>
       <button onClick={clear}>Clear</button>
