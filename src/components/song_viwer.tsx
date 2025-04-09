@@ -3,6 +3,7 @@ import { clearPanel, GlobalState, SongPane } from "../state";
 import { downloadBlob } from "../utils";
 import empty4_0_url from "../V4EMPTY.m8s";
 import empty5_0_url from "../V5EMPTY.m8s";
+import empty6_0_url from "../V6EMPTY_beta.m8s";
 import reverseUrl_5_0 from "../CMDMAPPING_5_0.m8s";
 import { loadDroppedSong, loadUrl } from "../fileio";
 import { StepsRender } from "./steps_render";
@@ -11,6 +12,12 @@ import { UndoRedoer } from './edit_log';
 
 const  versionHelpText =
   "Song version is important for writing song, you can only write a song of the same version, you can transfert across version though.";
+
+const versionUrlMapping : { [ix: number]: URL }= {
+  4: empty4_0_url,
+  5: empty5_0_url,
+  6: empty6_0_url
+};
 
 export function SongHeader(props: { panel: SongPane}) {
   const state = useContext(GlobalState);
@@ -27,13 +34,20 @@ export function SongHeader(props: { panel: SongPane}) {
       </>
       : undefined;
 
+    const selectedVersion = panel.empty_selection.value;
+
     return <div class="rootcolumn">
-      <button
-        onClick={() => loadUrl(state, panel, empty4_0_url)}
-        title={versionHelpText}>Load M8 FW 4.0 empty song (song format 4)</button>
-      <button
-        onClick={() => loadUrl(state, panel, empty5_0_url)}
-        title={versionHelpText}>Load M8 FW 5.0 empty song (song format 4.2)</button>
+      <div>
+        <select
+            class="empty-v-select"
+            onChange={(evt) =>
+              panel.empty_selection.value = parseInt((evt.target as HTMLOptionElement).value, 10)}>
+          <option value="4" selected={selectedVersion === 4}>M8 FW 4.0 empty song</option>
+          <option value="5" selected={selectedVersion === 5}>M8 FW 5.0 empty song</option>
+          <option value="6" selected={selectedVersion === 6}>M8 FW 6.0 (beta) empty song</option>
+        </select>
+        <button onClick={() => loadUrl(state, panel, versionUrlMapping[selectedVersion])}>Load</button>
+      </div>
       {debugLoad}
       <div class="filetarget"
            onDragOver={(ev) => ev.preventDefault()}

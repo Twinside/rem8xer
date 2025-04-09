@@ -1,6 +1,10 @@
+# 0.7
+
+ - FW 6.0 support
+
 # 0.6
 
- - M8 Firmware 4.1 support
+ - M8 Firmware 5.0 support
  - Aligning with m8-files upstream
 
 # 0.5.1

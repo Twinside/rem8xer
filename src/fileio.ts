@@ -34,7 +34,8 @@ export async function loadDroppedSong(state : State, ev : DragEvent, pane: SongP
   }
 }
 
-export async function loadUrl(state: State, pane: SongPane, url: string) {
+export async function loadUrl(state: State, pane: SongPane, url: URL | undefined) {
+    if (url === undefined) return;
     const loaded = fetch(url).then(resp => resp.arrayBuffer());
     await loadFile(state, pane, loaded);
 }
