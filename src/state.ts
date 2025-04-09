@@ -84,6 +84,9 @@ export type SongPane =
         /** Bytes of the raw song, used for rewriting. */
         raw_song: Signal<Uint8Array>,
 
+        /** Currently selected empty file version */
+        empty_selection: Signal<number>,
+
         /** Signal to force refresh */
         bumper: Signal<number>,
 
@@ -139,6 +142,7 @@ function initPane(side: PanelSide) : SongPane {
         edited_instrument_name: signal(undefined),
         edited_table: signal(undefined),
         edited_eq: signal(undefined),
+        empty_selection: signal(5),
         raw_song: signal(new Uint8Array(0)),
         selected_eq: signal(undefined),
         selected_chain: signal(undefined),

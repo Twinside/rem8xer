@@ -87,10 +87,42 @@ impl Describable for Sampler {
         pg.hex(params::EQ, self.synth_params.associated_eq);
         pg.str("SAMPLE", &self.sample_path);
         pg.enumeration("PLAY", self.play_mode as u8, &format!("{:?}", self.play_mode));
+
         pg.hex("SLICE", self.slice);
-        pg.hex("START", self.start);
-        pg.hex("LOOP", self.loop_start);
-        pg.hex("LEN", self.length);
+        match self.play_mode {
+            SamplePlayMode::FWD |
+            SamplePlayMode::REV |
+            SamplePlayMode::FWDLOOP |
+            SamplePlayMode::REVLOOP |
+            SamplePlayMode::FWD_PP |
+            SamplePlayMode::REV_PP |
+            SamplePlayMode::OSC |
+            SamplePlayMode::OSC_REV |
+            SamplePlayMode::OSC_PP => {
+                pg.hex("START", self.start);
+                pg.hex("LOOP ST", self.loop_start);
+                pg.hex("LENGTH", self.length);
+                pg.hex("DETUNE", self.synth_params.pitch);
+            },
+
+            SamplePlayMode::REPITCH |
+            SamplePlayMode::REP_REV |
+            SamplePlayMode::REP_PP => {
+                pg.hex("STEPS", self.synth_params.pitch);
+                pg.hex("START", self.start);
+                pg.hex("LOOP ST", self.loop_start);
+                pg.hex("LENGTH", self.length);
+            },
+
+            SamplePlayMode::REP_BPM |
+            SamplePlayMode::BPM_REV |
+            SamplePlayMode::BPM_PP => {
+                pg.hex("BPM", self.synth_params.pitch);
+                pg.hex("START", self.start);
+                pg.hex("LOOP ST", self.loop_start);
+                pg.hex("LENGTH", self.length);
+            }
+        }
 
         pg.hex("DEGRADE", self.degrade);
 

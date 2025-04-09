@@ -84,22 +84,20 @@ notch:      H(s) = (s^2 + 1) / (s^2 + s/Q + 1)
         a1 =  -2*cos(w0)
         a2 =   1 - alpha
 
-
-
-APF:        H(s) = (s^2 - s/Q + 1) / (s^2 + s/Q + 1)
-
-        b0 =   1 - alpha
-        b1 =  -2*cos(w0)
-        b2 =   1 + alpha
-        a0 =   1 + alpha
-        a1 =  -2*cos(w0)
-        a2 =   1 - alpha
-
-
-
 */
     let cw0 = w0.cos();
     match band.mode.eq_type() {
+        EqType::AllPass => {
+            // APF:        H(s) = (s^2 - s/Q + 1) / (s^2 + s/Q + 1)
+            BiQuadCoeffs {
+                b0:  1.0 - a,
+                b1: -2.0 * cw0,
+                b2:  1.0 + a,
+                a0:  1.0 + a,
+                a1: -2.0 * cw0,
+                a2:  1.0 - a
+            }
+        }
         EqType::LowCut => {
             // HPF:        H(s) = s^2 / (s^2 + s/Q + 1)
             BiQuadCoeffs {
