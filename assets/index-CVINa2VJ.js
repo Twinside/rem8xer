@@ -2103,7 +2103,7 @@
   }
   const empty4_0_url = "" + new URL("V4EMPTY-BJSP-h73.m8s", import.meta.url).href;
   const empty5_0_url = "" + new URL("V5EMPTY-C3POO0vy.m8s", import.meta.url).href;
-  const empty6_0_url = "" + new URL("V6EMPTY_beta-BJsVwZwA.m8s", import.meta.url).href;
+  const empty6_0_url = "" + new URL("V6EMPTY-x5dZuUUM.m8s", import.meta.url).href;
   async function loadFile(state2, pane, buff) {
     const loaded_file = new Uint8Array(await buff);
     try {
