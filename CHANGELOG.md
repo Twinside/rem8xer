@@ -1,3 +1,15 @@
+# 0.8
+
+ - Revisited copy algorithm to handle: referenced instruments and
+   tables. We are now following:
+
+     * `INS` command: to switch command (if you use it with `RNL` or other random command...)
+     * `NXT` command: spawning another command
+     * `TBX` command: external table
+     * `EQI` command: override equalizer
+
+   Instrument tables and external tables are now scanned recursively.
+
 # 0.7
 
  - FW 6.0 support
