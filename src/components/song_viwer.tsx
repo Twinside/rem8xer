@@ -44,7 +44,7 @@ export function SongHeader(props: { panel: SongPane}) {
               panel.empty_selection.value = parseInt((evt.target as HTMLOptionElement).value, 10)}>
           <option value="4" selected={selectedVersion === 4}>M8 FW 4.0 empty song</option>
           <option value="5" selected={selectedVersion === 5}>M8 FW 5.0 empty song</option>
-          <option value="6" selected={selectedVersion === 6}>M8 FW 6.0 (beta) empty song</option>
+          <option value="6" selected={selectedVersion === 6}>M8 FW 6.0 empty song</option>
         </select>
         <button onClick={() => loadUrl(state, panel, versionUrlMapping[selectedVersion])}>Load</button>
       </div>

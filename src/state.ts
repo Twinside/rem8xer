@@ -142,7 +142,7 @@ function initPane(side: PanelSide) : SongPane {
         edited_instrument_name: signal(undefined),
         edited_table: signal(undefined),
         edited_eq: signal(undefined),
-        empty_selection: signal(5),
+        empty_selection: signal(6),
         raw_song: signal(new Uint8Array(0)),
         selected_eq: signal(undefined),
         selected_chain: signal(undefined),
