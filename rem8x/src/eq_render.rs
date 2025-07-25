@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 
-use m8_files::{EqBand, EqMode, EqType, Equ};
+use m8_file_parser::{EqBand, EqMode, EqType, Equ};
 
 /// See https://www.w3.org/TR/audio-eq-cookbook/
 #[derive(Debug)]

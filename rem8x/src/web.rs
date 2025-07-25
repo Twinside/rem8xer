@@ -2,7 +2,7 @@ use std::iter;
 
 use js_sys::Uint8Array;
 use wasm_bindgen::prelude::*;
-use m8_files::{reader::Reader, remapper::{Remapper, RemapperDescriptorBuilder}, writer::Writer, *};
+use m8_file_parser::{reader::Reader, remapper::{Remapper, RemapperDescriptorBuilder}, writer::Writer, *};
 
 use crate::{eq_render::accumulate, param_gather::{describe_succint, Describable, ParameterGatherer}};
 

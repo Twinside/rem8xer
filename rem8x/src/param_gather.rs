@@ -1,4 +1,4 @@
-use m8_files::*;
+use m8_file_parser::*;
 
 /// Interface to gather and display parameters in a semi
 /// automated manner
