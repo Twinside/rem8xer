@@ -3,8 +3,8 @@ use std::iter;
 use js_sys::Uint8Array;
 use wasm_bindgen::prelude::*;
 use m8_file_parser::{reader::Reader, remapper::{Remapper, RemapperDescriptorBuilder}, writer::Writer, *};
-
-use crate::{eq_render::accumulate, param_gather::{describe_succint, Describable, ParameterGatherer}};
+use m8_file_parser::{param_gatherer::{describe_succint, Describable, ParameterGatherer}};
+use crate::{eq_render::accumulate};
 
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the
