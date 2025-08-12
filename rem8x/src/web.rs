@@ -126,7 +126,7 @@ pub fn show_phrase(song: &WasmSong, phrase: usize) -> String {
     }
 
     let song = &song.song;
-    song.phrases[phrase].print_screen(&song.instruments)
+    format!("{}", song.phrase_view(phrase))
 }
 
 #[wasm_bindgen]
@@ -735,7 +735,7 @@ impl RemapperDescriptorBuilder for JsonGatherer {
 }
 
 impl ParameterGatherer for JsonGatherer {
-    fn hex(&mut self, name: &str, val: u8) {
+    fn hex(self, name: &str, val: u8) -> Self {
         let obj = js_sys::Object::new();
         let _ = js_sys::Reflect::set(
             &obj,
@@ -748,9 +748,10 @@ impl ParameterGatherer for JsonGatherer {
             &JsValue::from_f64(val as f64));
 
         self.gather.push(&obj);
+        self
     }
 
-    fn bool(&mut self, name: &str, val: bool) {
+    fn bool(self, name: &str, val: bool) -> Self {
         let obj = js_sys::Object::new();
         let _ = js_sys::Reflect::set(
             &obj,
@@ -763,9 +764,10 @@ impl ParameterGatherer for JsonGatherer {
             &JsValue::from_bool(val));
 
         self.gather.push(&obj);
+        self
     }
 
-    fn float(&mut self, name: &str, val: f64) {
+    fn float(self, name: &str, val: f64) -> Self {
         let obj = js_sys::Object::new();
         let _ = js_sys::Reflect::set(
             &obj,
@@ -778,9 +780,10 @@ impl ParameterGatherer for JsonGatherer {
             &JsValue::from_f64(val));
 
         self.gather.push(&obj);
+        self
     }
 
-    fn enumeration(&mut self, name: &str, hex: u8, val: &str) {
+    fn enumeration(self, name: &str, hex: u8, val: &str) -> Self {
         let obj = js_sys::Object::new();
         let _ = js_sys::Reflect::set(
             &obj,
@@ -798,9 +801,10 @@ impl ParameterGatherer for JsonGatherer {
             &JsValue::from_f64(hex as f64));
 
         self.gather.push(&obj);
+        self
     }
 
-    fn str(&mut self, name: &str, val: &str) {
+    fn str(self, name: &str, val: &str) -> Self {
         let obj = js_sys::Object::new();
         let _ = js_sys::Reflect::set(
             &obj,
@@ -813,9 +817,12 @@ impl ParameterGatherer for JsonGatherer {
             &JsValue::from_str(val));
 
         self.gather.push(&obj);
+        self
     }
 
-    fn nest(&mut self, name: &str) -> Self {
+    fn nest_f<F>(self, name: &str, f: F) -> Self
+        where F : FnOnce (Self) -> Self, Self : Sized {
+
         let obj = js_sys::Object::new();
         let _ = js_sys::Reflect::set(
             &obj,
@@ -823,16 +830,18 @@ impl ParameterGatherer for JsonGatherer {
             &JsValue::from_str(name));
 
         let gather = js_sys::Array::new();
+
         let _ = js_sys::Reflect::set(
             &obj,
             &"nest".into(), 
             &gather);
-
+        
         self.gather.push(&obj);
 
-        Self { gather }
+        f(Self { gather });
+
+        self
     }
-    
 }
 
 /// Instrument parameters description.
@@ -842,10 +851,12 @@ pub fn describe_instrument(song: &WasmSong, instrument: usize) -> Result<js_sys:
         return Err(format!("Error invalid source instrument number {instrument:02X}"));
     }
 
-    let mut pg = JsonGatherer::new();
-    song.song.instruments[instrument].describe(&mut pg, song.song.version);
+    let result = song.song
+        .instruments[instrument]
+        .describe(JsonGatherer::new(), song.song.version)
+        .into();
 
-    Ok(pg.into())
+    Ok(result)
 }
 
 /// Instrument parameters description.
@@ -855,10 +866,13 @@ pub fn describe_succint_instrument(song: &WasmSong, instrument: usize) -> Result
         return Err(format!("Error invalid source instrument number {instrument:02X}"));
     }
 
-    let mut pg = JsonGatherer::new();
-    describe_succint(&song.song.instruments[instrument], &mut pg, song.song.version);
+    let result =
+        describe_succint(
+            &song.song.instruments[instrument],
+            JsonGatherer::new(),
+            song.song.version).into();
 
-    Ok(pg.into())
+    Ok(result)
 }
 
 /// Eq parameter description.
@@ -868,10 +882,8 @@ pub fn describe_eq(song: &WasmSong, eq_idx: usize) -> Result<js_sys::Array, Stri
         return Err(format!("Error invalid eq number {eq_idx:02X}"));
     }
 
-    let mut pg = JsonGatherer::new();
-    song.song.eqs[eq_idx].describe(&mut pg, song.song.version);
-
-    Ok(pg.into())
+    let pg = JsonGatherer::new();
+    Ok(song.song.eqs[eq_idx].describe(pg, song.song.version).into())
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
