@@ -73,6 +73,32 @@ pub fn load_song(arr: js_sys::Uint8Array) -> Result<WasmSong, String> {
 }
 
 #[wasm_bindgen]
+pub fn load_instrument(song: &mut WasmSong, at_index: usize, arr: js_sys::Uint8Array) -> Result<bool, String> {
+    let as_vec : Vec<u8> = arr.to_vec();
+    let mut reader = Reader::new(as_vec);
+    let instrument = Instrument::read_from_reader(&mut reader);
+
+    match instrument {
+        Err(psr) => Err(psr.to_string()),
+        Ok(instr) => {
+            let song = &mut song.song;
+            song.instruments[at_index] = instr.instrument;
+            song.tables[at_index] = instr.table;
+
+            match instr.eq {
+                None => {}
+                Some(equ) if song.version.at_least(6, 0) => {
+                    song.eqs[at_index] = equ;
+                }
+                Some(_) => { /* sorry don't bother with old formats */}
+            }
+
+            Ok(true)
+        }
+    }
+}
+
+#[wasm_bindgen]
 pub fn pick_song_step(song: &WasmSong, x: usize, y: usize) -> Result<u8, String> {
     if x >= SongSteps::TRACK_COUNT { return Err(format!("Invalid track number {x}")) }
     if y >= SongSteps::ROW_COUNT { return Err(format!("Invalid row number {y}")) }

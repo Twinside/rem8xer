@@ -1,3 +1,7 @@
+# 0.9
+
+ - Allow loading instrument files within rem8xer.
+
 # 0.8
 
  - Revisited copy algorithm to handle command referencing instruments and

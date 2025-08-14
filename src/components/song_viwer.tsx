@@ -51,8 +51,8 @@ export function SongHeader(props: { panel: SongPane}) {
       {debugLoad}
       <div class="filetarget"
            onDragOver={(ev) => ev.preventDefault()}
-           onDrop={(evt) => loadDroppedSong(state, evt, props.panel)}>
-        <span>Drag M8 song file here</span>
+           onDrop={(evt) => loadDroppedSong(state, evt, props.panel, versionUrlMapping[selectedVersion])}>
+        <span>Drag M8 song or instrument file here</span>
       </div>
     </div>;
   }
