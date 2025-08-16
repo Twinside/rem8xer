@@ -13,7 +13,8 @@ keywords = ["music"]
 js-sys = "0.3.72"
 wasm-bindgen = "0.2.84"
 console_error_panic_hook = "=0.1.7"
-m8-file-parser ={ git="https://github.com/Twinside/m8-file-parser.git" }
+# m8-file-parser = { git="https://github.com/Twinside/m8-file-parser.git" }
+m8-file-parser = "0.4"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
