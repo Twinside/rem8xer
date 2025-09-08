@@ -5,18 +5,6 @@ import { hexStr } from './common';
 import { JSX } from 'preact/jsx-runtime';
 import { BoolRender, Descriptor, FloatRender, HexGauge, HexRender, NestDescriptor, StrRender } from './descriptor';
 
-export function PhraseViewer(props: { panel: SongPane }) {
-  const song = props.panel.song.value;
-  const bump = props.panel.bumper.value;
-
-  if (song === undefined) return undefined;
-
-  const phrase_idx = props.panel.selected_phrase.value;
-  return (phrase_idx !== undefined)
-    ? <pre>{W.show_phrase(song, phrase_idx)}</pre>
-    : undefined
-}
-
 const MODRenderers : { [name: string]: number } = {
     "MOD1": 0,
     "MOD2": 1,
@@ -283,18 +271,14 @@ function RootDescriptorRender(props: { desc: Descriptor }) {
     return undefined;
 }
 
-export function InstrumentViewer(props: { panel: SongPane }) {
+export function InstrumentViewer(props: { instr_id: number, panel: SongPane }) {
   const song = props.panel.song.value;
   const bump = props.panel.bumper.value;
-  const selected = props.panel.selected_instrument.value;
   const state = useContext(GlobalState);
-
-  if (song === undefined || selected === undefined)
-        return undefined;
 
   let info : Descriptor[] = [];
   try {
-    info = W.describe_instrument(song, selected);
+    info = W.describe_instrument(song, props.instr_id);
   } catch (err) {
     state.message_banner.value = err.toString();
     return undefined;

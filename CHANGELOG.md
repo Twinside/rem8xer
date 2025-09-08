@@ -1,3 +1,7 @@
+# 0.10
+
+ - FW 6.2 support
+
 # 0.9
 
  - Allow loading instrument files within rem8xer.

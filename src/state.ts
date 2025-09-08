@@ -42,12 +42,14 @@ export function ExtendSelection(cs : ChainSelection, x: number, y: number) : Cha
 export type NumberEdition =
     {
         base_value: number,
+        view_index: number,
         current_value: number
     }
 
 export const EmptyNumberEdition : NumberEdition =
     {
         base_value: -1,
+        view_index: -1,
         current_value: -1
     }
 
@@ -55,6 +57,7 @@ export type ChainNumberEdition = NumberEdition & Position
 
 export const EmptyChainEdition : ChainNumberEdition =
     {
+        view_index: -1,
         x: -1, y: -1, base_value: -1, current_value: -1
     };
 
@@ -70,6 +73,9 @@ export const EmptyInstrumentNameEdition =
 export type PanelSide = "left" | "right"
 
 export type ActiveView = "song" | "spectra"
+
+type ElemViewKind = "phrase" | "chain" | "equ" | "instrument" | "table"
+export type ElementView = { kind: ElemViewKind, view_index: number, elem_id: number }
 
 export type SongPane =
     {
@@ -90,38 +96,18 @@ export type SongPane =
         /** Signal to force refresh */
         bumper: Signal<number>,
 
-        /** Currently selected chain in the song view */
-        selected_chain: Signal<number | undefined>,
-
-        /** Currently selected table in the explorer */
-        selected_table: Signal<number | undefined>,
-
-        /** Currently selected instrument in the explorer */
-        selected_instrument: Signal<number | undefined>,
-
-        /** Currently selected phrase within the selected chain */
-        selected_phrase: Signal<number | undefined>,
-
-        /** Currently selected eq */
-        selected_eq: Signal<number | undefined>,
-
         /** Currently edited chain number */
         edited_chain: Signal<ChainNumberEdition | undefined>,
 
-        /** Currently edited phrase number */
-        edited_phrase: Signal<NumberEdition | undefined>,
+        edited_view: Signal<NumberEdition | undefined>,
 
-        /** Currently edited table number */
-        edited_table: Signal<NumberEdition | undefined>,
-
-        /** Currently edited phrase number */
-        edited_instrument: Signal<NumberEdition | undefined>,
-
-        /** Currently edited Eq number */
-        edited_eq: Signal<NumberEdition | undefined>,
+        fresh_view_id: number,
 
         /** Instrument currently being renamed */
         edited_instrument_name: Signal<InstrumentNameEditor | undefined>,
+
+        /** All viewed elements of the song */
+        song_views: Signal<ElementView[]>,
 
         /** Obsolete for now */
         selection_range: Signal<ChainSelection | undefined>,
@@ -130,6 +116,37 @@ export type SongPane =
         active_view: Signal<ActiveView>
     }
 
+function highlight_view(pane: SongPane, view: number) {
+}
+
+export function fixViewId(pane: SongPane, view_id: number, elem_id: number) {
+    var views = [... pane.song_views.value];
+
+    for (let i = 0; i < views.length; i++) {
+        const view = views[i];
+        if (view.view_index === view_id) {
+            views[i] = { ...view, elem_id };
+        }
+    }
+
+    pane.song_views.value = views;
+}
+
+export function openHighlightElem(pane: SongPane, kind: ElemViewKind, elem_id: number) {
+    var views = pane.song_views.value;
+
+    for (const view of views) {
+        if (view.kind === kind && view.elem_id === elem_id) {
+            highlight_view(pane, view.view_index);
+            return;
+        }
+    }
+
+    const view_index = pane.fresh_view_id;
+    pane.fresh_view_id++;
+    pane.song_views.value = [...views, { kind, view_index, elem_id }];
+}
+
 function initPane(side: PanelSide) : SongPane {
     return {
         side,
@@ -137,19 +154,13 @@ function initPane(side: PanelSide) : SongPane {
         song: signal(undefined),
         bumper: signal(0),
         edited_chain: signal(undefined),
-        edited_phrase: signal(undefined),
-        edited_instrument: signal(undefined),
-        edited_instrument_name: signal(undefined),
-        edited_table: signal(undefined),
-        edited_eq: signal(undefined),
-        empty_selection: signal(6),
-        raw_song: signal(new Uint8Array(0)),
-        selected_eq: signal(undefined),
-        selected_chain: signal(undefined),
-        selected_phrase: signal(undefined),
+        edited_view: signal(undefined),
         selection_range: signal(undefined),
-        selected_table: signal(undefined),
-        selected_instrument: signal(undefined),
+        empty_selection: signal(6),
+        song_views: signal([]),
+        fresh_view_id: 0,
+        edited_instrument_name: signal(undefined),
+        raw_song: signal(new Uint8Array(0)),
         active_view: signal("song")
     };
 }
@@ -158,8 +169,6 @@ export function clearPanel(panel : SongPane) {
     panel.loaded_name.value = undefined;
     panel.song.value = undefined;
     panel.raw_song.value = undefined;
-    panel.selected_chain.value = undefined;
-    panel.selected_phrase.value = undefined;
     panel.selection_range.value = undefined;
 }
 
@@ -207,3 +216,13 @@ export function initState() : State {
 }
 
 export const GlobalState = createContext<State>(undefined);
+
+export function never(never: never) {}
+
+export function paneOfSide(state: State, side: PanelSide) : SongPane {
+    switch (side) {
+        case "left": return state.left;
+        case "right": return state.right;
+        default: never(side);
+    }
+}

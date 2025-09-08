@@ -115,7 +115,7 @@ function EqPlot(props: { song: W.WasmSong, eq: number, banner: Signal<string | u
 
     for (const mode of props.eq_modes) {
       try {
-        ys = W.plot_eq(props.song, props.eq, mode);
+        ys = W.plot_eq(props.song, props.eq, mode) as any;
       } catch (err) {
         props.banner.value = err;
       }
@@ -189,12 +189,9 @@ export function EqParamViewer(props: { panel: SongPane, banner: Signal<string | 
     return { dom, modes };
 }
 
-export function EqViewer(props: { panel: SongPane, banner: Signal<string | undefined> }) {
-  const selected = props.panel.selected_eq.value;
-  if (selected === undefined) return undefined;
-
+export function EqViewer(props: { panel: SongPane, eq_id : number, banner: Signal<string | undefined> }) {
   return <div class="instrparam">
-    <EqViewerAt panel={props.panel} eq={selected} banner={props.banner} />
+    <EqViewerAt panel={props.panel} eq={props.eq_id} banner={props.banner} />
   </div>;
 }
 

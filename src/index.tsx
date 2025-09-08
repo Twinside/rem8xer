@@ -1,7 +1,7 @@
 import { JSX, render } from "preact";
 import "./style.css";
 import * as W from '../rem8x/pkg/rem8x';
-import { EditLog, GlobalState, initState, NumberEdition, PanelSide, PatchData, PatchKind, SongPane, SongRef } from "./state";
+import { EditLog, ElementView, fixViewId, GlobalState, initState, NumberEdition, openHighlightElem, PanelSide, PatchData, PatchKind, SongPane, SongRef } from "./state";
 import { InstrumentList } from "./components/instrument_list";
 import { ChainViewer } from "./components/chain_viewer";
 import { SongHeader, SongViewer } from "./components/song_viwer";
@@ -20,26 +20,41 @@ import { SpectraView } from "./components/spectra_view";
 
 W.init();
 const state = initState();
+globalThis.show_instrument = (side: "l"|"r", n : number) => {
+  const pane = side === "l" ? state.left : state.right;
+  openHighlightElem(pane, "instrument", n);
+};
+
+globalThis.show_table = (side: "l"|"r", n : number) => {
+  const pane = side === "l" ? state.left : state.right;
+  openHighlightElem(pane, "table", n);
+};
+
+globalThis.show_eq = (side: "l"|"r", n : number) => {
+  const pane = side === "l" ? state.left : state.right;
+  openHighlightElem(pane, "equ", n);
+};
 
 /** Renumbering and copy button dependent on current selected/edited. */
 function EditControls(props: {
     name: string,
     side: PanelSide,
-    selected: Signal<number | undefined>,
+    view_index: number,
+    selectedElement: number,
     edited_number: Signal<NumberEdition | undefined>,
     canRenumber?: (value : number) => boolean,
     onRenumber: (base_value, value: number) => void,
     onCopy?: (selected: number) => void}) : JSX.Element {
 
-  const { name, side, selected, edited_number } = props;
-  const selectedElement = selected.value;
+  const { name, side, selectedElement, view_index, edited_number } = props;
   const edited  = edited_number.value;
   const renumbering =
     (props.canRenumber !== undefined && !props.canRenumber(selectedElement)) ? undefined :
-    edited === undefined
+    (edited === undefined || edited.view_index !== props.view_index)
       ? <RenumberButton
           name={name}
-          onClick={() => edited_number.value = { base_value: selectedElement, current_value: selectedElement } } />
+          onClick={() =>
+            edited_number.value = { view_index, base_value: selectedElement, current_value: selectedElement } } />
      
       : <HexNumberEditor
           value={edited.current_value}
@@ -51,7 +66,7 @@ function EditControls(props: {
           }}/>;
 
   const control = selectedElement === undefined
-    ? undefined
+    ? renumbering
     : <span class="edit-controls">
         {renumbering}
         {props.onCopy === undefined
@@ -63,11 +78,208 @@ function EditControls(props: {
     return control
 }
 
-function HexRep(sig : Signal<number | undefined>) : JSX.Element {
-  var value = sig.value;
-  return value === undefined
-    ? <></>
-    : <span style="font-family: monospace;">{hexStr(value)}</span>;
+function HexRep(sig : number) : JSX.Element {
+  return <span style="font-family: monospace;">{hexStr(sig)}</span>;
+}
+
+function PhraseElementView(
+  props: {
+    pane: SongPane,
+    undoRedo: UndoRedoer,
+    other_pane: SongPane,
+    banner: Signal<string | undefined>,
+    elem: ElementView
+  }) {
+  const side = props.pane.side;
+  const bump = props.pane.bumper.value;
+  const { view_index, elem_id } = props.elem;
+
+  const phraseControl =
+        <EditControls
+          name="phrase"
+          view_index={view_index}
+          side={props.pane.side}
+          selectedElement={props.elem.elem_id}
+          edited_number={props.pane.edited_view}
+          onRenumber={(base_phrase, new_phrase) => {
+            if (props.undoRedo.renumberPhrase(side, base_phrase, new_phrase)) {
+              fixViewId(props.pane, view_index, new_phrase);
+              props.pane.bumper.value = bump + 1;
+            }
+          }}
+          onCopy={(phrase) => {
+            props.undoRedo.copyPhrase(side, phrase);
+            props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
+          }} />;
+
+  return <details class="songsection">
+      <summary><div class="summary-root"><span class="summary-title">Phrase {HexRep(elem_id)}</span> {phraseControl}</div></summary>
+      <PhraseViewer panel={props.pane} view_index={view_index} phrase_idx={elem_id} />
+    </details>;
+}
+
+function ChainElementView(
+  props: {
+    pane: SongPane,
+    undoRedo: UndoRedoer,
+    other_pane: SongPane,
+    banner: Signal<string | undefined>,
+    elem: ElementView
+  }) {
+  const side = props.pane.side;
+  const bump = props.pane.bumper.value;
+  const { view_index, elem_id } = props.elem;
+
+  const chainControl = 
+    <EditControls
+      name="chain"
+      side={props.pane.side}
+      selectedElement={elem_id}
+      view_index={view_index}
+      edited_number={props.pane.edited_chain}
+      onRenumber={(base_chain, new_chain) => {
+          if (props.undoRedo.renumberChain(side, base_chain, new_chain)) {
+            fixViewId(props.pane, view_index, new_chain);
+            props.pane.bumper.value = bump + 1;
+          }
+      }}/>;
+
+  return <details class="songsection">
+    <summary><div class="summary-root"><span class="summary-title">Chain {HexRep(elem_id)}</span> {chainControl}</div></summary>
+    <ChainViewer view_id={view_index} chain_idx={elem_id} panel={props.pane} />
+  </details>;
+}
+
+function EqElementView(
+  props: {
+    pane: SongPane,
+    undoRedo: UndoRedoer,
+    other_pane: SongPane,
+    banner: Signal<string | undefined>,
+    elem: ElementView
+  }) {
+  const side = props.pane.side;
+  const bump = props.pane.bumper.value;
+  const { view_index, elem_id } = props.elem;
+
+  const eqControls =
+    <EditControls
+      name="Eq"
+      side={props.pane.side}
+      selectedElement={elem_id}
+      view_index={view_index}
+      edited_number={props.pane.edited_view}
+      onRenumber={(base_eq, new_eq) => {
+          if (props.undoRedo.renumberEq(side, base_eq, new_eq)) {
+            fixViewId(props.pane, view_index, new_eq);
+            props.pane.bumper.value = bump + 1;
+          }
+      }}
+      onCopy={(eq) => {
+        props.undoRedo.copyEq(side, eq);
+          props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
+      }}/>;
+
+  return <details class="songsection">
+      <summary><div class="summary-root"><span class="summary-title">Eq {HexRep(elem_id)}</span> {eqControls}</div></summary>
+      <EqViewer eq_id={elem_id} panel={props.pane} banner={props.banner} />
+  </details>;
+}
+
+function InstrumentElementView(
+  props: {
+    pane: SongPane,
+    undoRedo: UndoRedoer,
+    other_pane: SongPane,
+    banner: Signal<string | undefined>,
+    elem: ElementView
+  }) {
+  const side = props.pane.side;
+  const bump = props.pane.bumper.value;
+  const { view_index, elem_id } = props.elem;
+
+  const instrumentControl =
+    <EditControls
+      name="Instrument"
+      side={props.pane.side}
+      selectedElement={elem_id}
+      view_index={view_index}
+      edited_number={props.pane.edited_view}
+      onRenumber={(base_instrument, new_instrument) => {
+        if (props.undoRedo.renumberInstrument(side, base_instrument, new_instrument)) {
+          fixViewId(props.pane, view_index, new_instrument);
+          props.pane.bumper.value = bump + 1;
+        }
+      }}
+      onCopy={(instr) => {
+          props.undoRedo.copyInstrument(side, instr);
+          props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
+      }} />
+  return <details class="songsection">
+    <summary><div class="summary-root"><span class="summary-title">Instrument {HexRep(elem_id)}</span> {instrumentControl}</div></summary>
+    <InstrumentViewer panel={props.pane} instr_id={elem_id} />
+  </details>;
+}
+
+function TableElementView(
+  props: {
+    pane: SongPane,
+    undoRedo: UndoRedoer,
+    other_pane: SongPane,
+    banner: Signal<string | undefined>,
+    elem: ElementView
+  }) {
+  const side = props.pane.side;
+  const bump = props.pane.bumper.value;
+  const { view_index, elem_id } = props.elem;
+
+  const tableControl =
+    <EditControls
+        name="Table"
+        side={props.pane.side}
+        selectedElement={elem_id}
+        edited_number={props.pane.edited_view}
+        view_index={view_index}
+        canRenumber={tbl => tbl > 0x7F}
+        onRenumber={(base_table, new_table) => {
+          if (props.undoRedo.renumberTable(side, base_table, new_table)) {
+            fixViewId(props.pane, view_index, new_table);
+            props.pane.bumper.value = bump + 1;
+          }
+        }}
+        onCopy={(tbl) => {
+          props.undoRedo.copyTable(side, tbl);
+          props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
+        }} />;
+
+    return <details class="songsection">
+      <summary><div class="summary-root"><span class="summary-title">Table {HexRep(elem_id)}</span> {tableControl}</div></summary>
+      <TableViewer view_index={view_index} table_idx={elem_id} panel={props.pane} />
+    </details>;
+}
+
+function SongElementView(props: {
+  pane: SongPane,
+  undoRedo: UndoRedoer,
+  other_pane: SongPane,
+  banner: Signal<string | undefined>,
+  elem: ElementView
+}) {
+  const elem = props.elem;
+  const bump = props.pane.bumper.value;
+
+  switch (elem.kind) {
+    case "phrase":
+      return <PhraseElementView pane={props.pane} undoRedo={props.undoRedo} other_pane={props.other_pane} banner={props.banner} elem={elem} />;
+    case "chain":
+      return <ChainElementView pane={props.pane} undoRedo={props.undoRedo} other_pane={props.other_pane} banner={props.banner} elem={elem} />;
+    case "equ":
+      return <EqElementView pane={props.pane} undoRedo={props.undoRedo} other_pane={props.other_pane} banner={props.banner} elem={elem} />;
+    case "instrument":
+      return <InstrumentElementView pane={props.pane} undoRedo={props.undoRedo} other_pane={props.other_pane} banner={props.banner} elem={elem} />;
+    case "table":
+      return <TableElementView pane={props.pane} undoRedo={props.undoRedo} other_pane={props.other_pane} banner={props.banner} elem={elem} />;
+  }
 }
 
 function SongExplorer(props: {
@@ -81,151 +293,38 @@ function SongExplorer(props: {
 
   const side = props.pane.side;
   const bump = props.pane.bumper.value;
-  const phraseControl =
-        <EditControls
-          name="phrase"
-          side={props.pane.side}
-          selected={props.pane.selected_phrase}
-          edited_number={props.pane.edited_phrase}
-          onRenumber={(base_phrase, new_phrase) => {
-            if (props.undoRedo.renumberPhrase(side, base_phrase, new_phrase)) {
-              props.pane.selected_phrase.value = new_phrase;
-              props.pane.bumper.value = bump + 1;
-            }
-          }}
-          onCopy={(phrase) => {
-            props.undoRedo.copyPhrase(side, phrase);
-            props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
-          }} />
 
-  const chainControl = 
-    <EditControls
-      name="chain"
-      side={props.pane.side}
-      selected={props.pane.selected_chain}
-      edited_number={props.pane.edited_chain}
-      onRenumber={(base_chain, new_chain) => {
-          if (props.undoRedo.renumberChain(side, base_chain, new_chain)) {
-            props.pane.selected_chain.value = new_chain;
-            props.pane.bumper.value = bump + 1;
-          }
-      }}/>;
-
-  const tableControl =
-    <EditControls
-        name="Table"
-        side={props.pane.side}
-        selected={props.pane.selected_table}
-        edited_number={props.pane.edited_table}
-        canRenumber={tbl => tbl > 0x7F}
-        onRenumber={(base_table, new_table) => {
-          if (props.undoRedo.renumberTable(side, base_table, new_table)) {
-            props.pane.selected_table.value = new_table;
-            props.pane.bumper.value = bump + 1;
-          }
-        }}
-        onCopy={(tbl) => {
-          props.undoRedo.copyTable(side, tbl);
-          props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
-        }} />;
-
-  const instrumentControl =
-    <EditControls
-      name="Instrument"
-      side={props.pane.side}
-      selected={props.pane.selected_instrument}
-      edited_number={props.pane.edited_instrument}
-      onRenumber={(base_instrument, new_instrument) => {
-        if (props.undoRedo.renumberInstrument(side, base_instrument, new_instrument)) {
-          props.pane.selected_instrument.value = new_instrument;
-          props.pane.bumper.value = bump + 1;
-        }
-      }}
-      onCopy={(instr) => {
-          props.undoRedo.copyInstrument(side, instr);
-          props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
-      }} />
-
-  const eqControls =
-    <EditControls
-      name="Eq"
-      side={props.pane.side}
-      selected={props.pane.selected_eq}
-      edited_number={props.pane.edited_eq}
-      onRenumber={(base_eq, new_eq) => {
-          if (props.undoRedo.renumberEq(side, base_eq, new_eq)) {
-            props.pane.selected_eq.value = new_eq;
-            props.pane.bumper.value = bump + 1;
-          }
-      }}
-      onCopy={(eq) => {
-        props.undoRedo.copyEq(side, eq);
-          props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
-      }}/>;
+  const songViews =
+    props.pane.song_views.value.map(view =>
+      <SongElementView elem={view} pane={props.pane} undoRedo={props.undoRedo} other_pane={props.other_pane} banner={props.banner} />);
 
   return <div class="rootcolumn">
     <details class="songsection">
-      <summary>Chains</summary>
-      <ChainList
-        bump={props.pane.bumper}
-        song={song}
-        selected_chain={props.pane.selected_chain}
-        edited_chain={props.pane.edited_chain}/>
+      <summary>Chain list</summary>
+      <ChainList pane={props.pane} song={song} />
     </details>
     <details class="songsection">
       <summary>Phrases list</summary>
-      <PhraseList
-        bump={props.pane.bumper}
-        song={song}
-        selected_phrase={props.pane.selected_phrase}
-        edited_phrase={props.pane.edited_phrase} />
+      <PhraseList pane={props.pane} bump={props.pane.bumper} song={song} />
     </details>
     <details class="songsection">
-      <summary>Intruments</summary>
+      <summary>Intruments list</summary>
       <InstrumentList
         side={props.pane.side}
         undoRedo={props.undoRedo}
         bump={props.pane.bumper}
         song={song}
-        selected_instrument={props.pane.selected_instrument}
-        edited_instrument={props.pane.edited_instrument}
         edited_instrument_name={props.pane.edited_instrument_name} />
     </details>
     <details class="songsection">
-      <summary>Tables</summary>
-      <TableList
-        bump={props.pane.bumper}
-        song={song}
-        selected_table={props.pane.selected_table}
-        edited_table={props.pane.edited_table} />
+      <summary>Table list</summary>
+      <TableList pane={props.pane} bump={props.pane.bumper} song={song} />
     </details>
     <details class="songsection">
-      <summary>Eqs</summary>
-      <EqList
-        bump={props.pane.bumper}
-        song={song}
-        selected_eq={props.pane.selected_eq} />
+      <summary>Eq list</summary>
+      <EqList pane={props.pane}bump={props.pane.bumper} song={song} />
     </details>
-    <details class="songsection">
-      <summary><div class="summary-root"><span class="summary-title">Chain {HexRep(props.pane.selected_chain)}</span> {chainControl}</div></summary>
-      <ChainViewer panel={props.pane} />
-    </details>
-    <details class="songsection">
-      <summary><div class="summary-root"><span class="summary-title">Phrase {HexRep(props.pane.selected_phrase)}</span> {phraseControl}</div></summary>
-      <PhraseViewer panel={props.pane} />
-    </details>
-    <details class="songsection">
-      <summary><div class="summary-root"><span class="summary-title">Instrument {HexRep(props.pane.selected_instrument)}</span> {instrumentControl}</div></summary>
-      <InstrumentViewer panel={props.pane} />
-    </details>
-    <details class="songsection">
-      <summary><div class="summary-root"><span class="summary-title">Table {HexRep(props.pane.selected_table)}</span> {tableControl}</div></summary>
-      <TableViewer panel={props.pane} />
-    </details>
-    <details class="songsection">
-      <summary><div class="summary-root"><span class="summary-title">Eq {HexRep(props.pane.selected_eq)}</span> {eqControls}</div></summary>
-      <EqViewer panel={props.pane} banner={props.banner} />
-    </details>
+    {songViews}
   </div>;
 }
 
@@ -325,7 +424,7 @@ function App() {
   return <>
       <div class="selection-rect"></div>
       <div class="header">
-        <div><h1>Re<pre class="titlepre">M8</pre>xer</h1><span>v0.9</span></div>
+        <div><h1>Re<pre class="titlepre">M8</pre>xer</h1><span>v0.10</span></div>
         <UndoRedoLog log={state.remap_log} undo_level={state.undo_stack_pointer} undoredo={undoRedo} />
       </div>
       <div class="rootcontainer">

@@ -146,23 +146,47 @@ pub unsafe fn get_chain_steps(song: &WasmSong, chain_index: usize) -> js_sys::Ui
 }
 
 #[wasm_bindgen]
-pub fn show_phrase(song: &WasmSong, phrase: usize) -> String {
+pub fn show_phrase(song: &WasmSong, is_left: bool, phrase: usize) -> String {
     if phrase >= Song::N_PHRASES {
         return format!("Invalid phrase number {phrase:02x}");
     }
 
     let song = &song.song;
-    format!("{}", song.phrase_view(phrase))
+    format!("{}", song.phrase_view_with_templates(phrase, reference_template(is_left)))
 }
 
+fn reference_template(is_left: bool) -> ReferenceTemplating {
+    if is_left { reference_template_l() }
+    else { reference_template_r() }
+}
+
+fn reference_template_l() -> ReferenceTemplating {
+    ReferenceTemplating::WithTemplates {
+        instrument: Some("<span onClick=\"window.show_instrument('l',0x{HEX})\">{HEX}</span>".into()),
+        instrument_command: Some("{CMD}<span onClick=\"show_instrument('l',0x{HEX})\">{HEX}</span>".into()),
+        table: Some("{CMD}<span onClick=\"show_table('l',0x{HEX})\">{HEX}</span>".into()),
+        eq: Some("{CMD}<span onClick=\"show_eq('l',0x{HEX})\">{HEX}</span>".into())
+    }
+}
+
+fn reference_template_r() -> ReferenceTemplating {
+    ReferenceTemplating::WithTemplates {
+        instrument: Some("<span onClick=\"window.show_instrument('r',0x{HEX})\">{HEX}</span>".into()),
+        instrument_command: Some("{CMD}<span onClick=\"show_instrument('r',0x{HEX})\">{HEX}</span>".into()),
+        table: Some("{CMD}<span onClick=\"show_table('r',0x{HEX})\">{HEX}</span>".into()),
+        eq: Some("{CMD}<span onClick=\"show_eq('r',0x{HEX})\">{HEX}</span>".into())
+    }
+}
+
+
 #[wasm_bindgen]
-pub fn show_table(song: &WasmSong, table: usize) -> String {
+pub fn show_table(song: &WasmSong, is_left : bool, table: usize) -> String {
     if table >= Song::N_TABLES {
         return format!("Invalid table number {table:02x}");
     }
 
     let song = &song.song;
-    song.table_view(table).to_string()
+    song.table_view_with_templates(table, reference_template(is_left)).to_string()
 }
 
 #[wasm_bindgen]

@@ -1,6 +1,6 @@
 import { useContext } from 'preact/hooks';
 import * as W from '../../rem8x/pkg/rem8x';
-import { EmptyChainEdition, EmptySelection, GlobalState, SongPane } from '../state';
+import { EmptyChainEdition, EmptySelection, GlobalState, openHighlightElem, SongPane } from '../state';
 import { DraggedChain, hexStr, isDraggedChain } from "./common";
 import { HexNumberEditor } from './hexnumbereditor';
 import { UndoRedoer } from './edit_log';
@@ -100,8 +100,7 @@ export function StepsRender(props: {
                 onDragStart={evt => dragStart(evt, chain)}
                 onDragOver={evt => dragOver(evt)}
                 onDrop={evt => dragEnd(evt, line, col)}
-                onDblClick={() => pane.edited_chain.value = { x: col, y: line, current_value: chain, base_value: chain }}
-                onClick={() => pane.selected_chain.value = chain}>{hexStr(chain)} </span>; 
+                onClick={() => openHighlightElem(props.pane, "chain", chain)}>{hexStr(chain)} </span>; 
 
         elems.push(elem);
       }

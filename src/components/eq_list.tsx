@@ -1,11 +1,12 @@
 import * as W from '../../rem8x/pkg/rem8x';
 import { Signal } from "@preact/signals";
 import { hexStr } from "./common";
+import { openHighlightElem, SongPane } from '../state';
 
 export function EqList(props: {
   song: W.WasmSong,
+  pane: SongPane,
   bump: Signal<number>,
-  selected_eq: Signal<number | undefined>
 } ) {
   const eqs = W.allocated_eq_list(props.song);
   const elems = [];
@@ -22,7 +23,7 @@ export function EqList(props: {
     prevEq = vix;
 
     bucket.push(
-       <span onClick={() => props.selected_eq.value = vix}>{hexStr(vix)} </span>);
+       <span onClick={() => openHighlightElem(props.pane, "equ", vix)}>{hexStr(vix)} </span>);
   }
 
   if (bucket.length !== 0) {

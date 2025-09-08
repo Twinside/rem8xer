@@ -1,26 +1,18 @@
 import * as W from '../../rem8x/pkg/rem8x';
-import { SongPane } from "../state";
+import { openHighlightElem, SongPane } from "../state";
 import { hexStr } from "./common";
 
-export function ChainViewer(props: { panel: SongPane }) {
+export function ChainViewer(props: { view_id: number, chain_idx: number, panel: SongPane }) {
   const song = props.panel.song.value;
   const bump = props.panel.bumper.value;
 
   if (song === undefined) return <div class="rootcolumn"></div>;
 
-  const chain = props.panel.selected_chain.value;
-  if (chain === undefined) {
-    return <div class="rootcolumn">
-      <p>Select a chain to view</p>
-    </div>;
-  }
-
-  const chainSteps = W.get_chain_steps(song, chain);
+  const chainSteps = W.get_chain_steps(song, props.chain_idx);
   const elems = [];
 
-  const phraseSet = (i : number) => {
-    props.panel.selected_phrase.value = i;
-  }
+  const phraseSet = (i : number) => 
+      openHighlightElem(props.panel, "phrase", i);
 
   for (let i = 0; i < 32; i += 2) {
     elems.push(`${(i / 2).toString(16)} : `)

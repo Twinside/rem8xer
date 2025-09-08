@@ -21,7 +21,6 @@ function InstrumentView(props : { panel: SongPane, song: W.WasmSong, ix: number,
 
     }
 
-    // TODO: render succing
     return <div class="succint">
         <div class="succintfields">
             
@@ -31,7 +30,7 @@ function InstrumentView(props : { panel: SongPane, song: W.WasmSong, ix: number,
             </table>
         </div>
         {
-            eq >= 0 && eq < 35 && !isMidi
+            eq >= 0 && eq < 0x80 && !isMidi
                 ? <EqViewerAt panel={props.panel} banner={props.banner} eq={eq} />
                 : undefined
         }
