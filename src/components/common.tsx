@@ -42,3 +42,9 @@ export function CopyElement(props: { name: string, from_side: PanelSide, onClick
                    title={`copy ${props.name} to other song`}
                    onClick={() => props.onClick()}>{label}</button>;
 }
+
+
+export function CloseElement(props: { from_side: PanelSide, onClick: () => void }) {
+    return <button type="button" class="modButton" title={`Close panel`}
+                   onClick={() => props.onClick()}>⨯</button>;
+}

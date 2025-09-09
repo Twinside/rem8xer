@@ -4,11 +4,13 @@ import { downloadBlob } from "../utils";
 import empty4_0_url from "../V4EMPTY.m8s";
 import empty5_0_url from "../V5EMPTY.m8s";
 import empty6_0_url from "../V6EMPTY.m8s";
+import empty6_2_url from "../V6EMPTY.m8s";
 import reverseUrl_5_0 from "../V6EMPTY.m8s";
 import { loadDroppedSong, loadUrl } from "../fileio";
 import { StepsRender } from "./steps_render";
 import { useContext } from 'preact/hooks';
 import { UndoRedoer } from './edit_log';
+import { UnicodeSideAction, UnicodeSideIcon } from './common';
 
 const  versionHelpText =
   "Song version is important for writing song, you can only write a song of the same version, you can transfert across version though.";
@@ -16,15 +18,34 @@ const  versionHelpText =
 const versionUrlMapping : { [ix: number]: URL }= {
   4: empty4_0_url,
   5: empty5_0_url,
-  6: empty6_0_url
+  6: empty6_0_url,
+  7: empty6_2_url,
 };
 
-export function SongHeader(props: { panel: SongPane}) {
+export function SongHeader(props: { panel: SongPane }) {
   const state = useContext(GlobalState);
 
   const panel = props.panel;
   const song = panel.song.value;
   const bump = panel.bumper.value;
+
+  // this need to be more thought out
+  const leftCollapse = panel.side !== 'left' || true
+    ? undefined
+    : <button title="Collapse side"
+              onClick={() => panel.closed.value = !panel.closed.value}>{UnicodeSideIcon('left') + UnicodeSideAction('right')} </button>;
+    
+  const rightCollapse = panel.side !== 'right' || true
+    ? undefined
+    : <button title="Collapse side"
+              onClick={() => panel.closed.value = !panel.closed.value}>{UnicodeSideIcon('right') + UnicodeSideAction('left')} </button>;
+
+  if (panel.closed.value) {
+    return <div class="rootcolumn">
+      {leftCollapse}
+      {rightCollapse}
+    </div>
+  }
 
   if (song === undefined) {
     // debug helper
@@ -38,6 +59,7 @@ export function SongHeader(props: { panel: SongPane}) {
 
     return <div class="rootcolumn">
       <div>
+        {leftCollapse}
         <select
             class="empty-v-select"
             onChange={(evt) =>
@@ -45,8 +67,10 @@ export function SongHeader(props: { panel: SongPane}) {
           <option value="4" selected={selectedVersion === 4}>M8 FW 4.0 empty song</option>
           <option value="5" selected={selectedVersion === 5}>M8 FW 5.0 empty song</option>
           <option value="6" selected={selectedVersion === 6}>M8 FW 6.0 empty song</option>
+          <option value="7" selected={selectedVersion === 7}>M8 FW 6.2 empty song</option>
         </select>
         <button onClick={() => loadUrl(state, panel, versionUrlMapping[selectedVersion])}>Load</button>
+        {rightCollapse}
       </div>
       {debugLoad}
       <div class="filetarget"
@@ -81,9 +105,11 @@ export function SongHeader(props: { panel: SongPane}) {
 
   return <div>
       <h3 style="display: inline-block;" title={`${loaded_name}version ${songVersion}`}>{songName}</h3>
+      {leftCollapse}
       <span class="separator" />
       <button onClick={save}>Save</button>
       <button onClick={clear}>Clear</button>
+      {rightCollapse}
       <div class="tabcontainer">
         <div class="tabs">
           <div class={"tab" + (activeTab === "song" ? " tabactive" : "")}

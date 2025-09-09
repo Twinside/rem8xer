@@ -99,8 +99,10 @@ export type SongPane =
         /** Currently edited chain number */
         edited_chain: Signal<ChainNumberEdition | undefined>,
 
+        /** Currently edited number  */
         edited_view: Signal<NumberEdition | undefined>,
 
+        /** Incremented counter to allocate new views */
         fresh_view_id: number,
 
         /** Instrument currently being renamed */
@@ -114,6 +116,9 @@ export type SongPane =
 
         /** Current view */
         active_view: Signal<ActiveView>
+
+        /** Is the pane currently hidden */
+        closed: Signal<boolean>
     }
 
 function highlight_view(pane: SongPane, view: number) {
@@ -126,6 +131,20 @@ export function fixViewId(pane: SongPane, view_id: number, elem_id: number) {
         const view = views[i];
         if (view.view_index === view_id) {
             views[i] = { ...view, elem_id };
+        }
+    }
+
+    pane.song_views.value = views;
+}
+
+/** Remove a view */
+export function closeView(pane: SongPane, view_id: number) {
+    var views = [... pane.song_views.value];
+
+    for (let i = 0; i < views.length; i++) {
+        const view = views[i];
+        if (view.view_index === view_id) {
+            views.splice(i, 1);
         }
     }
 
@@ -150,13 +169,14 @@ export function openHighlightElem(pane: SongPane, kind: ElemViewKind, elem_id: n
 function initPane(side: PanelSide) : SongPane {
     return {
         side,
+        closed: signal(false),
         loaded_name: signal(undefined),
         song: signal(undefined),
         bumper: signal(0),
         edited_chain: signal(undefined),
         edited_view: signal(undefined),
         selection_range: signal(undefined),
-        empty_selection: signal(6),
+        empty_selection: signal(7),
         song_views: signal([]),
         fresh_view_id: 0,
         edited_instrument_name: signal(undefined),

@@ -21,7 +21,9 @@ export function ChainViewer(props: { view_id: number, chain_idx: number, panel: 
     if (phrase === 0xFF) {
       elems.push("--\n")
     } else {
-      elems.push(<span class="phrase" onClick={_ => phraseSet(phrase)}>{hexStr(phrase)} {hexStr(chainSteps[i + 1])}</span>)
+      elems.push(<span class="phrase" onClick={_ => phraseSet(phrase)} title="Display phrase">
+          <span class="phrase-link">{hexStr(phrase)}</span> {hexStr(chainSteps[i + 1])}
+        </span>);
       elems.push('\n')
     }
   }

@@ -1,13 +1,13 @@
 import { JSX, render } from "preact";
 import "./style.css";
 import * as W from '../rem8x/pkg/rem8x';
-import { EditLog, ElementView, fixViewId, GlobalState, initState, NumberEdition, openHighlightElem, PanelSide, PatchData, PatchKind, SongPane, SongRef } from "./state";
+import { closeView, EditLog, ElementView, fixViewId, GlobalState, initState, NumberEdition, openHighlightElem, PanelSide, PatchData, PatchKind, SongPane, SongRef } from "./state";
 import { InstrumentList } from "./components/instrument_list";
 import { ChainViewer } from "./components/chain_viewer";
 import { SongHeader, SongViewer } from "./components/song_viwer";
 import { PhraseList } from "./components/phrase_list";
 import { PhraseViewer, TableViewer } from "./components/phrase_viewer";
-import { CopyElement, hexStr, RenumberButton, UnicodeSideAction, UnicodeSideIcon } from "./components/common";
+import { CloseElement, CopyElement, hexStr, RenumberButton, UnicodeSideAction, UnicodeSideIcon } from "./components/common";
 import { ChainList } from "./components/chain_list";
 import { TableList } from "./components/table_list";
 import { InstrumentViewer } from "./components/instrument_view";
@@ -38,7 +38,7 @@ globalThis.show_eq = (side: "l"|"r", n : number) => {
 /** Renumbering and copy button dependent on current selected/edited. */
 function EditControls(props: {
     name: string,
-    side: PanelSide,
+    panel: SongPane,
     view_index: number,
     selectedElement: number,
     edited_number: Signal<NumberEdition | undefined>,
@@ -46,7 +46,8 @@ function EditControls(props: {
     onRenumber: (base_value, value: number) => void,
     onCopy?: (selected: number) => void}) : JSX.Element {
 
-  const { name, side, selectedElement, view_index, edited_number } = props;
+  const { name, panel, selectedElement, view_index, edited_number } = props;
+  const side = panel.side;
   const edited  = edited_number.value;
   const renumbering =
     (props.canRenumber !== undefined && !props.canRenumber(selectedElement)) ? undefined :
@@ -65,17 +66,15 @@ function EditControls(props: {
             props.onRenumber(edited.base_value, v);
           }}/>;
 
-  const control = selectedElement === undefined
-    ? renumbering
-    : <span class="edit-controls">
-        {renumbering}
-        {props.onCopy === undefined
-          ? undefined
-          : <CopyElement name={name} from_side={side} onClick={() => props.onCopy(selectedElement)} />}
-        
-      </span>;
+  const control = selectedElement !== undefined && props.onCopy !== undefined
+      ? <CopyElement name={name} from_side={side} onClick={() => props.onCopy(selectedElement)} />
+      : undefined;
 
-    return control
+    return <span class="edit-controls">
+      {renumbering}
+      {control}
+      <CloseElement from_side={side} onClick={() => closeView(panel, props.view_index) } />
+    </span>
 }
 
 function HexRep(sig : number) : JSX.Element {
@@ -98,7 +97,7 @@ function PhraseElementView(
         <EditControls
           name="phrase"
           view_index={view_index}
-          side={props.pane.side}
+          panel={props.pane}
           selectedElement={props.elem.elem_id}
           edited_number={props.pane.edited_view}
           onRenumber={(base_phrase, new_phrase) => {
@@ -112,7 +111,7 @@ function PhraseElementView(
             props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
           }} />;
 
-  return <details class="songsection">
+  return <details class="songsection" open>
       <summary><div class="summary-root"><span class="summary-title">Phrase {HexRep(elem_id)}</span> {phraseControl}</div></summary>
       <PhraseViewer panel={props.pane} view_index={view_index} phrase_idx={elem_id} />
     </details>;
@@ -133,7 +132,7 @@ function ChainElementView(
   const chainControl = 
     <EditControls
       name="chain"
-      side={props.pane.side}
+      panel={props.pane}
       selectedElement={elem_id}
       view_index={view_index}
       edited_number={props.pane.edited_chain}
@@ -144,7 +143,7 @@ function ChainElementView(
           }
       }}/>;
 
-  return <details class="songsection">
+  return <details class="songsection" open>
     <summary><div class="summary-root"><span class="summary-title">Chain {HexRep(elem_id)}</span> {chainControl}</div></summary>
     <ChainViewer view_id={view_index} chain_idx={elem_id} panel={props.pane} />
   </details>;
@@ -165,7 +164,7 @@ function EqElementView(
   const eqControls =
     <EditControls
       name="Eq"
-      side={props.pane.side}
+      panel={props.pane}
       selectedElement={elem_id}
       view_index={view_index}
       edited_number={props.pane.edited_view}
@@ -180,7 +179,7 @@ function EqElementView(
           props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
       }}/>;
 
-  return <details class="songsection">
+  return <details class="songsection" open>
       <summary><div class="summary-root"><span class="summary-title">Eq {HexRep(elem_id)}</span> {eqControls}</div></summary>
       <EqViewer eq_id={elem_id} panel={props.pane} banner={props.banner} />
   </details>;
@@ -201,7 +200,7 @@ function InstrumentElementView(
   const instrumentControl =
     <EditControls
       name="Instrument"
-      side={props.pane.side}
+      panel={props.pane}
       selectedElement={elem_id}
       view_index={view_index}
       edited_number={props.pane.edited_view}
@@ -215,7 +214,7 @@ function InstrumentElementView(
           props.undoRedo.copyInstrument(side, instr);
           props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
       }} />
-  return <details class="songsection">
+  return <details class="songsection" open>
     <summary><div class="summary-root"><span class="summary-title">Instrument {HexRep(elem_id)}</span> {instrumentControl}</div></summary>
     <InstrumentViewer panel={props.pane} instr_id={elem_id} />
   </details>;
@@ -236,7 +235,7 @@ function TableElementView(
   const tableControl =
     <EditControls
         name="Table"
-        side={props.pane.side}
+        panel={props.pane}
         selectedElement={elem_id}
         edited_number={props.pane.edited_view}
         view_index={view_index}
@@ -252,7 +251,7 @@ function TableElementView(
           props.other_pane.bumper.value = props.other_pane.bumper.value + 1;
         }} />;
 
-    return <details class="songsection">
+    return <details class="songsection" open>
       <summary><div class="summary-root"><span class="summary-title">Table {HexRep(elem_id)}</span> {tableControl}</div></summary>
       <TableViewer view_index={view_index} table_idx={elem_id} panel={props.pane} />
     </details>;
@@ -404,22 +403,26 @@ function UndoRedoLog(props: { log: Signal<EditLog[]>, undo_level: Signal<number>
 function App() {
   const undoRedo = new UndoRedoer(state);
 
-  const leftView = state.left.active_view.value === "song"
-    ?  <div class="rootcontent">
-        <SongExplorer pane={state.left} undoRedo={undoRedo}
-                      other_pane={state.right} banner={state.message_banner} />
-        <SongViewer panel={state.left} undoRedo={undoRedo} />
-      </div>
-    : <SpectraView panel={state.left} banner={state.message_banner} />;
+  const leftView = 
+    state.left.closed.value ? undefined :
+      state.left.active_view.value === "song"
+      ?  <div class="rootcontent">
+          <SongExplorer pane={state.left} undoRedo={undoRedo}
+                        other_pane={state.right} banner={state.message_banner} />
+          <SongViewer panel={state.left} undoRedo={undoRedo} />
+        </div>
+      : <SpectraView panel={state.left} banner={state.message_banner} />;
 
-  const rightView = state.right.active_view.value === "song"
-    ? <div class="rootcontent">
-        <SongViewer panel={state.right} undoRedo={undoRedo} />
-        <SongExplorer pane={state.right} undoRedo={undoRedo}
-                      other_pane={state.left} banner={state.message_banner} />
-      </div>
-    : <SpectraView panel={state.right} banner={state.message_banner} />;
+  const rightView =
 
+    state.right.closed.value ? undefined :
+      state.right.active_view.value === "song"
+      ? <div class="rootcontent">
+          <SongViewer panel={state.right} undoRedo={undoRedo} />
+          <SongExplorer pane={state.right} undoRedo={undoRedo}
+                        other_pane={state.left} banner={state.message_banner} />
+        </div>
+      : <SpectraView panel={state.right} banner={state.message_banner} />;
 
   return <>
       <div class="selection-rect"></div>

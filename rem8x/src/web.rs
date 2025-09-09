@@ -162,19 +162,19 @@ fn reference_template(is_left: bool) -> ReferenceTemplating {
 
 fn reference_template_l() -> ReferenceTemplating {
     ReferenceTemplating::WithTemplates {
-        instrument: Some("<span onClick=\"window.show_instrument('l',0x{HEX})\">{HEX}</span>".into()),
-        instrument_command: Some("{CMD}<span onClick=\"show_instrument('l',0x{HEX})\">{HEX}</span>".into()),
-        table: Some("{CMD}<span onClick=\"show_table('l',0x{HEX})\">{HEX}</span>".into()),
-        eq: Some("{CMD}<span onClick=\"show_eq('l',0x{HEX})\">{HEX}</span>".into())
+        instrument: Some("<span class=\"instr-link\" onClick=\"window.show_instrument('l',0x{HEX})\">{HEX}</span>".into()),
+        instrument_command: Some("{CMD}<span class=\"instr-link\" onClick=\"show_instrument('l',0x{HEX})\">{HEX}</span>".into()),
+        table: Some("{CMD}<span class=\"table-link\" onClick=\"show_table('l',0x{HEX})\">{HEX}</span>".into()),
+        eq: Some("{CMD}<span class=\"eq-link\" onClick=\"show_eq('l',0x{HEX})\">{HEX}</span>".into())
     }
 }
 
 fn reference_template_r() -> ReferenceTemplating {
     ReferenceTemplating::WithTemplates {
-        instrument: Some("<span onClick=\"window.show_instrument('r',0x{HEX})\">{HEX}</span>".into()),
-        instrument_command: Some("{CMD}<span onClick=\"show_instrument('r',0x{HEX})\">{HEX}</span>".into()),
-        table: Some("{CMD}<span onClick=\"show_table('r',0x{HEX})\">{HEX}</span>".into()),
-        eq: Some("{CMD}<span onClick=\"show_eq('r',0x{HEX})\">{HEX}</span>".into())
+        instrument: Some("<span class=\"instr-link\" onClick=\"window.show_instrument('r',0x{HEX})\">{HEX}</span>".into()),
+        instrument_command: Some("{CMD}<span class=\"instr-link\" onClick=\"show_instrument('r',0x{HEX})\">{HEX}</span>".into()),
+        table: Some("{CMD}<span class=\"table-link\" onClick=\"show_table('r',0x{HEX})\">{HEX}</span>".into()),
+        eq: Some("{CMD}<span class=\"eq-link\" onClick=\"show_eq('r',0x{HEX})\">{HEX}</span>".into())
     }
 }
 

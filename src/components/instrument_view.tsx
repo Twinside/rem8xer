@@ -1,6 +1,6 @@
 import { useContext } from 'preact/hooks';
 import * as W from '../../rem8x/pkg/rem8x';
-import { GlobalState, SongPane } from "../state";
+import { GlobalState, openHighlightElem, SongPane } from "../state";
 import { hexStr } from './common';
 import { JSX } from 'preact/jsx-runtime';
 import { BoolRender, Descriptor, FloatRender, HexGauge, HexRender, NestDescriptor, StrRender } from './descriptor';
@@ -156,8 +156,8 @@ const OperatorName : {[name: string]: number} = {
     "A": 0, "B": 1, "C": 2, "D": 3
 }
 
-function RootDescriptorRender(props: { desc: Descriptor }) {
-    const { desc } = props;
+function RootDescriptorRender(props: { pane: SongPane, instr: number, desc: Descriptor }) {
+    const { pane, instr, desc } = props;
 
     if ("str" in desc) return <StrRender v={desc} />;
     if ("hex" in desc) return <HexRender v={desc} />;
@@ -245,13 +245,22 @@ function RootDescriptorRender(props: { desc: Descriptor }) {
             }
         }
 
+        const eqValue = eq >= 0x80
+            ? "--"
+            : <span class="eq-link"
+                    onClick={() => openHighlightElem(pane, "equ", eq)}>{hexStr(eq)}</span>;
+
         return <div class="instrparam">
             <span>{desc.name}</span>
             <div>NAME {name}</div>
             <div>
                 <span>TRANSP. {transpose ? "ON" : "OFF"}</span>&nbsp;&nbsp;
-                <span>TBL TIC. {hexStr(tblTic)}</span>&nbsp;&nbsp;
-                <span>EQ {eq >= 0x20 ? "--" : hexStr(eq)}</span>
+                <span>TBL TIC.
+                    <span class="table-link"
+                          title="Show table associated of instrument"
+                          onClick={() => openHighlightElem(pane, "table", instr)}>{hexStr(tblTic)}</span>
+                    </span>&nbsp;&nbsp;
+                <span>EQ {eqValue}</span>
             </div>
             <table>
                 <tbody>{globalLines}</tbody>
@@ -285,6 +294,6 @@ export function InstrumentViewer(props: { instr_id: number, panel: SongPane }) {
   }
 
   return <div class="instrparam">
-    {info.map(d => <RootDescriptorRender desc={d} />)}
+    {info.map(d => <RootDescriptorRender pane={props.panel} instr={props.instr_id} desc={d} />)}
   </div>;
 }
