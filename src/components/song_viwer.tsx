@@ -30,14 +30,16 @@ export function SongHeader(props: { panel: SongPane }) {
   const bump = panel.bumper.value;
 
   // this need to be more thought out
-  const leftCollapse = panel.side !== 'left' || true
+  const leftCollapse = panel.side !== 'left'
     ? undefined
     : <button title="Collapse side"
+              class="collapseBtn"
               onClick={() => panel.closed.value = !panel.closed.value}>{UnicodeSideIcon('left') + UnicodeSideAction('right')} </button>;
     
-  const rightCollapse = panel.side !== 'right' || true
+  const rightCollapse = panel.side !== 'right'
     ? undefined
     : <button title="Collapse side"
+              class="collapseBtn"
               onClick={() => panel.closed.value = !panel.closed.value}>{UnicodeSideIcon('right') + UnicodeSideAction('left')} </button>;
 
   if (panel.closed.value) {
@@ -109,7 +111,6 @@ export function SongHeader(props: { panel: SongPane }) {
       <span class="separator" />
       <button onClick={save}>Save</button>
       <button onClick={clear}>Clear</button>
-      {rightCollapse}
       <div class="tabcontainer">
         <div class="tabs">
           <div class={"tab" + (activeTab === "song" ? " tabactive" : "")}
@@ -118,6 +119,7 @@ export function SongHeader(props: { panel: SongPane }) {
                onClick={() => props.panel.active_view.value = "spectra"}>Spectraview</div>
         </div>
       </div>
+      {rightCollapse}
     </div>;
 }
 
@@ -129,9 +131,7 @@ export function SongViewer(props: { panel: SongPane, undoRedo: UndoRedoer }) {
   if (song === undefined) return <></>;
 
   const steps = W.get_song_steps(song);
-  return <div class="rootcolumn">
-    <div class="songsteps-wrapper">
+  return <div class="songsteps-wrapper">
       <StepsRender steps={steps} pane={props.panel} undoRedo={props.undoRedo} />
-    </div>
-  </div>;
+    </div>;
 }

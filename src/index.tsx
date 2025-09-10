@@ -298,15 +298,15 @@ function SongExplorer(props: {
       <SongElementView elem={view} pane={props.pane} undoRedo={props.undoRedo} other_pane={props.other_pane} banner={props.banner} />);
 
   return <div class="rootcolumn">
-    <details class="songsection">
+    <details class="songsection-list">
       <summary>Chain list</summary>
       <ChainList pane={props.pane} song={song} />
     </details>
-    <details class="songsection">
+    <details class="songsection-list">
       <summary>Phrases list</summary>
       <PhraseList pane={props.pane} bump={props.pane.bumper} song={song} />
     </details>
-    <details class="songsection">
+    <details class="songsection-list">
       <summary>Intruments list</summary>
       <InstrumentList
         side={props.pane.side}
@@ -315,11 +315,11 @@ function SongExplorer(props: {
         song={song}
         edited_instrument_name={props.pane.edited_instrument_name} />
     </details>
-    <details class="songsection">
+    <details class="songsection-list">
       <summary>Table list</summary>
       <TableList pane={props.pane} bump={props.pane.bumper} song={song} />
     </details>
-    <details class="songsection">
+    <details class="songsection-list">
       <summary>Eq list</summary>
       <EqList pane={props.pane}bump={props.pane.bumper} song={song} />
     </details>
@@ -414,7 +414,6 @@ function App() {
       : <SpectraView panel={state.left} banner={state.message_banner} />;
 
   const rightView =
-
     state.right.closed.value ? undefined :
       state.right.active_view.value === "song"
       ? <div class="rootcontent">
@@ -431,11 +430,11 @@ function App() {
         <UndoRedoLog log={state.remap_log} undo_level={state.undo_stack_pointer} undoredo={undoRedo} />
       </div>
       <div class="rootcontainer">
-        <div class="rootheader">
+        <div class={state.left.closed.value ? "rootcollape" : "rootheader"}>
           <SongHeader panel={state.left} />
           {leftView}
         </div>
-        <div class="rootheader">
+        <div class={state.right.closed.value ? "rootcollape" : "rootheader"}>
           <SongHeader panel={state.right} />
           {rightView}
         </div>
