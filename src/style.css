@@ -31,20 +31,54 @@ body {
   height: 100%;
 }
 
+.chain-link {
+  cursor: pointer;
+  background-color: #355;
+}
+
+.chain-link:hover {
+  background-color: #466;
+  color: white;
+}
+
 .instr-link {
-  background-color: #118;;
+  background-color: #118;
+  cursor: pointer;
+}
+
+.instr-link:hover {
+  background-color: #33C;
+  color: white;
 }
 
 .table-link {
-  background-color: #181;;
+  background-color: #181;
+  cursor: pointer;
+}
+
+.table-link:hover {
+  background-color: #3B3;
+  color: white;
 }
 
 .eq-link {
   background-color: #811;
+  cursor: pointer;
+}
+
+.eq-link:hover {
+  background-color: #B33;
+  color: white;
 }
 
 .phrase-link {
   background-color: #881;
+  cursor: pointer;
+}
+
+.phrase-link:hover {
+  background-color: #BB3;
+  color: white;
 }
 
 h1 {
@@ -166,7 +200,7 @@ button:focus-visible {
 .rootcontainer {
   display: flex;
   flex-direction: row;
-  margin: 20px;
+  margin: 0px;
   width: 100%;
 }
 
@@ -197,7 +231,7 @@ button:focus-visible {
 }
 
 .rootcolumn {
-  padding: 30;
+  height: fit-content;
   border-right: 1px solid gray;
   display: flex;
   flex: auto;
@@ -267,7 +301,8 @@ button:focus-visible {
    flex-direction: column;
    padding: 30;
    border-right: 1px solid gray;
-   flex: auto;
+   flex-grow: 0;
+   flex-shrink: 0;
 }
 
 .songsteps {
@@ -321,16 +356,37 @@ button:focus-visible {
 }
 
 .songsection {
-  max-width: 48%;
-  min-width: 48%;
-  margin: 1%;
-  flex: 1;
+  margin: 2px;
+  min-width: 398px;
+  width: 48%;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 48%;
+
+  border-radius: 3px;
+  border: 2px solid #667;
+}
+
+.songsection pre {
+  margin-left: 3px;
+}
+
+.songsection .instrparam {
+  margin-left: 3px;
 }
 
 .songsection-list {
-  min-width: 33%;
   margin-bottom: 3px;
-  flex: 0.5;
+  border: 1px dashed gray;
+  padding-left: 10px;
+  height: fit-content;
+  flex-basis: 30.75%;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.songsection-list:hover {
+  background-color: #2C2C2C;
 }
 
 .songsection summary {

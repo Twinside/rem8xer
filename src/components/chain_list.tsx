@@ -57,6 +57,7 @@ export function ChainList(props: { song: W.WasmSong, pane: SongPane }) {
                 value={edited_chain.current_value}/>
             : <span onDblClick={allow_new_edit ? toggle_phrase : undefined}
                     onClick={() => openHighlightElem(props.pane, "chain", vix)}
+                    class="chain-link"
                     title="Double click to renumber chain">{hexStr(vix)} </span>);
   }
 

@@ -20,7 +20,7 @@ export function TableList(props: { pane: SongPane, song: W.WasmSong, bump: Signa
 
     bucket.push(
         <span onClick={() => openHighlightElem(props.pane, "table", vix)}
-              title="Double click to renumber table">{hexStr(vix)} </span>);
+              class="table-link">{hexStr(vix)} </span>);
   }
 
   if (bucket.length !== 0) {

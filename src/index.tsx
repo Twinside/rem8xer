@@ -323,6 +323,7 @@ function SongExplorer(props: {
       <summary>Eq list</summary>
       <EqList pane={props.pane}bump={props.pane.bumper} song={song} />
     </details>
+    <div class="songsection-list"></div>
     {songViews}
   </div>;
 }

@@ -19,7 +19,7 @@ export function PhraseList(props: { pane: SongPane, song: W.WasmSong, bump: Sign
 
     bucket.push(
         <span onClick={() => openHighlightElem(props.pane, "phrase", vix) }
-              title="Double click to renumber phrase">{hexStr(vix)} </span>);
+              class="phrase-link">{hexStr(vix)} </span>);
   }
 
   if (bucket.length !== 0) {

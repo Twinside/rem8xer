@@ -23,7 +23,8 @@ export function EqList(props: {
     prevEq = vix;
 
     bucket.push(
-       <span onClick={() => openHighlightElem(props.pane, "equ", vix)}>{hexStr(vix)} </span>);
+       <span class="eq-link"
+             onClick={() => openHighlightElem(props.pane, "equ", vix)}>{hexStr(vix)} </span>);
   }
 
   if (bucket.length !== 0) {

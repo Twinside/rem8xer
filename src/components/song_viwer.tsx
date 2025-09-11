@@ -4,6 +4,7 @@ import { downloadBlob } from "../utils";
 import empty4_0_url from "../V4EMPTY.m8s";
 import empty5_0_url from "../V5EMPTY.m8s";
 import empty6_0_url from "../V6EMPTY.m8s";
+// TODO: add good empty song!
 import empty6_2_url from "../V6EMPTY.m8s";
 import reverseUrl_5_0 from "../V6EMPTY.m8s";
 import { loadDroppedSong, loadUrl } from "../fileio";
@@ -29,18 +30,28 @@ export function SongHeader(props: { panel: SongPane }) {
   const song = panel.song.value;
   const bump = panel.bumper.value;
 
+  const isClosed = panel.closed.value;
+
   // this need to be more thought out
   const leftCollapse = panel.side !== 'left'
     ? undefined
-    : <button title="Collapse side"
-              class="collapseBtn"
-              onClick={() => panel.closed.value = !panel.closed.value}>{UnicodeSideIcon('left') + UnicodeSideAction('right')} </button>;
+    : <>
+        <button title="Collapse side" class="collapseBtn"
+                onClick={() => panel.closed.value = !isClosed}>
+          {UnicodeSideIcon('left') + UnicodeSideAction(isClosed ? 'left' : 'right')}
+        </button>
+        {isClosed ? undefined : <span class="separator" />}
+      </>;
     
   const rightCollapse = panel.side !== 'right'
     ? undefined
-    : <button title="Collapse side"
-              class="collapseBtn"
-              onClick={() => panel.closed.value = !panel.closed.value}>{UnicodeSideIcon('right') + UnicodeSideAction('left')} </button>;
+    : <>
+        {isClosed ? undefined : <span class="separator" />}
+        <button title="Collapse side" class="collapseBtn"
+                onClick={() => panel.closed.value = !panel.closed.value}>
+          {UnicodeSideAction(isClosed ? 'right' : 'left') + UnicodeSideIcon('right')}
+        </button>
+      </>;
 
   if (panel.closed.value) {
     return <div class="rootcolumn">
@@ -106,8 +117,8 @@ export function SongHeader(props: { panel: SongPane }) {
     : `'${panel.loaded_name.value}' `;
 
   return <div>
-      <h3 style="display: inline-block;" title={`${loaded_name}version ${songVersion}`}>{songName}</h3>
       {leftCollapse}
+      <h3 style="display: inline-block;" title={`${loaded_name}version ${songVersion}`}>{songName}</h3>
       <span class="separator" />
       <button onClick={save}>Save</button>
       <button onClick={clear}>Clear</button>

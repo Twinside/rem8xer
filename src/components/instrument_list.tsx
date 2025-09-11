@@ -48,7 +48,7 @@ export function InstrumentList(props: {
     elems.push(
       <div class="instr">
         {
-            <span onClick={() => open_instrument()} >{hexStr(vix)} : </span>
+            <span class="instr-link" onClick={() => open_instrument()} >{hexStr(vix)} : </span>
         }
         {
           edited_name.instrument_id === vix
