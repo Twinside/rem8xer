@@ -337,6 +337,7 @@ button:focus-visible {
   border-radius: 10px;
   margin: 10px;
   height: 300px;
+  width: 100%;
   font-size: 30px;
   font-weight: bold;
 
