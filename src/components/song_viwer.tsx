@@ -4,9 +4,8 @@ import { downloadBlob } from "../utils";
 import empty4_0_url from "../V4EMPTY.m8s";
 import empty5_0_url from "../V5EMPTY.m8s";
 import empty6_0_url from "../V6EMPTY.m8s";
-// TODO: add good empty song!
-import empty6_2_url from "../V6EMPTY.m8s";
-import reverseUrl_5_0 from "../V6EMPTY.m8s";
+import empty6_2_url from "../V6_2EMPTY.m8s";
+import reverseUrl_5_0 from "../V6_2EMPTY.m8s";
 import { loadDroppedSong, loadUrl } from "../fileio";
 import { StepsRender } from "./steps_render";
 import { useContext } from 'preact/hooks';
