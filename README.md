@@ -12,9 +12,10 @@ M8 song file remixer
    [version 0.4](https://twinside.github.io/rem8xer/v0.4),
    [version 0.3](https://twinside.github.io/rem8xer/v0.3)
 
-## Older version video presentation
+## Video presentation
 
-[https://www.youtube.com/watch?v=INRRK7ZTePQ](https://www.youtube.com/watch?v=INRRK7ZTePQ)
+ * [Version 0.10 presentation](https://youtu.be/TtaXSct7qaM)
+ * Older presentation [https://www.youtube.com/watch?v=INRRK7ZTePQ](https://www.youtube.com/watch?v=INRRK7ZTePQ) (first version maybe)
 
 ## Screenshot
 
