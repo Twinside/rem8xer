@@ -1,3 +1,7 @@
+# 0.10.1
+
+ - Fixed hypersynth chord information
+
 # 0.10
 
  - FW 6.2 support
