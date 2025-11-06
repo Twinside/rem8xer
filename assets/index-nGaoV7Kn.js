@@ -2865,6 +2865,47 @@
       })
     ];
   }
+  function HyperSynthChordsRender(desc) {
+    const v2 = desc.nest;
+    let i2 = 0;
+    const lines = [];
+    for (const desc2 of v2) {
+      if ("str" in desc2) {
+        lines.push(u$2("tr", {
+          children: [
+            u$2("td", {
+              class: "chordNumber",
+              children: hexStr(i2)
+            }),
+            u$2("td", {
+              children: u$2("pre", {
+                class: "chord",
+                children: desc2.str
+              })
+            })
+          ]
+        }));
+        i2++;
+      }
+    }
+    return u$2("table", {
+      children: [
+        u$2("thead", {
+          children: [
+            u$2("th", {
+              children: "Chord"
+            }),
+            u$2("th", {
+              children: "offsets"
+            })
+          ]
+        }),
+        u$2("tbody", {
+          children: lines
+        })
+      ]
+    });
+  }
   function ModRender(props) {
     const lines = props.v.map((desc) => {
       if (!("hex" in desc)) return void 0;
@@ -2972,6 +3013,7 @@
   };
   function RootDescriptorRender(props) {
     const { pane, instr, desc } = props;
+    let afterLeft = [];
     if ("str" in desc) return u$2(StrRender, {
       v: desc
     });
@@ -3023,6 +3065,10 @@
           operators[ix2] = FmOperatorRender(d2, d2.name === "A");
           continue;
         }
+        if (d2.name === "CHORDS" && "nest" in d2) {
+          afterLeft.push(HyperSynthChordsRender(d2));
+          continue;
+        }
         const asMod = MODRenderers[d2.name];
         if (asMod !== void 0 && "nest" in d2) {
           mods[asMod] = u$2(ModRender, {
@@ -3055,6 +3101,12 @@
           ]
         }));
       }
+      for (const after of afterLeft) lines.push(u$2("tr", {
+        children: u$2("td", {
+          colspan: 3,
+          children: after
+        })
+      }));
       const globalLines = buckets[2].map((elems) => u$2("tr", {
         children: elems
       }));

@@ -368,6 +368,14 @@ button:focus-visible {
   border: 2px solid #667;
 }
 
+.chord {
+  margin: 0px;
+}
+
+.chordNumber {
+  border-right: 1px solid gray;
+}
+
 .songsection pre {
   margin-left: 3px;
 }
