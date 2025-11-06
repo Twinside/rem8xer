@@ -84,6 +84,30 @@ function FmOperatorRender(desc: NestDescriptor, legend: boolean) {
     ]
 }
 
+function HyperSynthChordsRender(desc: NestDescriptor) {
+    const v = desc.nest;
+    let i = 0;
+    const lines = [];
+
+    for (const desc of v) {
+        if ("str" in desc) {
+            lines.push(
+                <tr>
+                    <td class="chordNumber">{hexStr(i)}</td>
+                    <td><pre class="chord">{desc.str}</pre></td>
+                </tr>);
+            i++;
+        }
+    }
+
+    return <table>
+        <thead><th>Chord</th><th>offsets</th></thead>
+        <tbody>
+            {lines}
+        </tbody>
+    </table>;
+}
+
 function ModRender(props: { v: Descriptor[]}) {
     const lines = props.v.map(desc => {
         if (!("hex" in desc)) return undefined;
@@ -158,6 +182,7 @@ const OperatorName : {[name: string]: number} = {
 
 function RootDescriptorRender(props: { pane: SongPane, instr: number, desc: Descriptor }) {
     const { pane, instr, desc } = props;
+    let afterLeft = [];
 
     if ("str" in desc) return <StrRender v={desc} />;
     if ("hex" in desc) return <HexRender v={desc} />;
@@ -200,6 +225,11 @@ function RootDescriptorRender(props: { pane: SongPane, instr: number, desc: Desc
                 continue;
             }
 
+            if (d.name === "CHORDS" && "nest" in d) {
+                afterLeft.push(HyperSynthChordsRender(d));
+                continue;
+            }
+
             const asMod = MODRenderers[d.name];
             if (asMod !== undefined && "nest" in d) {
                 mods[asMod] = <ModRender v={d.nest} />;
@@ -215,6 +245,7 @@ function RootDescriptorRender(props: { pane: SongPane, instr: number, desc: Desc
             }
         }
 
+
         const maxi = Math.max(buckets[0].length, buckets[1].length);
         const lines = [];
 
@@ -229,6 +260,9 @@ function RootDescriptorRender(props: { pane: SongPane, instr: number, desc: Desc
 
             lines.push(<tr>{left}{right}</tr>)
         }
+
+        for (const after of afterLeft)
+            lines.push(<tr><td colspan={3}>{after}</td></tr>);
 
         const globalLines =
             buckets[2].map(elems => <tr>{elems}</tr>);
