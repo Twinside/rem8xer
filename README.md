@@ -3,10 +3,11 @@
 
 M8 song file remixer
 
- * [latest version (0.10)](https://twinside.github.io/rem8xer/) 
+ * [latest version (0.10.1)](https://twinside.github.io/rem8xer/) 
+ * [version 0.10](https://twinside.github.io/rem8xer/v0.10) 
  * [version 0.9](https://twinside.github.io/rem8xer/v0.9) 
- * [version 0.8](https://twinside.github.io/rem8xer/v0.8) 
- * [version 0.7](https://twinside.github.io/rem8xer/v0.7),
+ * [version 0.8](https://twinside.github.io/rem8xer/v0.8),
+   [version 0.7](https://twinside.github.io/rem8xer/v0.7),
    [version 0.6](https://twinside.github.io/rem8xer/v0.6),
    [version 0.5](https://twinside.github.io/rem8xer/v0.5),
    [version 0.4](https://twinside.github.io/rem8xer/v0.4),

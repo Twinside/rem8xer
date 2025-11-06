@@ -1,6 +1,7 @@
 # 0.10.1
 
  - Fixed hypersynth chord information
+ - Rendering fix for hypersynth chords
 
 # 0.10
 
